@@ -1,0 +1,112 @@
+@import "tailwindcss";
+@tailwind utilities;
+
+body {
+    background:
+        /* center glow (main focus) */
+            radial-gradient(circle at 50% 40%,
+            rgba(110,168,180,0.22),
+            rgba(80,120,140,0.10) 25%,
+            transparent 60%
+            ),
+
+                /* subtle secondary glow */
+            radial-gradient(circle at 50% 60%,
+            rgba(60,100,120,0.10),
+            transparent 70%
+            ),
+
+                /* DARK VIGNETTE (edges) */
+            radial-gradient(circle at center,
+            transparent 40%,
+            rgba(0,0,0,0.45) 100%
+            ),
+
+                /* base color */ #33474e;
+
+    color: #ffffff;
+}
+
+/*body {*/
+/*    background:*/
+/*            radial-gradient(circle at 20% 10%, rgba(110,168,180,0.18), transparent 45%),*/
+/*            radial-gradient(circle at 80% 30%, rgba(80,120,140,0.14), transparent 50%),*/
+/*            radial-gradient(circle at 50% 100%, rgba(40,70,90,0.18), transparent 55%),*/
+/*            #0c151a;*/
+/*}*/
+
+/* MAIN CARD */
+.glass-card {
+    background: rgba(39, 56, 63, 0.35) !important;
+
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+
+    transform: translateZ(0);
+    will-change: backdrop-filter;
+
+    border: 1px solid rgba(255,255,255,0.06);
+
+    box-shadow:
+            0 20px 60px rgba(0,0,0,0.45);
+
+    border-radius: 24px;
+}
+
+/* MID LEVEL SURFACE (inside cards, charts, panels) */
+.card-section {
+    background: rgba(49, 66, 74, 0.35);
+    backdrop-filter: blur(12px);
+}
+
+.inactive-surface {
+    background: rgba(24, 39, 44, 0.6);
+
+    backdrop-filter: blur(10px);
+
+    border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ACTIVE / SELECTED STATE */
+.active-surface {
+    background: rgba(52, 61, 66, 0.7);
+
+    backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(255,255,255,0.07);
+
+    box-shadow:
+            0 0 0 1px rgba(255,255,255,0.03) inset,
+            0 8px 20px rgba(0,0,0,0.25);
+}
+
+.ant-card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.ant-card-body {
+    background: rgba(39, 56, 63, 0.35) !important;
+
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+
+    border: 1px solid rgba(255,255,255,0.06);
+
+    border-radius: 24px;
+
+    transform: translateZ(0);
+}
+
+.ant-layout {
+    background: transparent !important;
+}
+.ant-layout-content {
+    background: transparent !important;
+}
+
+.ant-layout,
+.ant-layout * {
+    box-shadow: none;
+}
