@@ -9,21 +9,29 @@ export async function POST(req: NextRequest) {
             {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     cookie: req.headers.get('cookie') || '',
                 },
             }
-        )
+        );
+        console.log('LOGOUT RES',response)
 
-        const data = await response.json()
-
-        return NextResponse.json(data, {
+        const data = await response.json();
+        const nextResponse = NextResponse.json(data, {
             status: response.status,
-        })
+        });
+
+        const setCookie = response.headers.get('set-cookie');
+
+        if (setCookie) {
+            nextResponse.headers.set('set-cookie', setCookie);
+        }
+
+        return nextResponse;
     } catch (error: any) {
+        console.log('LOGOUT ERROR',error)
         return NextResponse.json(
             { message: error.message },
             { status: 500 }
-        )
+        );
     }
 }
