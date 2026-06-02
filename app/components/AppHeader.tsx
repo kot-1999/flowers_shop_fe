@@ -18,8 +18,8 @@ export default function AppHeader() {
                 selectedKeys={[pathname]}
                 items={[
                     { key: "/", label: <Link href="/">/:Home</Link> },
-                    { key: "/about", label: <Link href="/about">About</Link> },
-                    { key: "/login", label: <Link href="/login">Login</Link> },
+                    { key: "/about", label: <Link href="/pages/about">About</Link> },
+                    { key: "/login", label: <Link href="/pages/auth/login">Login</Link> },
                 ]}
             />
         </Header>

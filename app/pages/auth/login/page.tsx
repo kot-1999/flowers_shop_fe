@@ -93,7 +93,7 @@ export default function AuthCard() {
                     <Form.Item>
                         <Button
                             type="link"
-                            onClick={() => router.push('/forgot-password')}
+                            onClick={() => router.push('/pages/auth/forgot-password')}
                             style={{ padding: 0 }}
                         >
                             Forgot password?
