@@ -19,6 +19,7 @@ export default function AppHeader() {
                 items={[
                     { key: "/", label: <Link href="/">/:Home</Link> },
                     { key: "/about", label: <Link href="/about">About</Link> },
+                    { key: "/login", label: <Link href="/login">Login</Link> },
                 ]}
             />
         </Header>
