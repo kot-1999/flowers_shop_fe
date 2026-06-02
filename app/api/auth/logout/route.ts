@@ -13,7 +13,6 @@ export async function POST(req: NextRequest) {
                 },
             }
         );
-        console.log('LOGOUT RES',response)
 
         const data = await response.json();
         const nextResponse = NextResponse.json(data, {
@@ -28,7 +27,6 @@ export async function POST(req: NextRequest) {
 
         return nextResponse;
     } catch (error: any) {
-        console.log('LOGOUT ERROR',error)
         return NextResponse.json(
             { message: error.message },
             { status: 500 }
