@@ -5,11 +5,13 @@ import {useRouter} from "next/navigation";
 import {useState} from "react";
 import {useAuth} from "@/app/components/AuthContent";
 import {GoogleOutlined} from "@ant-design/icons";
+import {useT} from "@/app/utils/helpers";
 
 export default function AuthCard() {
     const { checkAuth } = useAuth();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('login');
+    const t = useT()
 
     const onLoginFinish = (values: unknown) => {
         onFinish(values, 'login');
@@ -44,7 +46,7 @@ export default function AuthCard() {
             await checkAuth()
 
             if (res.ok) {
-                message.success(`${mode === 'login' ? 'Login' : 'Registration'} successful`);
+                message.success(data.message);
 
                 if (mode === 'register') {
                     setActiveTab('login');
@@ -68,14 +70,14 @@ export default function AuthCard() {
     const items = [
         {
             key: "login",
-            label: "Login",
+            label: t("Login"),
             children: (
                 <Form layout="vertical" onFinish={onLoginFinish}>
                     <Form.Item
-                        label="Email"
+                        label={t("Email")}
                         name="email"
                         rules={[
-                            { required: true, message: "Email required" },
+                            { required: true, message: t("Email required") },
                             { type: "email" },
                         ]}
                     >
@@ -83,9 +85,9 @@ export default function AuthCard() {
                     </Form.Item>
 
                     <Form.Item
-                        label="Password"
+                        label={t("Password")}
                         name="password"
-                        rules={[{ required: true, message: "Password required" }]}
+                        rules={[{ required: true, message: t("Password required") }]}
                     >
                         <Input.Password />
                     </Form.Item>
@@ -93,45 +95,45 @@ export default function AuthCard() {
                     <Form.Item>
                         <Button
                             type="link"
-                            onClick={() => router.push('/pages/auth/forgot-password')}
+                            onClick={() => router.push('/auth/forgot-password')}
                             style={{ padding: 0 }}
                         >
-                            Forgot password?
+                            {t('Forgot password?')}
                         </Button>
                     </Form.Item>
 
                     <Button type="primary" htmlType="submit" block>
-                        Login
+                        {t('Login')}
                     </Button>
                 </Form>
             ),
         },
         {
             key: "register",
-            label: "Register",
+            label: t("Register"),
             children: (
                 <Form layout="vertical" onFinish={onRegisterFinish}>
                     <Form.Item
-                        label="First Name"
+                        label={t("First Name")}
                         name="firstName"
-                        rules={[{ required: true, message: "Name required" }]}
+                        rules={[{ required: true, message: t("Name required") }]}
                     >
                         <Input placeholder="John" />
                     </Form.Item>
 
                     <Form.Item
-                        label="Last Name"
+                        label={t("Last Name")}
                         name="lastName"
-                        rules={[{ required: true, message: "Name required" }]}
+                        rules={[{ required: true, message: t("Name required") }]}
                     >
                         <Input placeholder="Doe" />
                     </Form.Item>
 
                     <Form.Item
-                        label="Email"
+                        label={t("Email")}
                         name="email"
                         rules={[
-                            { required: true, message: "Email required" },
+                            { required: true, message: t("Email required") },
                             { type: "email" },
                         ]}
                     >
@@ -139,26 +141,26 @@ export default function AuthCard() {
                     </Form.Item>
 
                     <Form.Item
-                        label="Password"
+                        label={t("Password")}
                         name="password"
-                        rules={[{ required: true, message: "Password required" }]}
+                        rules={[{ required: true, message: t("Password required") }]}
                     >
                         <Input.Password />
                     </Form.Item>
 
                     <Form.Item
-                        label="Repeat password"
+                        label={t("Repeat password")}
                         name="passwordRepeat"
                         dependencies={["password"]}
                         rules={[
-                            { required: true, message: "Please repeat password" },
+                            { required: true, message: t("Please repeat password") },
                             ({ getFieldValue }) => ({
                                 validator(_, value) {
                                     if (!value || getFieldValue("password") === value) {
                                         return Promise.resolve();
                                     }
                                     return Promise.reject(
-                                        new Error("Passwords do not match")
+                                        new Error(t("Passwords do not match"))
                                     );
                                 },
                             }),
@@ -168,7 +170,7 @@ export default function AuthCard() {
                     </Form.Item>
 
                     <Button type="primary" size="large" htmlType="submit" block>
-                        Register
+                        {t('Register')}
                     </Button>
                 </Form>
             ),
@@ -176,17 +178,16 @@ export default function AuthCard() {
     ];
 
     return (
-        <div
-            style={{
-                display: "flex",
-                justifyContent: "center",
-                paddingTop: 80,
-            }}
-        >
-            <Card title="Authorization" style={{ width: 400 }}>
-                <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} centered />
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 80 }}>
+            <Card title={t("Authorization")} style={{ width: 400 }}>
+                <Tabs
+                    activeKey={activeTab}
+                    onChange={setActiveTab}
+                    items={items}
+                    centered
+                />
 
-                <Divider>OR</Divider>
+                <Divider>{t("OR")}</Divider>
 
                 <Button
                     block
@@ -196,7 +197,7 @@ export default function AuthCard() {
                         window.location.href = '/api/auth/google'
                     }}
                 >
-                    Continue with Google
+                    {t('Continue with Google')}
                 </Button>
             </Card>
         </div>

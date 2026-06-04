@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { encryptAES } from "@/app/utils/serverFunctions"
+import {encryptAES, getRequiredHeaders} from "@/app/utils/serverFunctions"
 
 const BACKEND_URL = process.env.BACKEND_URL
 
 export async function POST(req: NextRequest) {
     try {
-        const body = await req.json()
+        const [body, headers] = await Promise.all([req.json(), getRequiredHeaders(req)])
 
         const response = await fetch(
             `${BACKEND_URL}/api/v1/authorization/login`,
             {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers,
                 body: JSON.stringify({
                     ...body,
                     password: await encryptAES(body.password),

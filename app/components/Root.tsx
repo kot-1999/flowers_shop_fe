@@ -1,6 +1,5 @@
 'use client'
 
-import "./globals.css";
 import {ConfigProvider, FloatButton, Layout, Space, theme, Typography} from "antd";
 import { UpOutlined } from "@ant-design/icons";
 import AppHeader from "@/app/components/AppHeader";
@@ -9,12 +8,10 @@ import {AuthProvider} from "@/app/components/AuthContent";
 const { Content, Footer } = Layout;
 const { Text } = Typography;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const Root = ({ children }: { children: React.ReactNode }) => {
     const year = new Date().getFullYear();
 
     return (
-        <html lang="en">
-        <body suppressHydrationWarning>
         <AuthProvider>
             <ConfigProvider
                 theme={{
@@ -200,34 +197,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     },
                 }}
             >
-                    <Layout style={{ minHeight: "100vh" }}>
-                       <AppHeader/>
+                <Layout style={{ minHeight: "100vh" }}>
+                    <AppHeader/>
 
-                        <Content style={{ padding: 24 }}>
-                            <FloatButton.BackTop
-                                icon={<UpOutlined />}
-                                style={{
-                                    right: 50,
-                                    bottom: 50,
-                                    width: 64,
-                                    height: 64,
-                                    boxShadow: '-moz-initial',
-                                    borderWidth: 5,
-                                }}
-                            />
-                            {children}
-                        </Content>
+                    <Content style={{ padding: 24 }}>
+                        <FloatButton.BackTop
+                            icon={<UpOutlined />}
+                            style={{
+                                right: 50,
+                                bottom: 50,
+                                width: 64,
+                                height: 64,
+                                boxShadow: '-moz-initial',
+                                borderWidth: 5,
+                            }}
+                        />
+                        {children}
+                    </Content>
 
-                        <Footer style={{ textAlign: "center", marginTop: 40 }}>
-                            <Space orientation="vertical" size={4}>
-                                <Text>Flowers Shop</Text>
-                                <Text type="secondary">© {year} Flowers shop</Text>
-                            </Space>
-                        </Footer>
-                    </Layout>
+                    <Footer style={{ textAlign: "center", marginTop: 40 }}>
+                        <Space orientation="vertical" size={4}>
+                            <Text>Flowers Shop</Text>
+                            <Text type="secondary">© {year} Flowers shop</Text>
+                        </Space>
+                    </Footer>
+                </Layout>
             </ConfigProvider>
         </AuthProvider>
-        </body>
-        </html>
-    );
+    )
 }

@@ -5,25 +5,27 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "translate:scan": "npx i18next-parser -c i18next-parser.config.js",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "antd": "6.3.1",
-    "crypto-js": "^4.2.0",
-    "next": "^16.1.6",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "crypto-js": "4.2.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-intl": "10.1.11"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4",
-    "@types/crypto-js": "^4.2.2",
-    "@types/node": "^20.19.41",
-    "@types/react": "^19.2.15",
+    "@types/crypto-js": "4.2.2",
+    "@types/node": "20.19.41",
+    "@types/react": "19.2.15",
     "@types/react-dom": "19",
-    "eslint": "^9.39.4",
-    "eslint-config-next": "^16.1.6",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.1.6",
     "tailwindcss": "4",
-    "typescript": "^5.9.3"
+    "typescript": "5.9.3"
   }
 }
