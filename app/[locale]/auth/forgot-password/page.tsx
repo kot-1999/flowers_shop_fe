@@ -4,6 +4,7 @@ import { Form, Input, Button, Card, message, Result } from "antd";
 import { MailOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {useT} from "@/app/utils/helpers";
 
 export default function ForgotPasswordForm() {
     const router = useRouter();
@@ -11,6 +12,7 @@ export default function ForgotPasswordForm() {
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [submittedEmail, setSubmittedEmail] = useState('');
+    const t = useT()
 
     const onFinish = async (values: any) => {
         setLoading(true);
@@ -28,12 +30,12 @@ export default function ForgotPasswordForm() {
             if (res.ok) {
                 setSubmittedEmail(values.email);
                 setSubmitted(true);
-                message.success('Password reset email sent successfully');
+                message.success(data.message);
             } else {
-                message.error(data.message || 'Failed to send reset email');
+                message.error(data.message || t('Failed to send reset email'));
             }
         } catch (err: any) {
-            message.error(err.message || 'An error occurred');
+            message.error(err.message || t('An error occurred'));
         } finally {
             setLoading(false);
         }
@@ -88,11 +90,11 @@ export default function ForgotPasswordForm() {
             }}
         >
             <Card
-                title={<><MailOutlined /> Forgot Password</>}
+                title={<><MailOutlined /> {t('Forgot Password')}</>}
                 style={{ width: 400 }}
             >
                 <p style={{ marginBottom: 24, color: '#666' }}>
-                    Enter your email address and we'll send you a link to reset your password.
+                    {t("Enter your email address and we'll send you a link to reset your password.")}
                 </p>
 
                 <Form
@@ -102,15 +104,15 @@ export default function ForgotPasswordForm() {
                     requiredMark="optional"
                 >
                     <Form.Item
-                        label="Email"
+                        label={t('Email')}
                         name="email"
                         rules={[
-                            { required: true, message: "Email is required" },
-                            { type: "email", message: "Please enter a valid email" },
+                            { required: true, message: t("Email is required") },
+                            { type: "email", message: t("Please enter a valid email") },
                         ]}
                     >
                         <Input
-                            placeholder="email@example.com"
+                            placeholder={t("email@example.com")}
                             size="large"
                             type="email"
                         />
@@ -124,7 +126,7 @@ export default function ForgotPasswordForm() {
                             size="large"
                             loading={loading}
                         >
-                            Send Reset Link
+                            {t('Send Reset Link')}
                         </Button>
                     </Form.Item>
 
@@ -135,7 +137,7 @@ export default function ForgotPasswordForm() {
                             icon={<ArrowLeftOutlined />}
                             onClick={() => router.push('/')}
                         >
-                            Back to Login
+                            {t('Back to Login')}
                         </Button>
                     </Form.Item>
                 </Form>

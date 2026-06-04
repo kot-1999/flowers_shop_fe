@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import { Card, Input, Button, Form, Spin } from 'antd'
 import { useRouter } from 'next/navigation'
+import {useT} from "@/app/utils/helpers";
 
 export default function CompleteRegistrationPage() {
     const [loading, setLoading] = useState(false)
     const [user, setUser] = useState<any>(null)
     const router = useRouter()
+    const t = useT()
 
     useEffect(() => {
         const load = async () => {
@@ -57,7 +59,7 @@ export default function CompleteRegistrationPage() {
 
     return (
         <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
-            <Card title="Complete registration" style={{ width: 420 }}>
+            <Card title={t('Complete registration')} style={{ width: 420 }}>
                 <Form
                     layout="vertical"
                     onFinish={onFinish}
@@ -66,13 +68,13 @@ export default function CompleteRegistrationPage() {
                         lastName: user.lastName,
                     }}
                 >
-                    <Form.Item label="Email">
+                    <Form.Item label={t('Email')}>
                         <Input value={user.email} disabled />
                     </Form.Item>
 
                     <Form.Item
                         name="firstName"
-                        label="First name"
+                        label={t('First name')}
                         rules={[{ required: true }]}
                     >
                         <Input />
@@ -80,7 +82,7 @@ export default function CompleteRegistrationPage() {
 
                     <Form.Item
                         name="lastName"
-                        label="Last name"
+                        label={t('Last name')}
                         rules={[{ required: true }]}
                     >
                         <Input />
@@ -88,7 +90,7 @@ export default function CompleteRegistrationPage() {
 
                     <Form.Item
                         name="password"
-                        label="Password"
+                        label={t('Password')}
                         rules={[{ required: true }]}
                         hasFeedback
                     >
@@ -97,7 +99,7 @@ export default function CompleteRegistrationPage() {
 
                     <Form.Item
                         name="passwordRepeat"
-                        label="Repeat password"
+                        label={t('Repeat password')}
                         dependencies={['password']}
                         hasFeedback
                         rules={[
@@ -108,7 +110,7 @@ export default function CompleteRegistrationPage() {
                                         return Promise.resolve()
                                     }
                                     return Promise.reject(
-                                        new Error('Passwords do not match')
+                                        new Error(t('Passwords do not match'))
                                     )
                                 },
                             }),
@@ -117,9 +119,11 @@ export default function CompleteRegistrationPage() {
                         <Input.Password />
                     </Form.Item>
 
-                    <Button type="primary" htmlType="submit" loading={loading} block>
-                        Finish
-                    </Button>
+                    <Form.Item>
+                        <Button type="primary" htmlType="submit" loading={loading} block>
+                            {t('Finish')}
+                        </Button>
+                    </Form.Item>
                 </Form>
             </Card>
         </div>

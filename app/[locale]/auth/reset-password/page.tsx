@@ -4,6 +4,7 @@ import { Form, Input, Button, Card, message, Spin, Result } from "antd";
 import { LockOutlined } from "@ant-design/icons";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import {useT} from "@/app/utils/helpers";
 
 export default function ResetPasswordForm() {
     const router = useRouter();
@@ -12,6 +13,7 @@ export default function ResetPasswordForm() {
     const [loading, setLoading] = useState(false);
     const [token, setToken] = useState('');
     const [tokenValid, setTokenValid] = useState(true);
+    const t = useT()
 
     useEffect(() => {
         const jwtToken = searchParams.get('token');
@@ -72,11 +74,11 @@ export default function ResetPasswordForm() {
                 <Card style={{ width: 450 }}>
                     <Result
                         status="error"
-                        title="Invalid Token"
-                        subTitle="The password reset link is invalid or has expired."
+                        title={t("Invalid Token")}
+                        subTitle={t("The password reset link is invalid or has expired.")}
                         extra={
                             <Button type="primary" size="large" onClick={() => router.push('/')}>
-                                Back to Login
+                                {t('Back to Login')}
                             </Button>
                         }
                     />
@@ -96,7 +98,7 @@ export default function ResetPasswordForm() {
                     background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                 }}
             >
-                <Spin size="large" tip="Loading..." />
+                <Spin size="large" description={t("Loading...")} />
             </div>
         );
     }
@@ -111,7 +113,7 @@ export default function ResetPasswordForm() {
             }}
         >
             <Card
-                title={<><LockOutlined /> Reset Password</>}
+                title={<><LockOutlined /> {t('Reset Password')}</>}
                 style={{ width: 450, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}
                 bordered={false}
             >
@@ -123,41 +125,41 @@ export default function ResetPasswordForm() {
                     autoComplete="off"
                 >
                     <Form.Item
-                        label="New Password"
+                        label={t("New Password")}
                         name="newPassword"
                         rules={[
-                            { required: true, message: "Please enter new password" },
-                            { min: 3, message: "Password must be at least 3 characters" },
+                            { required: true, message: t("Please enter new password") },
+                            { min: 3, message: t("Password must be at least 3 characters") },
                         ]}
                     >
                         <Input.Password
-                            placeholder="Enter new password"
+                            placeholder={t("Enter new password")}
                             size="large"
                             autoComplete="new-password"
                         />
                     </Form.Item>
 
                     <Form.Item
-                        label="Confirm Password"
+                        label={t("Confirm Password")}
                         name="confirmPassword"
                         dependencies={['newPassword']}
                         rules={[
-                            { required: true, message: "Please confirm your password" },
-                            { min: 3, message: "Password must be at least 3 characters" },
+                            { required: true, message: t("Please confirm your password") },
+                            { min: 3, message: t("Password must be at least 3 characters") },
                             ({ getFieldValue }) => ({
                                 validator(_, value) {
                                     if (!value || getFieldValue('newPassword') === value) {
                                         return Promise.resolve();
                                     }
                                     return Promise.reject(
-                                        new Error('Passwords do not match')
+                                        new Error(t('Passwords do not match'))
                                     );
                                 },
                             }),
                         ]}
                     >
                         <Input.Password
-                            placeholder="Confirm new password"
+                            placeholder={t("Confirm new password")}
                             size="large"
                             autoComplete="new-password"
                         />
@@ -171,7 +173,7 @@ export default function ResetPasswordForm() {
                             size="large"
                             loading={loading}
                         >
-                            Reset Password
+                            {t("Reset Password")}
                         </Button>
                     </Form.Item>
 
@@ -182,7 +184,7 @@ export default function ResetPasswordForm() {
                             size="large"
                             onClick={() => router.push('/')}
                         >
-                            Back to Login
+                            {t("Back to Login")}
                         </Button>
                     </Form.Item>
                 </Form>
