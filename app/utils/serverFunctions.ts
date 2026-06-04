@@ -1,20 +1,20 @@
 'use server'
 
-import { cookies } from "next/headers";
+import {cookies} from "next/headers";
 import crypto from 'crypto-js'
+import {CookieKey, Language} from "@/app/utils/enums";
+import {NextRequest} from "next/server";
 
-type Key = 'user'
-
-export async function setCookie(key: Key, data: any) {
+export async function setCookie(key: CookieKey, data: any, maxAge = 60 * 60 * 1) {
     const cookieStore = await cookies();
     cookieStore.set(key, JSON.stringify(data), {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        maxAge: 60 * 60 * 1, // 1 hour
+        maxAge, // 1 hour
     });
 }
-export async function getCookie(key: Key) {
+export async function getCookie(key: CookieKey) {
     const cookieStore = await cookies();
     const cookie = cookieStore.get(key)
     if (cookie?.value) {
@@ -49,4 +49,16 @@ export async function decryptAES(value: string): Promise<string> {
         value,
         ENCRYPTION_KEY
     ).toString(crypto.enc.Utf8)
+}
+
+export async function getRequiredHeaders(req: NextRequest): Promise<{ 'Content-Type': string, 'Accept-Language': Language, cookie: any }> {
+    const settings = await getCookie(CookieKey.Settings)
+
+    return {
+        'Content-Type': 'application/json',
+        // IMPORTANT: forward app language
+        'Accept-Language': settings?.locale ?? Language.en,
+        // IMPORTANT: forward session cookie
+        cookie: req.headers.get('cookie') ?? '',
+    }
 }

@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import {getRequiredHeaders} from "@/app/utils/serverFunctions";
 
 const BACKEND_URL = process.env.BACKEND_URL
 
 export async function POST(req: NextRequest) {
     try {
+        const headers = await getRequiredHeaders(req)
+
         const response = await fetch(
             `${BACKEND_URL}/api/v1/authorization/logout`,
             {
                 method: 'POST',
-                headers: {
-                    cookie: req.headers.get('cookie') || '',
-                },
+                headers,
             }
         );
 
