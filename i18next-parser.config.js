@@ -8,5 +8,6 @@ module.exports = {
     createOldCatalogs: false,
     keepRemoved: false,
     keySeparator: false,
-    namespaceSeparator: false
+    namespaceSeparator: false,
+    sort: false
 };
