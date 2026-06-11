@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
         const headers = await getRequiredHeaders(req)
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/admin/item-types`,
+            `${BACKEND_URL}/api/v1/admin/item-types`,
             {
                 method: 'GET',
                 headers,
@@ -36,7 +36,7 @@ export async function PUT(req: NextRequest) {
         ])
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/admin/item-types`,
+            `${BACKEND_URL}/api/v1/admin/item-types`,
             {
                 method: 'PUT',
                 headers,

@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
         ])
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/ai/good-metadata`,
+            `${BACKEND_URL}/api/v1/ai/good-metadata`,
             {
                 method: 'POST',
                 headers,

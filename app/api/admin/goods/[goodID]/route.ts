@@ -15,7 +15,7 @@ export async function PATCH(
         ])
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/admin/goods/${goodID}`,
+            `${BACKEND_URL}/api/v1/admin/goods/${goodID}`,
             {
                 method: 'PATCH',
                 headers,

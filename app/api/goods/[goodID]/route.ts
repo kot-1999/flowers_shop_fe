@@ -12,7 +12,7 @@ export async function GET(
         const headers = await getRequiredHeaders(req)
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/goods/${goodID}`,
+            `${BACKEND_URL}/api/v1/goods/${goodID}`,
             {
                 method: 'GET',
                 headers,

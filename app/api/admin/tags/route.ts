@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
         const headers = await getRequiredHeaders(req)
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/admin/tags`,
+            `${BACKEND_URL}/api/v1/admin/tags`,
             {
                 method: 'GET',
                 headers,

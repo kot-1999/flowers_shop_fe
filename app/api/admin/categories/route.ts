@@ -36,7 +36,7 @@ export async function PUT(req: NextRequest) {
         ])
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/admin/categories`,
+            `${BACKEND_URL}/api/v1/admin/categories`,
             {
                 method: 'PUT',
                 headers,

@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
         ])
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/admin/goods`,
+            `${BACKEND_URL}/api/v1/admin/goods`,
             {
                 method: 'POST',
                 headers,

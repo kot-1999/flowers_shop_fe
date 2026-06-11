@@ -12,7 +12,7 @@ export async function DELETE(
         const headers = await getRequiredHeaders(req)
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/admin/categories/${categoryID}`,
+            `${BACKEND_URL}/api/v1/admin/categories/${categoryID}`,
             {
                 method: 'DELETE',
                 headers,

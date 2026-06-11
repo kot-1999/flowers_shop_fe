@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
         ])
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/ai/translations`,
+            `${BACKEND_URL}/api/v1/ai/translations`,
             {
                 method: 'POST',
                 headers,
