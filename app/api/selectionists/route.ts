@@ -7,8 +7,11 @@ export async function GET(req: NextRequest) {
     try {
         const headers = await getRequiredHeaders(req)
 
+        const url = new URL(req.url)
+        const query = url.searchParams.toString()
+
         const response = await fetch(
-            `${BACKEND_URL}/api/v1/selectionists`,
+            `${BACKEND_URL}/api/v1/selectionists?${query}`,
             {
                 method: 'GET',
                 headers,
