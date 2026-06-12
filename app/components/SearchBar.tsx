@@ -1,10 +1,10 @@
-import {fetchSettings, getLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers";
+import {getLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers";
 import { LocalStorageKey} from "@/app/utils/enums";
 import {useEffect, useState} from 'react'
 import {Button, Checkbox, Col, Input, Row, Select, Space } from 'antd'
 import {DownOutlined, UpOutlined} from "@ant-design/icons";
 
-export default function SearchBar({ fetchGoods, settings }: any) {
+export default function SearchBar({ fetchGoods, settings, resetSignal }: any) {
     const t = useT()
 
     const [appliedSearch, setAppliedSearch] = useState('')
@@ -25,6 +25,12 @@ export default function SearchBar({ fetchGoods, settings }: any) {
         const searchSettings = getLocalStorage(LocalStorageKey.SearchSettings)
 
         if (!searchSettings) {
+            setAppliedSearch('')
+            setAppliedSelectionists([])
+            setAppliedTags([])
+            setAppliedShowOnly(false)
+            setSortBy('createdAt')
+            setSortOrder('desc')
             return
         }
 
@@ -34,7 +40,7 @@ export default function SearchBar({ fetchGoods, settings }: any) {
         setAppliedShowOnly(searchSettings.appliedShowOnly ?? false)
         setSortBy(searchSettings?.sortBy ?? 'createdAt')
         setSortOrder(searchSettings?.sortOrder ?? 'desc')
-    }, [])
+    }, [resetSignal])
 
     // Save search settings
     useEffect(() => {
