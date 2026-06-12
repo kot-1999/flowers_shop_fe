@@ -1,305 +1,372 @@
 'use client'
 
-import {
-    Card,
-    Col,
-    Progress,
-    Row,
-    Statistic,
-    Table,
-    Tag,
-    Typography,
-    Button,
-    Input, Flex, Layout,
-} from 'antd'
+import {useEffect, useState} from 'react'
+import {Button, Card, Checkbox, Col, Image, Input, Row, Select, Space, Spin, Tag} from 'antd'
+import SimplePagination from '@/app/components/SimplePagination'
+import {useSearchParams} from 'next/navigation'
+import {fetchSettings, getLocalStorage, setLocalStorage, useT} from '@/app/utils/helpers'
+import {GoodState, LocalStorageKey} from "@/app/utils/enums";
+import {DownOutlined, UpOutlined} from "@ant-design/icons";
 
-import {
-    WarningOutlined,
-    RocketOutlined,
-    GlobalOutlined,
-    RadarChartOutlined,
-    SearchOutlined,
-} from '@ant-design/icons'
-
-const { Title, Text } = Typography
-
-const towerColumns = [
-    {
-        title: 'ID',
-        dataIndex: 'id',
-    },
-    {
-        title: 'Location',
-        dataIndex: 'location',
-    },
-    {
-        title: 'Load',
-        dataIndex: 'load',
-        render: (value: number) => (
-            <Progress
-                percent={value}
-                size="small"
-                strokeColor="#5eead4"
-                railColor="rgba(255,255,255,0.06)"
-                showInfo={false}
-            />
-        ),
-    },
-    {
-        title: 'Devices',
-        dataIndex: 'devices',
-    },
-]
-
-const towerData = [
-    {
-        key: 1,
-        id: 'TWR-001',
-        location: 'Portland, OR',
-        load: 95,
-        devices: '1,258',
-    },
-    {
-        key: 2,
-        id: 'RD-35',
-        location: 'Seattle, WA',
-        load: 81,
-        devices: '1,738',
-    },
-    {
-        key: 3,
-        id: 'HFK-456',
-        location: 'San Francisco, CA',
-        load: 78,
-        devices: '1,884',
-    },
-]
 export default function App() {
+    const [goodsData, setGoods] = useState<{
+        goods: any[]
+        pagination: any
+    }>({
+        goods: [],
+        pagination: {},
+    })
+
+    const [loading, setLoading] = useState(false)
+    const searchParams = useSearchParams()
+    const t = useT()
+
+    const [settings, setSettings] = useState<any>(null)
+
+    const searchSettings = getLocalStorage(LocalStorageKey.SearchSettings)
+
+    const [appliedSearch, setAppliedSearch] = useState('')
+
+    const [selectionists, setSelectionists] = useState<any[]>([])
+    const [appliedSelectionists, setAppliedSelectionists] = useState<any[]>([])
+
+    const [tags, setTags] = useState<any[]>([])
+    const [appliedTags, setAppliedTags] = useState<any[]>([])
+
+    const [appliedShowOnly, setAppliedShowOnly] = useState(false)
+
+    const [sortBy, setSortBy] = useState('createdAt')
+    const [sortOrder, setSortOrder] = useState('desc')
+
+    // Load application settings
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const data = await fetchSettings()
+                setSettings(data)
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
+        loadSettings()
+    }, [])
+
+    // Load search settings
+    useEffect(() => {
+        const searchSettings = getLocalStorage(LocalStorageKey.SearchSettings)
+
+        if (!searchSettings) {
+            return
+        }
+
+        setAppliedSearch(searchSettings.appliedSearch ?? '')
+        setAppliedSelectionists(searchSettings.appliedSelectionists ?? [])
+        setAppliedTags(searchSettings.appliedTags ?? [])
+        setAppliedShowOnly(searchSettings.appliedShowOnly ?? false)
+        setSortBy(searchSettings?.sortBy ?? 'createdAt')
+        setSortOrder(searchSettings?.sortOrder ?? 'desc')
+    }, [])
+
+    // Save search settings
+    useEffect(() => {
+        setLocalStorage(
+            LocalStorageKey.SearchSettings,
+            {
+                appliedSearch,
+                appliedTags,
+                appliedSelectionists,
+                appliedShowOnly,
+                sortBy,
+                sortOrder
+            }
+        )
+    }, [
+        appliedSearch,
+        appliedTags,
+        appliedSelectionists,
+        appliedShowOnly,
+        sortBy,
+        sortOrder
+    ])
+
+    // Fetch goods
+    const fetchGoods = async () => {
+        if (!settings) return
+
+        setLoading(true)
+
+        try {
+            const params = new URLSearchParams()
+
+            params.set('page', searchParams.get('page') ?? '1')
+            params.set('limit', searchParams.get('limit') ?? '24')
+            params.set('sortBy', sortBy)
+            params.set('sortOrder', sortOrder)
+
+            if (appliedSearch) {
+                params.set('search', appliedSearch)
+            }
+
+            if (appliedSelectionists.length) {
+                appliedSelectionists.forEach((s) => {
+                    params.append('selectionistIDs[]', s.id);
+                });
+            }
+
+            if (appliedShowOnly) {
+                params.set('state[]', GoodState.Available)
+            }
+
+            const res = await fetch(`/api/goods?${params.toString()}`)
+            const data = await res.json()
+
+            setGoods(data)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    // Trigger goods fetch
+    useEffect(() => {
+        fetchGoods()
+    }, [settings, searchParams])
+
+    const handleSelectionistSearch = async (value?: string) => {
+        if (!value && selectionists.length > 0) {
+            return;
+        }
+        try {
+            const params = new URLSearchParams()
+
+            if (value) {
+                params.set('search', value)
+            }
+
+            params.set('limit', '30')
+
+            const res = await fetch(`/api/selectionists?${params.toString()}`);
+
+            const data = await res.json();
+            setSelectionists(data.selectionists);
+        } catch (error) {
+            console.error(error)
+        }
+    };
+
+    const handleTagSearch = async (value?: string) => {
+        if (!value && tags.length > 0) {
+            return
+        }
+        try {
+            const params = new URLSearchParams()
+
+            if (value) {
+                params.set('search', value)
+            }
+
+            params.set('limit', '30')
+
+            const res = await fetch(`/api/tags?${params.toString()}`);
+
+            const data = await res.json();
+            setTags(data.tags);
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     return (
-        <Layout style={{ minHeight: '100vh' }}>
-            <Flex vertical gap={24}>
+        <div style={{ padding: 24 }}>
+            <h1>{t('Goods')}</h1>
 
-                {/* HEADER */}
-                <Flex justify="space-between" align="center">
-                    <Flex vertical>
-                        <Title level={2}>
-                            CyberDefend Overview
-                        </Title>
+            {/* SEARCH INPUT */}
+            {/* SEARCH BAR */}
+            <Space.Compact style={{ width: '100%', marginBottom: 12 }}>
+                <Input
+                    placeholder={t('searchGoods')}
+                    value={appliedSearch}
+                    onChange={(e) => setAppliedSearch(e.target.value)}
+                />
 
-                        <Text type="secondary">
-                            Satellite monitoring & collision detection
-                        </Text>
-                    </Flex>
+                <Button
+                    type="primary"
+                    onClick={fetchGoods}
+                >
+                    {t('search')}
+                </Button>
+            </Space.Compact>
 
-                    <Input
-                        className="inactive-surface"
-                        prefix={<SearchOutlined />}
-                        placeholder="Search..."
+            {/* FILTERS ROW */}
+            <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
+
+                <Col>
+                    <Select
                         style={{ width: 260 }}
+                        mode="multiple"
+                        allowClear
+                        placeholder={t('Filter by selectionist')}
+                        value={appliedSelectionists.map((item) => ({
+                            label: item.name?.[settings?.locale],
+                            value: item.id,
+                            data: item,
+                        }))}
+                        showSearch={{
+                            onSearch: handleSelectionistSearch,
+                        }}
+                        onFocus={() => handleSelectionistSearch()}
+                        options={selectionists.map((item) => ({
+                            label: item.name?.[settings?.locale],
+                            value: item.id,
+                            data: item,
+                        }))}
+                        onChange={(values, options) => {
+                            setAppliedSelectionists(
+                                (options as any[]).map((o) => o.data)
+                            )
+                        }}
                     />
-                </Flex>
+                </Col>
 
-                {/* TOP GRID */}
-                <Row gutter={[24, 24]}>
+                <Col>
+                    <Select
+                        style={{ width: 260 }}
+                        mode="multiple"
+                        allowClear
+                        placeholder={t('Filter by tag')}
+                        value={appliedTags.map((item) => ({
+                            label: item.name?.[settings?.locale],
+                            value: item.id,
+                            data: item,
+                        }))}
+                        showSearch={{
+                            onSearch: handleTagSearch,
+                        }}
+                        onFocus={() => handleTagSearch()}
+                        options={tags.map((item) => ({
+                            label: item.name?.[settings?.locale],
+                            value: item.id,
+                            data: item,
+                        }))}
+                        onChange={(values, options) => {
+                            setAppliedTags(
+                                (options as any[]).map((o) => o.data)
+                            )
+                        }}
+                    />
+                </Col>
 
-                    {/* SAT CARD */}
-                    <Col xs={24} lg={8}>
-                        <Card className="glass-card">
-                            <Flex vertical gap={20}>
+                <Col>
+                    <Checkbox
+                        checked={appliedShowOnly}
+                        onChange={(e) => setAppliedShowOnly(e.target.checked)}
+                    >
+                        {t('Show only available')}
+                    </Checkbox>
+                </Col>
 
-                                <Flex gap={16}>
-                                    <RocketOutlined />
+            </Row>
 
-                                    <Flex vertical>
-                                        <Text type="secondary">
-                                            ACTIVE SATELLITE
-                                        </Text>
+            {/* SORT ROW */}
+            <Space style={{ marginBottom: 16 }}>
 
-                                        <Title level={4}>
-                                            STARLINK-17524
-                                        </Title>
-                                    </Flex>
-                                </Flex>
+                <Select
+                    style={{ width: 160 }}
+                    value={sortBy}
+                    onChange={setSortBy}
+                    options={[
+                        { value: 'createdAt', label: t('createdAt') },
+                        { value: 'name', label: t('name') },
+                        { value: 'selectionist', label: t('selectionist') },
+                        { value: 'state', label: t('Availability') },
+                    ]}
+                />
 
-                                <Progress
-                                    percent={72}
-                                />
+                <Button
+                    onClick={() =>
+                        setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+                    }
+                    icon={sortOrder === 'asc' ? <UpOutlined /> : <DownOutlined />}
+                >
+                    {sortOrder.toUpperCase()}
+                </Button>
 
-                                <div className="card-section" style={{ padding: 12 }}>
-                                    <Row gutter={16}>
-                                        <Col span={12}>
-                                            <Statistic
-                                                title="Signal"
-                                                value="Weak"
-                                            />
-                                        </Col>
+            </Space>
 
-                                        <Col span={12}>
-                                            <Statistic
-                                                title="Frequency"
-                                                value="43.5 MHz"
-                                            />
-                                        </Col>
-                                    </Row>
-                                </div>
+            {/* GOODS */}
+            {loading ? (
+                <Spin />
+            ) : (
+                <div>
+                    <Row gutter={[16, 16]}>
+                        {goodsData.goods?.map((good) => (
+                            <Col xs={24} sm={12} md={8} key={good.id}>
+                                <Card
+                                    title={
+                                        good.name[settings.locale]
+                                    }
+                                    extra={<Tag>{good.state}</Tag>}
+                                >
+                                    {/* IMAGE */}
+                                    {good.photos?.[0] && (
+                                        <Image
+                                            src={good.photos[0]}
+                                            alt={good.name?.en ?? 'good'}
+                                        />
+                                    )}
 
-                            </Flex>
-                        </Card>
-                    </Col>
+                                    {/* DESCRIPTION */}
+                                    <p>
+                                        {good.description[settings.locale]}
+                                    </p>
 
-                    {/* GLOBAL NETWORK */}
-                    <Col xs={24} lg={10}>
-                        <Card className="glass-card" style={{ height: '100%' }}>
-                            <Flex vertical gap={24}>
-
-                                <Flex gap={16}>
-                                    <GlobalOutlined />
-
-                                    <Flex vertical>
-                                        <Title level={4}>
-                                            Global Network
-                                        </Title>
-
-                                        <Text type="secondary">
-                                            Live orbital monitoring
-                                        </Text>
-                                    </Flex>
-                                </Flex>
-
-                                <Row gutter={16}>
-                                    <Col span={8}>
-                                        <div className="card-section" style={{ padding: 12 }}>
-                                            <Statistic title="Satellites" value={2584} />
+                                    {/* PRICE */}
+                                    {good.pricings?.length > 0 && (
+                                        <div style={{ overflowX: 'auto' }}>
+                                            <Space orientation="vertical" size={[6, 6]} wrap>
+                                                {good.pricings.map((p: any) => (
+                                                    <div key={p.id}>
+                                                        <b>{p.price} €</b>
+                                                        {' — '}
+                                                        <span>{p.itemType?.name[settings.locale]}</span>
+                                                    </div>
+                                                ))}
+                                            </Space>
                                         </div>
-                                    </Col>
+                                    )}
 
-                                    <Col span={8}>
-                                        <div className="card-section" style={{ padding: 12 }}>
-                                            <Statistic title="Collisions" value={12} />
+                                    {/* TAGS */}
+                                    <Space wrap>
+                                        {good.tags?.map((tag: any) => (
+                                            <Tag key={tag.id}>
+                                                {tag.name[settings?.locale]}
+                                            </Tag>
+                                        ))}
+                                    </Space>
+
+                                    {/* SELECTIONIST */}
+                                    {good.selectionist && (
+                                        <div>
+                                            {good.selectionist.name[settings?.locale]}
+                                            {' '}
+                                            <Tag>{good.selectionist.country}</Tag>
                                         </div>
-                                    </Col>
+                                    )}
+                                </Card>
+                            </Col>
+                        ))}
+                    </Row>
 
-                                    <Col span={8}>
-                                        <div className="card-section active-surface" style={{ padding: 12 }}>
-                                            <Statistic title="Coverage" value="94%" />
-                                        </div>
-                                    </Col>
-                                </Row>
-
-                            </Flex>
-                        </Card>
-                    </Col>
-
-                    {/* ALERT */}
-                    <Col xs={24} lg={6}>
-                        <Card className="glass-card">
-                            <Flex vertical gap={20}>
-
-                                <Flex gap={12}>
-                                    <WarningOutlined />
-
-                                    <Title level={4}>
-                                        Collision Risk
-                                    </Title>
-                                </Flex>
-
-                                <div className="card-section" style={{ padding: 12 }}>
-                                    <Text type="secondary">Chance of collision</Text>
-                                    <Title level={1}>89%</Title>
-                                </div>
-
-                                <Tag color="error">
-                                    Critical Alert
-                                </Tag>
-
-                                <div className="inactive-surface" style={{ padding: 10 }}>
-                                    <Text type="secondary">
-                                        Estimated collision window:
-                                        15:31:11 UTC
-                                    </Text>
-                                </div>
-
-                                <Button type="primary" block>
-                                    Resolve Issue
-                                </Button>
-
-                            </Flex>
-                        </Card>
-                    </Col>
-
-                </Row>
-
-                {/* BOTTOM */}
-                <Row gutter={[24, 24]}>
-
-                    {/* METRICS */}
-                    <Col xs={24} lg={8}>
-                        <Card className="glass-card">
-                            <Flex vertical gap={24}>
-
-                                <Flex gap={12}>
-                                    <RadarChartOutlined />
-                                    <Title level={4}>Velocity Metrics</Title>
-                                </Flex>
-
-                                <div className="card-section" style={{ padding: 12 }}>
-                                    <Statistic title="Current Speed" value="24.9 km/h" />
-                                </div>
-
-                                <div className="card-section" style={{ padding: 12 }}>
-                                    <Statistic title="Target Speed" value="27 km/h" />
-                                </div>
-
-                                <Row gutter={16}>
-                                    <Col span={12}>
-                                        <div className="inactive-surface" style={{ padding: 12 }}>
-                                            <Statistic title="Targets" value={6} />
-                                        </div>
-                                    </Col>
-
-                                    <Col span={12}>
-                                        <div className="active-surface" style={{ padding: 12 }}>
-                                            <Statistic title="Alerts" value={2} />
-                                        </div>
-                                    </Col>
-                                </Row>
-
-                            </Flex>
-                        </Card>
-                    </Col>
-
-                    {/* TABLE */}
-                    <Col xs={24} lg={16}>
-                        <Card className="glass-card">
-                            <Flex vertical gap={20}>
-
-                                <Flex justify="space-between" align="center">
-                                    <Flex vertical>
-                                        <Title level={4}>Active Towers</Title>
-                                        <Text type="secondary">
-                                            24 active issues detected
-                                        </Text>
-                                    </Flex>
-
-                                    <Button>
-                                        View All
-                                    </Button>
-                                </Flex>
-
-                                <Table
-                                    className="inactive-surface"
-                                    columns={towerColumns}
-                                    dataSource={towerData}
-                                    pagination={false}
-                                />
-
-                            </Flex>
-                        </Card>
-                    </Col>
-
-                </Row>
-
-            </Flex>
-        </Layout>
+                    <SimplePagination
+                        pagination={{
+                            current: goodsData?.pagination?.page ?? 1,
+                            total: goodsData?.pagination?.total ?? 0,
+                            perPage:
+                                goodsData?.pagination?.limit ?? 24,
+                        }}
+                    />
+                </div>
+            )}
+        </div>
     )
 }
