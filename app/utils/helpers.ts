@@ -37,3 +37,9 @@ export const getLocalStorage = (key: string) => {
         return item
     }
 }
+
+export const removeLocalStorage = (key: LocalStorageKey) => {
+    if (typeof window === 'undefined') return
+
+    localStorage.removeItem(key)
+}
