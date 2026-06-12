@@ -14,3 +14,14 @@ export enum Language {
 export enum CookieKey {
     Settings = 'appSettings'
 }
+
+export enum LocalStorageKey {
+    SearchSettings = 'searchSettings',
+}
+
+export enum GoodState{
+    Available = 'Available',
+    NoShow = 'NoShow',
+    Awaiting = 'Awaiting',
+    Deleted = 'Deleted'
+}
