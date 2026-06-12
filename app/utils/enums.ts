@@ -17,6 +17,8 @@ export enum CookieKey {
 
 export enum LocalStorageKey {
     SearchSettings = 'searchSettings',
+    HomePagination = 'homePagination',
+    SelectedCategory = 'selectedCategory',
 }
 
 export enum GoodState{
