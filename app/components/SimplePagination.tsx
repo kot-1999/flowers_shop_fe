@@ -24,12 +24,8 @@ export default function SimplePagination({
         const stored = getLocalStorage(storageKey) ?? {}
 
         setLocalStorage(storageKey, {
-            ...stored,
-            pagination: {
-                ...stored.pagination,
-                page,
-                limit: pageSize
-            },
+            page,
+            limit: pageSize
         })
 
         callFunc()
