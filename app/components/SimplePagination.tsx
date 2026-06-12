@@ -1,38 +1,54 @@
 'use client'
 
-import {Pagination} from "antd";
-import {useRouter, useSearchParams} from "next/navigation";
+import { Pagination } from "antd"
+import { LocalStorageKey } from "@/app/utils/enums"
+import {getLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers"
 
-interface SimplePaginationProps {
-    pagination: { current: number; total: number, perPage: number };
+type Props = {
+    storageKey: LocalStorageKey
+    total: number
+    pageSize: number
+    current: number
+    callFunc: Function
 }
 
-export default function SimplePagination({pagination}: SimplePaginationProps) {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const key = 'page'
+export default function SimplePagination({
+     storageKey,
+     total,
+     pageSize,
+     current,
+     callFunc
+ }: Props) {
+    const t = useT()
+    const onChange = (page: number, pageSize: number) => {
+        const stored = getLocalStorage(storageKey) ?? {}
 
-    const onChange = (page: number) => {
-        const params = new URLSearchParams(searchParams.toString());
+        setLocalStorage(storageKey, {
+            ...stored,
+            pagination: {
+                ...stored.pagination,
+                page,
+                limit: pageSize
+            },
+        })
 
-        if (page) {
-            params.set(key, String(page))
-        } else {
-            params.delete(key)
-        }
+        callFunc()
+    }
 
-        router.replace(`?${params.toString()}`);
-    };
     return (
         <Pagination
-            total={pagination.total}
-            pageSize={pagination.perPage}
+            total={total}
+            pageSize={pageSize}
+            current={current}
             onChange={onChange}
-            current={pagination.current}
             defaultCurrent={1}
-            align='center'
+            align="center"
             hideOnSinglePage
-            showSizeChanger={false}
+            showSizeChanger
+            pageSizeOptions={['12', '24', '48']}
+            locale={{
+                items_per_page: t('/ page'), // 👈 this changes "page"
+            }}
         />
-    );
+    )
 }
