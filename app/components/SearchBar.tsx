@@ -135,6 +135,7 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                 }))}
                 showSearch={{
                     onSearch: handleSelectionistSearch,
+                    filterOption: false
                 }}
                 onFocus={() => handleSelectionistSearch()}
                 options={selectionists.map((item) => ({
@@ -163,6 +164,7 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                 }))}
                 showSearch={{
                     onSearch: handleTagSearch,
+                    filterOption: false
                 }}
                 onFocus={() => handleTagSearch()}
                 options={tags.map((item) => ({
