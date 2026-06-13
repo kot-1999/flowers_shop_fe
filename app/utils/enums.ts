@@ -19,6 +19,10 @@ export enum LocalStorageKey {
     SearchSettings = 'searchSettings',
     HomePagination = 'homePagination',
     SelectedCategory = 'selectedCategory',
+    ItemTypePagination = 'itemTypesPagination',
+    TabPagination = 'tabPagination',
+    SelectionistPagination = 'selectionistPagination',
+    GoodPagination = 'goodPagination',
 }
 
 export enum GoodState{
