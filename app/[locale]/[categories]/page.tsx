@@ -24,7 +24,6 @@ export default function Categories() {
     const [settings, setSettings] = useState<any>(null)
     const [settingsLoaded, setSettingsLoaded] = useState(false)
 
-    const [searchResetSignal, setSearchResetSignal] = useState(0)
     const pathname = usePathname();
     // Load application settings
     useEffect(() => {
@@ -67,6 +66,12 @@ export default function Categories() {
                 });
             }
 
+            if (searchSettings.appliedTags?.length) {
+                searchSettings.appliedTags.forEach((item: any) => {
+                    params.append('tagIDs[]', item.id);
+                });
+            }
+
             if (selectedCategory) {
                 params.set('categoryID', selectedCategory.id)
             }
@@ -93,7 +98,7 @@ export default function Categories() {
         <div style={{ padding: 24 }}>
             <h1>{t('Goods')}</h1>
 
-            <SearchBar fetchGoods={fetchHome} settings={settings} resetSignal={searchResetSignal} />
+            <SearchBar fetchGoods={fetchHome} settings={settings}/>
 
             {/* GOODS */}
             {loading ? (

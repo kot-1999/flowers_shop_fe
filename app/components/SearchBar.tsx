@@ -4,7 +4,7 @@ import {useEffect, useState} from 'react'
 import {Button, Checkbox, Col, Input, Row, Select, Space } from 'antd'
 import {DownOutlined, UpOutlined} from "@ant-design/icons";
 
-export default function SearchBar({ fetchGoods, settings, resetSignal }: any) {
+export default function SearchBar({ fetchGoods, settings }: any) {
     const t = useT()
 
     const [appliedSearch, setAppliedSearch] = useState('')
@@ -40,7 +40,7 @@ export default function SearchBar({ fetchGoods, settings, resetSignal }: any) {
         setAppliedShowOnly(searchSettings.appliedShowOnly ?? false)
         setSortBy(searchSettings?.sortBy ?? 'createdAt')
         setSortOrder(searchSettings?.sortOrder ?? 'desc')
-    }, [resetSignal])
+    }, [])
 
     // Save search settings
     useEffect(() => {

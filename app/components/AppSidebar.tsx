@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import { Layout, Menu, Button, Select } from 'antd';
+import {Layout, Menu, Button, Select, Space, Switch, Typography} from 'antd';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { useAuth } from '@/app/components/AuthContent';
@@ -9,10 +9,13 @@ import {fetchSettings, getLocalStorage, languageOptions, removeLocalStorage, use
 import {Language, LocalStorageKey} from '@/app/utils/enums';
 import { getMenuItems } from '@/app/utils/menuItems';
 import Link from "next/link";
+import {MoonOutlined, SunOutlined} from "@ant-design/icons";
+
+const { Text } = Typography;
 
 const { Sider } = Layout;
 
-export default function AppSidebar() {
+export default function AppSidebar({ isDark, setDark }: { isDark: boolean, setDark: (val: boolean) => void }) {
     const { user } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
@@ -116,6 +119,18 @@ export default function AppSidebar() {
 
                 {/* BOTTOM SECTION (fixed) */}
                 <div style={{ padding: 12, flexShrink: 0 }}>
+                    {isDark ? <MoonOutlined /> : <SunOutlined />}
+
+                    <Switch
+                        checked={isDark}
+                        onChange={(checked) => setDark(checked)}
+                        checkedChildren="Dark"
+                        unCheckedChildren="Light"
+                    />
+
+                    <Text type="secondary">
+                        {isDark ? "Dark mode" : "Light mode"}
+                    </Text>
                     <Select
                         value={currentLocale}
                         style={{ width: '100%', marginBottom: 8 }}

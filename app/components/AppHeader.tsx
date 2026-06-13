@@ -15,7 +15,7 @@ import {fetchSettings, languageOptions, removeLocalStorage, useT} from '@/app/ut
 import {Language, LocalStorageKey} from '@/app/utils/enums';
 import {getMenuItems} from "@/app/utils/menuItems";
 
-export default function AppHeader() {
+export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDark: (val: boolean) => void }) {
     const { user } = useAuth();
     const t = useT();
     const router = useRouter();

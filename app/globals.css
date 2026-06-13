@@ -1,85 +1,96 @@
 @import "tailwindcss";
 @tailwind utilities;
 
-body {
-    background:
-        /* center glow (main focus) */
-            radial-gradient(circle at 50% 40%,
-            rgba(110,168,180,0.22),
-            rgba(80,120,140,0.10) 25%,
-            transparent 60%
-            ),
+/* =========================
+   🌱 ROOT THEME VARIABLES
+========================= */
+:root {
+    --bg-base: #f6f8fc;
+    --bg-glow-1: rgba(79, 140, 255, 0.12);
+    --bg-glow-2: rgba(120, 200, 255, 0.08);
+    --text-base: #1f2328;
 
-                /* subtle secondary glow */
-            radial-gradient(circle at 50% 60%,
-            rgba(60,100,120,0.10),
-            transparent 70%
-            ),
+    --glass: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(30, 35, 45, 0.08);
 
-                /* DARK VIGNETTE (edges) */
-            radial-gradient(circle at center,
-            transparent 40%,
-            rgba(0,0,0,0.45) 100%
-            ),
-
-                /* base color */ #33474e;
-
-    color: #ffffff;
+    --surface: rgba(255, 255, 255, 0.75);
+    --surface-active: rgba(79, 140, 255, 0.08);
 }
 
-/*body {*/
-/*    background:*/
-/*            radial-gradient(circle at 20% 10%, rgba(110,168,180,0.18), transparent 45%),*/
-/*            radial-gradient(circle at 80% 30%, rgba(80,120,140,0.14), transparent 50%),*/
-/*            radial-gradient(circle at 50% 100%, rgba(40,70,90,0.18), transparent 55%),*/
-/*            #0c151a;*/
-/*}*/
+/* =========================
+   🌙 DARK THEME OVERRIDE
+   (toggle via .dark on body or html)
+========================= */
+.dark {
+    --bg-base: #0b1220;
+    --bg-glow-1: rgba(90, 162, 255, 0.18);
+    --bg-glow-2: rgba(74, 211, 166, 0.06);
+    --text-base: #e8eef7;
 
-/* MAIN CARD */
+    --glass: rgba(18, 28, 46, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.08);
+
+    --surface: rgba(18, 28, 46, 0.75);
+    --surface-active: rgba(90, 162, 255, 0.12);
+}
+
+/* =========================
+   🌿 BODY BACKGROUND (WORKS BOTH THEMES)
+========================= */
+body {
+    background:
+            radial-gradient(circle at 50% 40%, var(--bg-glow-1), transparent 55%),
+            radial-gradient(circle at 50% 70%, var(--bg-glow-2), transparent 60%),
+            var(--bg-base);
+
+    color: var(--text-base);
+}
+
+/* =========================
+   🧊 GLASS SYSTEM (THE CORE OF YOUR DESIGN)
+========================= */
 .glass-card {
-    background: rgba(39, 56, 63, 0.35) !important;
+    background: var(--glass) !important;
 
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
 
-    transform: translateZ(0);
-    will-change: backdrop-filter;
-
-    border: 1px solid rgba(255,255,255,0.06);
-
-    box-shadow:
-            0 20px 60px rgba(0,0,0,0.45);
+    border: 1px solid var(--glass-border);
 
     border-radius: 24px;
+
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
 
-/* MID LEVEL SURFACE (inside cards, charts, panels) */
+/* MID SURFACE */
 .card-section {
-    background: rgba(49, 66, 74, 0.35);
-    backdrop-filter: blur(12px);
+    background: var(--surface);
+    backdrop-filter: blur(14px);
 }
 
+/* INACTIVE STATE */
 .inactive-surface {
-    background: rgba(24, 39, 44, 0.6);
-
+    background: rgba(255, 255, 255, 0.4);
     backdrop-filter: blur(10px);
-
-    border: 1px solid rgba(255,255,255,0.04);
+    border: 1px solid var(--glass-border);
 }
 
-/* ACTIVE / SELECTED STATE */
+/* ACTIVE STATE */
 .active-surface {
-    background: rgba(52, 61, 66, 0.7);
+    background: var(--surface-active);
 
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(14px);
 
-    border: 1px solid rgba(255,255,255,0.07);
+    border: 1px solid var(--glass-border);
 
     box-shadow:
-            0 0 0 1px rgba(255,255,255,0.03) inset,
-            0 8px 20px rgba(0,0,0,0.25);
+            0 0 0 1px rgba(255,255,255,0.05) inset,
+            0 10px 30px rgba(0,0,0,0.15);
 }
 
+/* =========================
+   🧱 ANT DESIGN CLEAN RESET
+========================= */
 .ant-card {
     background: transparent !important;
     border: none !important;
@@ -87,26 +98,13 @@ body {
 }
 
 .ant-card-body {
-    background: rgba(39, 56, 63, 0.35) !important;
-
+    background: var(--glass) !important;
     backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
-
-    border: 1px solid rgba(255,255,255,0.06);
-
+    border: 1px solid var(--glass-border);
     border-radius: 24px;
-
-    transform: translateZ(0);
-}
-
-.ant-layout {
-    background: transparent !important;
-}
-.ant-layout-content {
-    background: transparent !important;
 }
 
 .ant-layout,
-.ant-layout * {
-    box-shadow: none;
+.ant-layout-content {
+    background: transparent !important;
 }
