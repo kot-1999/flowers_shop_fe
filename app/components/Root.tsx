@@ -4,12 +4,23 @@ import {ConfigProvider, FloatButton, Layout, Space, theme, Typography} from "ant
 import { UpOutlined } from "@ant-design/icons";
 import AppHeader from "@/app/components/AppHeader";
 import {AuthProvider} from "@/app/components/AuthContent";
+import AppSidebar from "@/app/components/AppSidebar";
+import {useEffect, useState} from "react";
 
 const { Content, Footer } = Layout;
 const { Text } = Typography;
 
 export const Root = ({ children }: { children: React.ReactNode }) => {
     const year = new Date().getFullYear();
+
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 1024);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     return (
         <AuthProvider>
@@ -198,8 +209,17 @@ export const Root = ({ children }: { children: React.ReactNode }) => {
                 }}
             >
                 <Layout style={{ minHeight: "100vh" }}>
-                    <AppHeader/>
+                    {/* SIDEBAR ONLY ON DESKTOP */}
+                    {!isMobile && <AppSidebar />}
 
+                    {/* MAIN COLUMN */}
+                    <Layout
+                        style={{
+                            minHeight: '100vh',
+                        }}
+                    >
+                        {/* HEADER ONLY ON MOBILE */}
+                        {isMobile && <AppHeader />}
                     <Content style={{ padding: 24 }}>
                         <FloatButton.BackTop
                             icon={<UpOutlined />}
@@ -215,12 +235,14 @@ export const Root = ({ children }: { children: React.ReactNode }) => {
                         {children}
                     </Content>
 
-                    <Footer style={{ textAlign: "center", marginTop: 40 }}>
-                        <Space orientation="vertical" size={4}>
-                            <Text>Flowers Shop</Text>
-                            <Text type="secondary">© {year} Flowers shop</Text>
-                        </Space>
-                    </Footer>
+                    {/* FOOTER ALWAYS INSIDE MAIN LAYOUT */}
+                        <Footer style={{ textAlign: 'center' }}>
+                            <Space direction="vertical" size={4}>
+                                <Text>Flowers Shop</Text>
+                                <Text type="secondary">© {new Date().getFullYear()}</Text>
+                            </Space>
+                        </Footer>
+                    </Layout>
                 </Layout>
             </ConfigProvider>
         </AuthProvider>

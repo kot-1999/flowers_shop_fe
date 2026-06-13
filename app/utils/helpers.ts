@@ -1,5 +1,5 @@
 import {useIntl} from "react-intl";
-import {LocalStorageKey} from "@/app/utils/enums";
+import {Language, LocalStorageKey} from "@/app/utils/enums";
 
 export function useT() {
     const intl = useIntl();
@@ -43,3 +43,12 @@ export const removeLocalStorage = (key: LocalStorageKey) => {
 
     localStorage.removeItem(key)
 }
+
+
+export const languageOptions = [
+    { value: Language.en, label: '🇬🇧 English' },
+    { value: Language.ua, label: '🇺🇦 Українська' },
+    { value: Language.de, label: '🇩🇪 Deutsch' },
+    { value: Language.sk, label: '🇸🇰 Slovak' },
+]
+

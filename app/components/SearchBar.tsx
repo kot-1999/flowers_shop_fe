@@ -1,4 +1,4 @@
-import {getLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers";
+import {getLocalStorage, removeLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers";
 import { LocalStorageKey} from "@/app/utils/enums";
 import {useEffect, useState} from 'react'
 import {Button, Checkbox, Col, Input, Row, Select, Space } from 'antd'
@@ -119,7 +119,10 @@ export default function SearchBar({ fetchGoods, settings, resetSignal }: any) {
 
         <Button
             type="primary"
-            onClick={fetchGoods}
+            onClick={() => {
+                removeLocalStorage(LocalStorageKey.HomePagination)
+                fetchGoods()
+            }}
         >
             {t('search')}
         </Button>
