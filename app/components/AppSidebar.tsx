@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {Layout, Menu, Button, Select, Space, Switch, Typography} from 'antd';
+import {Layout, Menu, Button, Select, Space, Switch, Typography, Flex} from 'antd';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { useAuth } from '@/app/components/AuthContent';
@@ -19,7 +19,7 @@ export default function AppSidebar({ isDark, setDark }: { isDark: boolean, setDa
     const { user } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
-
+    const t = useT()
     const currentLocale = pathname.split('/')[1] as Language;
     const [collapsed, setCollapsed] = useState(false);
     const [settings, setSettings] = useState<any>(null)
@@ -118,25 +118,44 @@ export default function AppSidebar({ isDark, setDark }: { isDark: boolean, setDa
                 </div>
 
                 {/* BOTTOM SECTION (fixed) */}
-                <div style={{ padding: 12, flexShrink: 0 }}>
-                    {isDark ? <MoonOutlined /> : <SunOutlined />}
+                <div
+                    style={{
+                        padding: 12,
+                        flexShrink: 0,
+                        borderTop: "1px solid rgba(255,255,255,0.06)",
+                    }}
+                >
+                    {/* THEME ROW */}
+                    <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
 
-                    <Switch
-                        checked={isDark}
-                        onChange={(checked) => setDark(checked)}
-                        checkedChildren="Dark"
-                        unCheckedChildren="Light"
-                    />
+                        { !collapsed &&
+                            <Space size={8} align="center">
+                                {isDark ? <MoonOutlined /> : <SunOutlined />}
+                                <Text type="secondary">
+                                    {isDark ? t("Dark mode") : t("Light mode")}
+                                </Text>
+                            </Space>
+                        }
 
-                    <Text type="secondary">
-                        {isDark ? "Dark mode" : "Light mode"}
-                    </Text>
-                    <Select
-                        value={currentLocale}
-                        style={{ width: '100%', marginBottom: 8 }}
-                        onChange={changeLanguage}
-                        options={languageOptions}
-                    />
+
+                        <Switch
+                            checked={isDark}
+                            onChange={setDark}
+                            checkedChildren={t('Dark')}
+                            unCheckedChildren={t('Light')}
+                            size="small"
+                        />
+                    </Flex>
+
+                    {/* LANGUAGE ROW */}
+                    <div style={{ marginTop: 8 }}>
+                        <Select
+                            value={currentLocale}
+                            onChange={changeLanguage}
+                            options={languageOptions}
+                            style={{ width: "100%" }}
+                        />
+                    </div>
                 </div>
             </div>
         </Sider>

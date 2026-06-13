@@ -1,9 +1,9 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {Button, Drawer, Flex, Menu, Select} from 'antd';
+import {Button, Drawer, Flex, Menu, Select, Space, Switch, Typography} from 'antd';
 import {
-    MenuOutlined,
+    MenuOutlined, MoonOutlined, SunOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 
@@ -15,6 +15,7 @@ import {fetchSettings, languageOptions, removeLocalStorage, useT} from '@/app/ut
 import {Language, LocalStorageKey} from '@/app/utils/enums';
 import {getMenuItems} from "@/app/utils/menuItems";
 
+const { Text } = Typography;
 export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDark: (val: boolean) => void }) {
     const { user } = useAuth();
     const t = useT();
@@ -93,14 +94,6 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                     </Link>
 
                     <Flex align="center" gap={10}>
-                        <Select
-                            value={currentLocale}
-                            style={{ width: 140 }}
-                            popupStyle={{ zIndex: 1110 }}
-                            onChange={changeLanguage}
-                            options={languageOptions}
-                        />
-
                         <Button
                             type="text"
                             icon={<MenuOutlined />}
@@ -141,6 +134,43 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                 />
 
                 <div style={{ padding: 12  }}>
+                    <div
+                        style={{
+                            padding: 12,
+                            flexShrink: 0,
+                            borderTop: "1px solid rgba(255,255,255,0.06)",
+                        }}
+                    >
+                        {/* THEME ROW */}
+                        <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
+
+                            <Space size={8} align="center">
+                                {isDark ? <MoonOutlined /> : <SunOutlined />}
+                                <Text type="secondary">
+                                    {isDark ? t("Dark mode") : t("Light mode")}
+                                </Text>
+                            </Space>
+
+
+                            <Switch
+                                checked={isDark}
+                                onChange={setDark}
+                                checkedChildren={t('Dark')}
+                                unCheckedChildren={t('Light')}
+                                size="small"
+                            />
+                        </Flex>
+
+                        {/* LANGUAGE ROW */}
+                        <div style={{ marginTop: 8 }}>
+                            <Select
+                                value={currentLocale}
+                                onChange={changeLanguage}
+                                options={languageOptions}
+                                style={{ width: "100%" }}
+                            />
+                        </div>
+                    </div>
                     <Button
                         type="primary"
                         block
