@@ -23,10 +23,25 @@ export default function AppSidebar({ isDark, setDark }: { isDark: boolean, setDa
     const currentLocale = pathname.split('/')[1] as Language;
     const [collapsed, setCollapsed] = useState(false);
     const [settings, setSettings] = useState<any>(null)
-
-    const items = getMenuItems({ user, settings });
-
     const [, locale, ...rest] = pathname.split('/');
+    const [categories, setCategories] = useState<any>([])
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const res = await fetch(`/api/categories`)
+                const data = await res.json()
+
+                setCategories(data.categories)
+                console.log(data.categories, settings)
+
+            } catch (err) {
+                console.error(err)
+            }
+        }
+
+        loadCategories()
+    }, [locale])
 
     // Load application settings
     useEffect(() => {
@@ -40,7 +55,7 @@ export default function AppSidebar({ isDark, setDark }: { isDark: boolean, setDa
         }
 
         loadSettings()
-    }, [])
+    }, [locale])
 
     async function changeLanguage(nextLocale: Language) {
         await fetch('/api/cookie/settings', {
@@ -113,7 +128,7 @@ export default function AppSidebar({ isDark, setDark }: { isDark: boolean, setDa
                         style={{
                             borderRight: 0,
                         }}
-                        items={items}
+                        items={getMenuItems({ user, settings, categories })}
                     />
                 </div>
 

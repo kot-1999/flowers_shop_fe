@@ -27,9 +27,25 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
     const currentLocale = pathname.split('/')[1] as Language;
 
     const [settings, setSettings] = useState<any>(null)
-    const items = getMenuItems({ user, settings, setDrawerOpen });
     const [, locale, ...rest] = pathname.split('/');
+    const [categories, setCategories] = useState<any>([])
 
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const res = await fetch(`/api/categories`)
+                const data = await res.json()
+
+                setCategories(data.categories)
+
+
+            } catch (err) {
+                console.error(err)
+            }
+        }
+
+        loadCategories()
+    }, [locale])
     // Load application settings
     useEffect(() => {
         const loadSettings = async () => {
@@ -42,7 +58,7 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
         }
 
         loadSettings()
-    }, [])
+    }, [locale])
 
     async function changeLanguage(nextLocale: Language) {
         await fetch('/api/cookie/settings', {
@@ -62,6 +78,7 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
 
         router.push(newPath);
     }
+
     return (
         <>
             {/* HEADER */}
@@ -130,7 +147,7 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                         flex: 1,
                         overflowY: 'auto',
                     }}
-                    items={items}
+                    items={getMenuItems({ user, settings, categories, setDrawerOpen })}
                 />
 
                 <div style={{ padding: 12  }}>

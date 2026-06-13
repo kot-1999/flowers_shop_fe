@@ -7,40 +7,20 @@ import {
 } from '@ant-design/icons';
 import Link from 'next/link';
 import {removeLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers";
-import {useEffect, useState} from "react";
 import {LocalStorageKey} from "@/app/utils/enums";
 
 export function getMenuItems({
-     user,
-     settings,
-     setDrawerOpen,
+    user,
+    settings,
+    categories,
+    setDrawerOpen
 }: {
     user: any;
     settings: any,
+    categories: any[]
     setDrawerOpen?: (v: boolean) => void;
 }) {
     const t = useT()
-
-    const [categories, setCategories] = useState<any>([])
-
-
-
-    useEffect(() => {
-        const loadCategories = async () => {
-            try {
-                const res = await fetch(`/api/categories`)
-                const data = await res.json()
-
-                setCategories(data.categories)
-
-
-            } catch (err) {
-                console.error(err)
-            }
-        }
-
-        loadCategories()
-    }, [])
 
     const onClick = (key: string) => {
         setDrawerOpen?.(false)
@@ -89,7 +69,7 @@ export function getMenuItems({
                         removeLocalStorage(LocalStorageKey.SearchSettings)
                         removeLocalStorage(LocalStorageKey.HomePagination)
                     }}>
-                        {category.name.en}
+                        {category.name[settings.locale as string]}
                     </Link>
                 )
             }))]
