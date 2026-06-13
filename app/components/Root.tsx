@@ -11,9 +11,8 @@ const { Content, Footer } = Layout;
 const { Text } = Typography;
 
 export const Root = ({ children }: { children: React.ReactNode }) => {
-    const year = new Date().getFullYear();
-
     const [isMobile, setIsMobile] = useState(false);
+
 
     useEffect(() => {
         const check = () => setIsMobile(window.innerWidth < 1024);

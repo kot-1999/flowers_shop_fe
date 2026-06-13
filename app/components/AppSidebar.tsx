@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { Layout, Menu, Button, Select } from 'antd';
 import { usePathname, useRouter } from 'next/navigation';
 
 import { useAuth } from '@/app/components/AuthContent';
-import {languageOptions, useT} from '@/app/utils/helpers';
-import { Language } from '@/app/utils/enums';
+import {fetchSettings, getLocalStorage, languageOptions, removeLocalStorage, useT} from '@/app/utils/helpers';
+import {Language, LocalStorageKey} from '@/app/utils/enums';
 import { getMenuItems } from '@/app/utils/menuItems';
 import Link from "next/link";
 
@@ -14,12 +14,30 @@ const { Sider } = Layout;
 
 export default function AppSidebar() {
     const { user } = useAuth();
-    const t = useT();
     const router = useRouter();
     const pathname = usePathname();
 
     const currentLocale = pathname.split('/')[1] as Language;
     const [collapsed, setCollapsed] = useState(false);
+    const [settings, setSettings] = useState<any>(null)
+
+    const items = getMenuItems({ user, settings });
+
+    const [, locale, ...rest] = pathname.split('/');
+
+    // Load application settings
+    useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const data = await fetchSettings()
+                setSettings(data)
+            } catch (error) {
+                console.error(error)
+            }
+        }
+
+        loadSettings()
+    }, [])
 
     async function changeLanguage(nextLocale: Language) {
         await fetch('/api/cookie/settings', {
@@ -32,7 +50,6 @@ export default function AppSidebar() {
         router.push(newPath);
     }
 
-    const items = getMenuItems({ user, t });
 
     return (
         <Sider
@@ -45,45 +62,67 @@ export default function AppSidebar() {
                 position: 'sticky',
                 top: 0,
                 left: 0,
-                display: 'flex',
-                flexDirection: 'column',
             }}
         >
+            {/* IMPORTANT: internal flex container */}
             <div
                 style={{
-                    height: 64,
+                    height: '100%',
                     display: 'flex',
-                    alignItems: 'center',
-                    padding: '0 16px',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
                 }}
             >
-                <Link
-                    href="/"
-                    className="text-white text-xl font-semibold no-underline"
+                {/* HEADER (fixed) */}
+                <div
+                    style={{
+                        height: 64,
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '0 16px',
+                        flexShrink: 0,
+                    }}
                 >
-                    🌸 {!collapsed ? ' Flowers Shop' : ''}
-                </Link>
-            </div>
-            {/* MENU (takes all space) */}
-            <Menu
-                mode="inline"
-                selectedKeys={[pathname]}
-                defaultOpenKeys={['categories', 'account']}
-                style={{
-                    flex: 1,
-                    borderRight: 0,
-                }}
-                items={items}
-            />
+                    <Link
+                        href={`/`}
+                        className="text-white text-xl font-semibold no-underline"
+                        onClick={() => {
+                            removeLocalStorage(LocalStorageKey.SelectedCategory);
+                            removeLocalStorage(LocalStorageKey.SearchSettings);
+                            removeLocalStorage(LocalStorageKey.HomePagination);
+                        }}
+                    >
+                        🌸 {!collapsed ? ' Flowers Shop' : ''}
+                    </Link>
+                </div>
 
-            {/* BOTTOM SECTION (language + button) */}
-            <div style={{ padding: 12, marginTop: 'auto' }}>
-                <Select
-                    value={currentLocale}
-                    style={{ width: '100%', marginBottom: 8 }}
-                    onChange={changeLanguage}
-                    options={languageOptions}
-                />
+                {/* SCROLLABLE MENU AREA */}
+                <div
+                    style={{
+                        flex: 1,
+                        overflowY: 'auto',
+                    }}
+                >
+                    <Menu
+                        mode="inline"
+                        selectedKeys={['/' + rest.join('/')]}
+                        defaultOpenKeys={['categories', 'account']}
+                        style={{
+                            borderRight: 0,
+                        }}
+                        items={items}
+                    />
+                </div>
+
+                {/* BOTTOM SECTION (fixed) */}
+                <div style={{ padding: 12, flexShrink: 0 }}>
+                    <Select
+                        value={currentLocale}
+                        style={{ width: '100%', marginBottom: 8 }}
+                        onChange={changeLanguage}
+                        options={languageOptions}
+                    />
+                </div>
             </div>
         </Sider>
     );
