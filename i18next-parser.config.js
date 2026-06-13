@@ -9,5 +9,7 @@ module.exports = {
     keepRemoved: false,
     keySeparator: false,
     namespaceSeparator: false,
-    sort: false
+    sort: false,
+    jsSafeValue: false,
+    defaultValue: (locale, ns, key) => key,
 };
