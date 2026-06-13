@@ -1,13 +1,13 @@
 import {
-    AppstoreOutlined,
-    SettingOutlined,
+    AppstoreOutlined, DashboardOutlined, ReconciliationOutlined,
+    SettingOutlined, ShopOutlined,
     ShoppingCartOutlined,
-    ShoppingOutlined,
+    ShoppingOutlined, TeamOutlined,
     UserOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
 import {removeLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers";
-import {LocalStorageKey} from "@/app/utils/enums";
+import {LocalStorageKey, UserRole} from "@/app/utils/enums";
 
 export function getMenuItems({
     user,
@@ -38,7 +38,63 @@ export function getMenuItems({
                 ),
             }
             : null,
-
+        user?.role === UserRole.Admin
+            ? {
+                key: 'management',
+                icon: <SettingOutlined />,
+                label: t('Management'),
+                children: [
+                    {
+                        key: '/management/dashboard',
+                        icon: <DashboardOutlined />,
+                        label: (
+                            <Link
+                                href="/management/dashboard"
+                                onClick={() => onClick('/management/dashboard')}
+                            >
+                                {t('Dashboard')}
+                            </Link>
+                        ),
+                    },
+                    {
+                        key: '/management/goods',
+                        icon: <ShopOutlined />,
+                        label: (
+                            <Link
+                                href="/management/goods"
+                                onClick={() => onClick('/management/goods')}
+                            >
+                                {t('Goods')}
+                            </Link>
+                        ),
+                    },
+                    {
+                        key: '/management/orders',
+                        icon: <ReconciliationOutlined />,
+                        label: (
+                            <Link
+                                href="/management/orders"
+                                onClick={() => onClick('/management/orders')}
+                            >
+                                {t('Orders')}
+                            </Link>
+                        ),
+                    },
+                    {
+                        key: '/management/users',
+                        icon: <TeamOutlined />,
+                        label: (
+                            <Link
+                                href="/management/users"
+                                onClick={() => onClick('/management/users')}
+                            >
+                                {t('Users')}
+                            </Link>
+                        ),
+                    },
+                ],
+            }
+            : null,
         {
             key: 'categories',
             icon: <AppstoreOutlined />,
