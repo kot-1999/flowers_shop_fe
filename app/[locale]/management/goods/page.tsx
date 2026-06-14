@@ -1,23 +1,21 @@
 'use client'
 
-import { Tabs } from 'antd';
-import GoodTab from "@/app/components/goodTabs/GoodTab";
-import CategoryTab from "@/app/components/goodTabs/CategoryTab";
-import ItemTypeTab from "@/app/components/goodTabs/ItemTypeTab";
-import TagTab from "@/app/components/goodTabs/TagTab";
-import SelectionistTab from "@/app/components/goodTabs/SelectionistTab";
-import {fetchSettings, useT} from "@/app/utils/helpers";
-import {useEffect, useState} from "react";
-import {usePathname} from "next/navigation";
+import { Tabs } from 'antd'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
-
+import CategoryTab from '@/app/components/goodTabs/CategoryTab'
+import GoodTab from '@/app/components/goodTabs/GoodTab'
+import ItemTypeTab from '@/app/components/goodTabs/ItemTypeTab'
+import SelectionistTab from '@/app/components/goodTabs/SelectionistTab'
+import TagTab from '@/app/components/goodTabs/TagTab'
+import { fetchSettings, getTFunc } from '@/app/utils/helpers'
 
 export default function GoodsPage() {
-    const t = useT()
+    const t = getTFunc()
     const [settings, setSettings] = useState<any>(null)
-    const pathname = usePathname();
-    const [, locale, ...rest] = pathname.split('/');
-
+    const pathname = usePathname()
+    const [, locale] = pathname.split('/')
 
     useEffect(() => {
         const loadSettings = async () => {
@@ -36,29 +34,29 @@ export default function GoodsPage() {
         {
             key: 'goods',
             label: t('Goods'),
-            children: <GoodTab />,
+            children: <GoodTab />
         },
         {
             key: 'categories',
             label: t('Categories'),
-            children: <CategoryTab />,
+            children: <CategoryTab />
         },
         {
             key: 'tags',
             label: t('Tags'),
-            children: <TagTab />,
+            children: <TagTab />
         },
         {
             key: 'item-types',
             label: t('Product Types'),
-            children: <ItemTypeTab settings={settings}/>,
+            children: <ItemTypeTab settings={settings}/>
         },
         {
             key: 'selectionists',
             label: t('Selectionists'),
-            children: <SelectionistTab settings={settings}/>,
-        },
-    ];
+            children: <SelectionistTab settings={settings}/>
+        }
+    ]
 
-    return <Tabs defaultActiveKey="goods" items={items} />;
+    return <Tabs defaultActiveKey="goods" items={items} />
 }

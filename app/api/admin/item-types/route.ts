@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { getRequiredHeaders } from '@/app/utils/serverFunctions'
 
 const BACKEND_URL = process.env.BACKEND_URL
@@ -13,14 +14,14 @@ export async function GET(req: NextRequest) {
             `${BACKEND_URL}/api/v1/admin/item-types?${query}`,
             {
                 method: 'GET',
-                headers,
+                headers
             }
         )
 
         const data = await response.json()
 
         return NextResponse.json(data, {
-            status: response.status,
+            status: response.status
         })
     } catch (error: any) {
         return NextResponse.json(
@@ -34,7 +35,7 @@ export async function PUT(req: NextRequest) {
     try {
         const [body, headers] = await Promise.all([
             req.json(),
-            getRequiredHeaders(req),
+            getRequiredHeaders(req)
         ])
 
         const response = await fetch(
@@ -42,14 +43,14 @@ export async function PUT(req: NextRequest) {
             {
                 method: 'PUT',
                 headers,
-                body: JSON.stringify(body),
+                body: JSON.stringify(body)
             }
         )
 
         const data = await response.json()
 
         return NextResponse.json(data, {
-            status: response.status,
+            status: response.status
         })
     } catch (error: any) {
         return NextResponse.json(

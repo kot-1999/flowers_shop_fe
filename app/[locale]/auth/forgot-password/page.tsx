@@ -1,54 +1,55 @@
-'use client';
+'use client'
 
-import { Form, Input, Button, Card, message, Result } from "antd";
-import { MailOutlined, ArrowLeftOutlined } from "@ant-design/icons";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import {useT} from "@/app/utils/helpers";
+import { MailOutlined, ArrowLeftOutlined } from '@ant-design/icons'
+import { Form, Input, Button, Card, message, Result } from 'antd'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+
+import { getTFunc } from '@/app/utils/helpers'
 
 export default function ForgotPasswordForm() {
-    const router = useRouter();
-    const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
-    const [submittedEmail, setSubmittedEmail] = useState('');
-    const t = useT()
+    const router = useRouter()
+    const [form] = Form.useForm()
+    const [loading, setLoading] = useState(false)
+    const [submitted, setSubmitted] = useState(false)
+    const [submittedEmail, setSubmittedEmail] = useState('')
+    const t = getTFunc()
 
     const onFinish = async (values: any) => {
-        setLoading(true);
+        setLoading(true)
         try {
-            const res = await fetch("/api/auth/forgot-password", {
+            const res = await fetch('/api/auth/forgot-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    email: values.email,
-                }),
-            });
+                    email: values.email
+                })
+            })
 
-            const data = await res.json();
+            const data = await res.json()
 
             if (res.ok) {
-                setSubmittedEmail(values.email);
-                setSubmitted(true);
-                message.success(data.message);
+                setSubmittedEmail(values.email)
+                setSubmitted(true)
+                message.success(data.message)
             } else {
-                message.error(data.message || t('Failed to send reset email'));
+                message.error(data.message || t('Failed to send reset email'))
             }
         } catch (err: any) {
-            message.error(err.message || t('An error occurred'));
+            message.error(err.message || t('An error occurred'))
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     if (submitted) {
         return (
             <div
                 style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    minHeight: "100vh",
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '100vh'
                 }}
             >
                 <Card style={{ width: 400 }} bordered={false}>
@@ -67,33 +68,36 @@ export default function ForgotPasswordForm() {
                             <Button
                                 key="new-email"
                                 onClick={() => {
-                                    setSubmitted(false);
-                                    form.resetFields();
+                                    setSubmitted(false)
+                                    form.resetFields()
                                 }}
                             >
                                 Try Another Email
-                            </Button>,
+                            </Button>
                         ]}
                     />
                 </Card>
             </div>
-        );
+        )
     }
 
     return (
         <div
             style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                minHeight: "100vh",
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '100vh'
             }}
         >
             <Card
                 title={<><MailOutlined /> {t('Forgot Password')}</>}
                 style={{ width: 400 }}
             >
-                <p style={{ marginBottom: 24, color: '#666' }}>
+                <p style={{
+                    marginBottom: 24,
+                    color: '#666' 
+                }}>
                     {t("Enter your email address and we'll send you a link to reset your password.")}
                 </p>
 
@@ -107,12 +111,18 @@ export default function ForgotPasswordForm() {
                         label={t('Email')}
                         name="email"
                         rules={[
-                            { required: true, message: t("Email is required") },
-                            { type: "email", message: t("Please enter a valid email") },
+                            {
+                                required: true,
+                                message: t('Email is required') 
+                            },
+                            {
+                                type: 'email',
+                                message: t('Please enter a valid email') 
+                            }
                         ]}
                     >
                         <Input
-                            placeholder={t("email@example.com")}
+                            placeholder={t('email@example.com')}
                             size="large"
                             type="email"
                         />
@@ -143,5 +153,5 @@ export default function ForgotPasswordForm() {
                 </Form>
             </Card>
         </div>
-    );
+    )
 }

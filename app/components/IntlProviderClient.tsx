@@ -1,11 +1,11 @@
-"use client";
+'use client'
 
-import {IntlProvider} from "react-intl";
+import { IntlProvider } from 'react-intl'
 
 export default function IntlProviderClient({
-   locale,
-   messages,
-   children
+    locale,
+    messages,
+    children
 }: {
     locale: string;
     messages: Record<string, string>;
@@ -15,5 +15,5 @@ export default function IntlProviderClient({
         <IntlProvider locale={locale} messages={messages}>
             {children}
         </IntlProvider>
-    );
+    )
 }

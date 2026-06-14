@@ -1,28 +1,28 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Button,
     Form,
     Input,
     message,
     Modal,
-    Tabs,
-} from 'antd';
+    Tabs
+} from 'antd'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { Language } from '@/app/utils/enums';
-import { useT } from '@/app/utils/helpers';
+import { Language } from '@/app/utils/enums'
+import { getTFunc } from '@/app/utils/helpers'
 
-type Selectionist = {
+interface Selectionist {
     id: string;
     nameTID?: string;
     name: Record<Language, string>;
     country: string;
     createdAt?: string;
     updatedAt?: string;
-};
+}
 
-type Props = {
+interface Props {
     open: boolean;
     selectionist: Selectionist | null;
     settings: {
@@ -30,172 +30,162 @@ type Props = {
     };
     onClose: () => void;
     onSuccess: () => void;
-};
+}
 
-type FormValues = {
+interface FormValues {
     nameTranslations: Partial<Record<Language, string>>;
     country: string;
-};
+}
 
 export default function SelectionistModal({
-                                              open,
-                                              selectionist,
-                                              settings,
-                                              onClose,
-                                              onSuccess,
-                                          }: Props) {
-    const t = useT();
+    open,
+    selectionist,
+    settings,
+    onClose,
+    onSuccess
+}: Props) {
+    const t = getTFunc()
 
-    const [form] = Form.useForm<FormValues>();
+    const [form] = Form.useForm<FormValues>()
 
-    const [loading, setLoading] = useState(false);
-    const [aiLoading, setAiLoading] = useState(false);
+    const [loading, setLoading] = useState(false)
+    const [aiLoading, setAiLoading] = useState(false)
 
-    const [activeLanguage, setActiveLanguage] =
-        useState<Language>(settings.locale);
+    const [activeLanguage, setActiveLanguage]
+        = useState<Language>(settings.locale)
 
     const originalTranslations = useRef<
         Partial<Record<Language, string>> | null
-    >(null);
+    >(null)
 
     const emptyTranslations = useMemo(
         () =>
             Object.values(Language).reduce(
                 (acc, lang) => {
-                    acc[lang] = '';
-                    return acc;
+                    acc[lang] = ''
+                    return acc
                 },
                 {} as Record<Language, string>
             ),
         []
-    );
+    )
 
     useEffect(() => {
         if (!open) {
-            return;
+            return
         }
 
-        setActiveLanguage(settings.locale);
+        setActiveLanguage(settings.locale)
 
         if (!selectionist) {
-            originalTranslations.current = null;
+            originalTranslations.current = null
 
-            form.resetFields();
+            form.resetFields()
 
             form.setFieldsValue({
                 country: '',
-                nameTranslations: emptyTranslations,
-            });
+                nameTranslations: emptyTranslations
+            })
 
-            return;
+            return
         }
 
-        originalTranslations.current = selectionist.name;
+        originalTranslations.current = selectionist.name
 
         form.setFieldsValue({
             country: selectionist.country,
-            nameTranslations: selectionist.name,
-        });
+            nameTranslations: selectionist.name
+        })
     }, [
         open,
         selectionist,
         settings.locale,
         form,
-        emptyTranslations,
-    ]);
+        emptyTranslations
+    ])
 
     const generateTranslations = async () => {
         try {
-            const values = form.getFieldsValue();
+            const values = form.getFieldsValue()
 
-            const sourceText =
-                values?.nameTranslations?.[activeLanguage];
+            const sourceText
+                = values?.nameTranslations?.[activeLanguage]
 
             if (!sourceText) {
-                message.warning(t('Enter text first'));
-                return;
+                message.warning(t('Enter text first'))
+                return
             }
 
-            setAiLoading(true);
+            setAiLoading(true)
 
             const res = await fetch('/api/ai/translations', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    text: [sourceText],
-                }),
-            });
+                    text: [sourceText]
+                })
+            })
 
-            const data = await res.json();
+            const data = await res.json()
 
             if (!res.ok) {
-                message.error(
-                    data?.message ||
-                    t('AI translation failed')
-                );
-                return;
+                message.error(data?.message
+                    || t('AI translation failed'))
+                return
             }
 
-            const translations =
-                data?.translations?.[0];
+            const translations
+                = data?.translations?.[0]
 
-            const current =
-                form.getFieldValue('nameTranslations') || {};
+            const current
+                = form.getFieldValue('nameTranslations') || {}
 
             form.setFieldsValue({
                 nameTranslations: {
                     ...current,
-                    ...translations,
-                },
-            });
+                    ...translations
+                }
+            })
 
-            message.success(
-                t('Translations generated')
-            );
+            message.success(t('Translations generated'))
         } catch {
-            message.error(
-                t('AI translation failed')
-            );
+            message.error(t('AI translation failed'))
         } finally {
-            setAiLoading(false);
+            setAiLoading(false)
         }
-    };
+    }
 
     const handleSubmit = async () => {
         try {
-            const values =
-                await form.validateFields();
+            const values
+                = await form.validateFields()
 
-            setLoading(true);
+            setLoading(true)
 
-            const translationsChanged =
-                JSON.stringify(
-                    values.nameTranslations
-                ) !==
-                JSON.stringify(
-                    originalTranslations.current
-                );
+            const translationsChanged
+                = JSON.stringify(values.nameTranslations)
+                !== JSON.stringify(originalTranslations.current)
 
             const body: Record<string, unknown> = {
-                country: values.country,
-            };
+                country: values.country
+            }
 
             if (selectionist?.id) {
-                body.selectionistID =
-                    selectionist.id;
+                body.selectionistID
+                    = selectionist.id
             }
 
             if (
-                selectionist?.nameTID &&
-                !translationsChanged
+                selectionist?.nameTID
+                && !translationsChanged
             ) {
-                body.nameTID =
-                    selectionist.nameTID;
+                body.nameTID
+                    = selectionist.nameTID
             } else {
-                body.nameTranslations =
-                    values.nameTranslations;
+                body.nameTranslations
+                    = values.nameTranslations
             }
 
             const res = await fetch(
@@ -204,55 +194,39 @@ export default function SelectionistModal({
                     method: 'PUT',
                     headers: {
                         'Content-Type':
-                            'application/json',
+                            'application/json'
                     },
-                    body: JSON.stringify(body),
+                    body: JSON.stringify(body)
                 }
-            );
+            )
 
-            const data = await res.json();
+            const data = await res.json()
 
             if (!res.ok) {
                 if (data.message) {
-                    message.error(data.message);
+                    message.error(data.message)
                 } else if (data.messages) {
-                    data.messages.forEach(
-                        (item: string) =>
-                            message.error(item)
-                    );
+                    data.messages.forEach((item: string) =>
+                        message.error(item))
                 } else {
-                    message.error(
-                        t(
-                            'Failed to save selectionist'
-                        )
-                    );
+                    message.error(t('Failed to save selectionist'))
                 }
 
-                return;
+                return
             }
 
-            message.success(
-                data.message ||
-                (selectionist
-                    ? t(
-                        'Selectionist updated'
-                    )
-                    : t(
-                        'Selectionist created'
-                    ))
-            );
+            message.success(data.message
+                || (selectionist
+                    ? t('Selectionist updated')
+                    : t('Selectionist created')))
 
-            onSuccess();
+            onSuccess()
         } catch {
-            message.error(
-                t(
-                    'Failed to save selectionist'
-                )
-            );
+            message.error(t('Failed to save selectionist'))
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     return (
         <Modal
@@ -280,9 +254,7 @@ export default function SelectionistModal({
                     }
                     loading={aiLoading}
                 >
-                    {t(
-                        'Generate translations'
-                    )}
+                    {t('Generate translations')}
                 </Button>,
 
                 <Button
@@ -292,13 +264,9 @@ export default function SelectionistModal({
                     onClick={handleSubmit}
                 >
                     {selectionist
-                        ? t(
-                            'Update Selectionist'
-                        )
-                        : t(
-                            'Create Selectionist'
-                        )}
-                </Button>,
+                        ? t('Update Selectionist')
+                        : t('Create Selectionist')}
+                </Button>
             ]}
         >
             <Form
@@ -309,13 +277,9 @@ export default function SelectionistModal({
                     type="card"
                     activeKey={activeLanguage}
                     onChange={(key) =>
-                        setActiveLanguage(
-                            key as Language
-                        )
+                        setActiveLanguage(key as Language)
                     }
-                    items={Object.values(
-                        Language
-                    ).map((lang) => ({
+                    items={Object.values(Language).map((lang) => ({
                         key: lang,
                         label:
                             lang.toUpperCase(),
@@ -323,21 +287,19 @@ export default function SelectionistModal({
                             <Form.Item
                                 name={[
                                     'nameTranslations',
-                                    lang,
+                                    lang
                                 ]}
                                 label={t('Name')}
                                 rules={[
                                     {
                                         required: true,
-                                        message: t(
-                                            'Name is required'
-                                        ),
-                                    },
+                                        message: t('Name is required')
+                                    }
                                 ]}
                             >
                                 <Input />
                             </Form.Item>
-                        ),
+                        )
                     }))}
                 />
 
@@ -347,15 +309,13 @@ export default function SelectionistModal({
                     rules={[
                         {
                             required: true,
-                            message: t(
-                                'Country is required'
-                            ),
-                        },
+                            message: t('Country is required')
+                        }
                     ]}
                 >
                     <Input />
                 </Form.Item>
             </Form>
         </Modal>
-    );
+    )
 }

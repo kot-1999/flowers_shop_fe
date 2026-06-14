@@ -7,7 +7,8 @@
     "build": "next build",
     "translate:scan": "npx i18next-parser -c i18next-parser.config.js",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "antd": "6.3.1",

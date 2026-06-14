@@ -1,16 +1,18 @@
-import {useIntl} from "react-intl";
-import {Language, LocalStorageKey} from "@/app/utils/enums";
+import { useIntl } from 'react-intl'
 
-export function useT() {
-    const intl = useIntl();
+import { Language, LocalStorageKey } from '@/app/utils/enums'
+
+export function getTFunc() {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const intl = useIntl()
 
     return (key: string) =>
-        intl.formatMessage({ id: key });
+        intl.formatMessage({ id: key })
 }
 
 export const fetchSettings = async () => {
     const res = await fetch('/api/cookie/settings', {
-        method: 'GET',
+        method: 'GET'
     })
 
     if (!res.ok) {
@@ -21,13 +23,13 @@ export const fetchSettings = async () => {
 }
 
 export const setLocalStorage = (key: LocalStorageKey, value: any) => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') {return}
 
     localStorage.setItem(key, JSON.stringify(value))
 }
 
 export const getLocalStorage = (key: string) => {
-    if (typeof window === 'undefined') return null
+    if (typeof window === 'undefined') {return null}
 
     const item = localStorage.getItem(key)
 
@@ -39,16 +41,26 @@ export const getLocalStorage = (key: string) => {
 }
 
 export const removeLocalStorage = (key: LocalStorageKey) => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') {return}
 
     localStorage.removeItem(key)
 }
 
-
 export const languageOptions = [
-    { value: Language.en, label: '🇬🇧 English' },
-    { value: Language.ua, label: '🇺🇦 Українська' },
-    { value: Language.de, label: '🇩🇪 Deutsch' },
-    { value: Language.sk, label: '🇸🇰 Slovak' },
+    {
+        value: Language.en,
+        label: '🇬🇧 English' 
+    },
+    {
+        value: Language.ua,
+        label: '🇺🇦 Українська' 
+    },
+    {
+        value: Language.de,
+        label: '🇩🇪 Deutsch' 
+    },
+    {
+        value: Language.sk,
+        label: '🇸🇰 Slovak' 
+    }
 ]
-

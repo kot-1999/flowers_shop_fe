@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {getRequiredHeaders} from "@/app/utils/serverFunctions";
+
+import { getRequiredHeaders } from '@/app/utils/serverFunctions'
 
 const BACKEND_URL = process.env.BACKEND_URL
 
@@ -11,26 +12,26 @@ export async function POST(req: NextRequest) {
             `${BACKEND_URL}/api/v1/authorization/logout`,
             {
                 method: 'POST',
-                headers,
+                headers
             }
-        );
+        )
 
-        const data = await response.json();
+        const data = await response.json()
         const nextResponse = NextResponse.json(data, {
-            status: response.status,
-        });
+            status: response.status
+        })
 
-        const setCookie = response.headers.get('set-cookie');
+        const setCookie = response.headers.get('set-cookie')
 
         if (setCookie) {
-            nextResponse.headers.set('set-cookie', setCookie);
+            nextResponse.headers.set('set-cookie', setCookie)
         }
 
-        return nextResponse;
+        return nextResponse
     } catch (error: any) {
         return NextResponse.json(
             { message: error.message },
             { status: 500 }
-        );
+        )
     }
 }

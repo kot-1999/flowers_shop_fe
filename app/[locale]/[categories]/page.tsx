@@ -1,13 +1,14 @@
 'use client'
 
-import {useEffect, useState} from 'react'
-import {Spin} from 'antd'
+import { Spin } from 'antd'
+import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
+
+import GoodsList from '@/app/components/GoodsList'
+import SearchBar from '@/app/components/SearchBar'
 import SimplePagination from '@/app/components/SimplePagination'
-import {usePathname} from 'next/navigation'
-import {fetchSettings, getLocalStorage, useT} from '@/app/utils/helpers'
-import {Defaults, GoodState, LocalStorageKey} from "@/app/utils/enums";
-import SearchBar from "@/app/components/SearchBar";
-import GoodsList from "@/app/components/GoodsList";
+import { Defaults, GoodState, LocalStorageKey } from '@/app/utils/enums'
+import { fetchSettings, getLocalStorage, getTFunc } from '@/app/utils/helpers'
 
 export default function Categories() {
     const [goodsData, setGoods] = useState<{
@@ -15,16 +16,16 @@ export default function Categories() {
         pagination: any
     }>({
         goods: [],
-        pagination: {},
+        pagination: {}
     })
 
     const [loading, setLoading] = useState(false)
-    const t = useT()
+    const t = getTFunc()
 
     const [settings, setSettings] = useState<any>(null)
     const [settingsLoaded, setSettingsLoaded] = useState(false)
 
-    const pathname = usePathname();
+    const pathname = usePathname()
     // Load application settings
     useEffect(() => {
         const loadSettings = async () => {
@@ -41,7 +42,6 @@ export default function Categories() {
         loadSettings()
     }, [])
 
-
     // Fetch goods
     const fetchHome = async () => {
         try {
@@ -49,7 +49,6 @@ export default function Categories() {
             const searchSettings = getLocalStorage(LocalStorageKey.SearchSettings) ?? {}
             const homePagination = getLocalStorage(LocalStorageKey.HomePagination) ?? {}
             const selectedCategory = getLocalStorage(LocalStorageKey.SelectedCategory)
-
 
             params.set('page', homePagination?.page ?? Defaults.Page.toString())
             params.set('limit', homePagination?.limit ?? Defaults.Limit.toString())
@@ -62,14 +61,14 @@ export default function Categories() {
 
             if (searchSettings.appliedSelectionists?.length) {
                 searchSettings.appliedSelectionists.forEach((item: any) => {
-                    params.append('selectionistIDs[]', item.id);
-                });
+                    params.append('selectionistIDs[]', item.id)
+                })
             }
 
             if (searchSettings.appliedTags?.length) {
                 searchSettings.appliedTags.forEach((item: any) => {
-                    params.append('tagIDs[]', item.id);
-                });
+                    params.append('tagIDs[]', item.id)
+                })
             }
 
             if (selectedCategory) {
@@ -105,7 +104,6 @@ export default function Categories() {
                 <Spin />
             ) : (
                 <div>
-
 
                     <GoodsList goodsData={goodsData} settings={settings}/>
                     <SimplePagination

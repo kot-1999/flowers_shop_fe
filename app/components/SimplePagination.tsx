@@ -1,28 +1,27 @@
 'use client'
 
-import { Pagination } from "antd"
-import { LocalStorageKey } from "@/app/utils/enums"
-import {getLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers"
+import { Pagination } from 'antd'
 
-type Props = {
+import { LocalStorageKey } from '@/app/utils/enums'
+import { setLocalStorage, getTFunc } from '@/app/utils/helpers'
+
+interface Props {
     storageKey: LocalStorageKey
     total: number
     pageSize: number
     current: number
-    callFunc: Function
+    callFunc: () => void
 }
 
 export default function SimplePagination({
-     storageKey,
-     total,
-     pageSize,
-     current,
-     callFunc
- }: Props) {
-    const t = useT()
+    storageKey,
+    total,
+    pageSize,
+    current,
+    callFunc
+}: Props) {
+    const t = getTFunc()
     const onChange = (page: number, pageSize: number) => {
-        const stored = getLocalStorage(storageKey) ?? {}
-
         setLocalStorage(storageKey, {
             page,
             limit: pageSize
@@ -43,7 +42,7 @@ export default function SimplePagination({
             showSizeChanger
             pageSizeOptions={['12', '24', '48']}
             locale={{
-                items_per_page: t('/ page'), // 👈 this changes "page"
+                items_per_page: t('/ page') // 👈 this changes "page"
             }}
         />
     )

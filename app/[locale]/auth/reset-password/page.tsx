@@ -1,65 +1,66 @@
-'use client';
+'use client'
 
-import { Form, Input, Button, Card, message, Spin, Result } from "antd";
-import { LockOutlined } from "@ant-design/icons";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
-import {useT} from "@/app/utils/helpers";
+import { LockOutlined } from '@ant-design/icons'
+import { Form, Input, Button, Card, message, Spin, Result } from 'antd'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect } from 'react'
+
+import { getTFunc } from '@/app/utils/helpers'
 
 export default function ResetPasswordForm() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [form] = Form.useForm();
-    const [loading, setLoading] = useState(false);
-    const [token, setToken] = useState('');
-    const [tokenValid, setTokenValid] = useState(true);
-    const t = useT()
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const [form] = Form.useForm()
+    const [loading, setLoading] = useState(false)
+    const [token, setToken] = useState('')
+    const [tokenValid, setTokenValid] = useState(true)
+    const t = getTFunc()
 
     useEffect(() => {
-        const jwtToken = searchParams.get('token');
+        const jwtToken = searchParams.get('token')
         if (!jwtToken) {
-            setTokenValid(false);
-            message.error('No reset token provided');
-            return;
+            setTokenValid(false)
+            message.error('No reset token provided')
+            return
         }
-        setToken(jwtToken);
-    }, [searchParams]);
+        setToken(jwtToken)
+    }, [searchParams])
 
     const onFinish = async (values: any) => {
         if (values.newPassword !== values.confirmPassword) {
-            message.error('Passwords do not match');
-            return;
+            message.error('Passwords do not match')
+            return
         }
 
-        setLoading(true);
+        setLoading(true)
         try {
-            const res = await fetch("/api/auth/reset-password", {
+            const res = await fetch('/api/auth/reset-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    newPassword: values.newPassword,
-                }),
-            });
+                    newPassword: values.newPassword
+                })
+            })
 
-            const data = await res.json();
+            const data = await res.json()
 
             if (res.ok) {
-                message.success('Password reset successfully');
+                message.success('Password reset successfully')
                 setTimeout(() => {
-                    router.push('/');
-                }, 1500);
+                    router.push('/')
+                }, 1500)
             } else {
-                message.error(data.message || 'Failed to reset password');
+                message.error(data.message || 'Failed to reset password')
             }
         } catch (err: any) {
-            message.error(err.message || 'An error occurred');
+            message.error(err.message || 'An error occurred')
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     if (!tokenValid) {
         return (
@@ -68,14 +69,14 @@ export default function ResetPasswordForm() {
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    minHeight: '100vh',
+                    minHeight: '100vh'
                 }}
             >
                 <Card style={{ width: 450 }}>
                     <Result
                         status="error"
-                        title={t("Invalid Token")}
-                        subTitle={t("The password reset link is invalid or has expired.")}
+                        title={t('Invalid Token')}
+                        subTitle={t('The password reset link is invalid or has expired.')}
                         extra={
                             <Button type="primary" size="large" onClick={() => router.push('/')}>
                                 {t('Back to Login')}
@@ -84,7 +85,7 @@ export default function ResetPasswordForm() {
                     />
                 </Card>
             </div>
-        );
+        )
     }
 
     if (!token) {
@@ -95,12 +96,12 @@ export default function ResetPasswordForm() {
                     justifyContent: 'center',
                     alignItems: 'center',
                     minHeight: '100vh',
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                 }}
             >
-                <Spin size="large" description={t("Loading...")} />
+                <Spin size="large" description={t('Loading...')} />
             </div>
-        );
+        )
     }
 
     return (
@@ -109,12 +110,15 @@ export default function ResetPasswordForm() {
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                minHeight: '100vh',
+                minHeight: '100vh'
             }}
         >
             <Card
                 title={<><LockOutlined /> {t('Reset Password')}</>}
-                style={{ width: 450, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}
+                style={{
+                    width: 450,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)' 
+                }}
                 bordered={false}
             >
                 <Form
@@ -125,41 +129,51 @@ export default function ResetPasswordForm() {
                     autoComplete="off"
                 >
                     <Form.Item
-                        label={t("New Password")}
+                        label={t('New Password')}
                         name="newPassword"
                         rules={[
-                            { required: true, message: t("Please enter new password") },
-                            { min: 3, message: t("Password must be at least 3 characters") },
+                            {
+                                required: true,
+                                message: t('Please enter new password') 
+                            },
+                            {
+                                min: 3,
+                                message: t('Password must be at least 3 characters') 
+                            }
                         ]}
                     >
                         <Input.Password
-                            placeholder={t("Enter new password")}
+                            placeholder={t('Enter new password')}
                             size="large"
                             autoComplete="new-password"
                         />
                     </Form.Item>
 
                     <Form.Item
-                        label={t("Confirm Password")}
+                        label={t('Confirm Password')}
                         name="confirmPassword"
                         dependencies={['newPassword']}
                         rules={[
-                            { required: true, message: t("Please confirm your password") },
-                            { min: 3, message: t("Password must be at least 3 characters") },
+                            {
+                                required: true,
+                                message: t('Please confirm your password') 
+                            },
+                            {
+                                min: 3,
+                                message: t('Password must be at least 3 characters') 
+                            },
                             ({ getFieldValue }) => ({
                                 validator(_, value) {
                                     if (!value || getFieldValue('newPassword') === value) {
-                                        return Promise.resolve();
+                                        return Promise.resolve()
                                     }
-                                    return Promise.reject(
-                                        new Error(t('Passwords do not match'))
-                                    );
-                                },
-                            }),
+                                    return Promise.reject(new Error(t('Passwords do not match')))
+                                }
+                            })
                         ]}
                     >
                         <Input.Password
-                            placeholder={t("Confirm new password")}
+                            placeholder={t('Confirm new password')}
                             size="large"
                             autoComplete="new-password"
                         />
@@ -173,7 +187,7 @@ export default function ResetPasswordForm() {
                             size="large"
                             loading={loading}
                         >
-                            {t("Reset Password")}
+                            {t('Reset Password')}
                         </Button>
                     </Form.Item>
 
@@ -184,11 +198,11 @@ export default function ResetPasswordForm() {
                             size="large"
                             onClick={() => router.push('/')}
                         >
-                            {t("Back to Login")}
+                            {t('Back to Login')}
                         </Button>
                     </Form.Item>
                 </Form>
             </Card>
         </div>
-    );
+    )
 }

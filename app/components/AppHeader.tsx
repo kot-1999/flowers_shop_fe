@@ -1,43 +1,41 @@
-'use client';
+'use client'
 
-import {useEffect, useState} from 'react';
-import {Button, Drawer, Flex, Menu, Select, Space, Switch, Typography} from 'antd';
 import {
-    MenuOutlined, MoonOutlined, SunOutlined,
-} from '@ant-design/icons';
-import Link from 'next/link';
+    MenuOutlined, MoonOutlined, SunOutlined
+} from '@ant-design/icons'
+import { Button, Drawer, Flex, Menu, Select, Space, Switch, Typography } from 'antd'
+import { Header } from 'antd/es/layout/layout'
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
-import { Header } from 'antd/es/layout/layout';
-import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/app/components/AuthContent'
+import { Language, LocalStorageKey } from '@/app/utils/enums'
+import { fetchSettings, languageOptions, removeLocalStorage, getTFunc } from '@/app/utils/helpers'
+import { getMenuItems } from '@/app/utils/menuItems'
 
-import { useAuth } from '@/app/components/AuthContent';
-import {fetchSettings, languageOptions, removeLocalStorage, useT} from '@/app/utils/helpers';
-import {Language, LocalStorageKey} from '@/app/utils/enums';
-import {getMenuItems} from "@/app/utils/menuItems";
-
-const { Text } = Typography;
+const { Text } = Typography
 export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDark: (val: boolean) => void }) {
-    const { user } = useAuth();
-    const t = useT();
-    const router = useRouter();
+    const { user } = useAuth()
+    const t = getTFunc()
+    const router = useRouter()
 
-    const pathname = usePathname();
-    const [drawerOpen, setDrawerOpen] = useState(false);
+    const pathname = usePathname()
+    const [drawerOpen, setDrawerOpen] = useState(false)
 
-    const currentLocale = pathname.split('/')[1] as Language;
+    const currentLocale = pathname.split('/')[1] as Language
 
     const [settings, setSettings] = useState<any>(null)
-    const [, locale, ...rest] = pathname.split('/');
+    const [, locale, ...rest] = pathname.split('/')
     const [categories, setCategories] = useState<any>([])
 
     useEffect(() => {
         const loadCategories = async () => {
             try {
-                const res = await fetch(`/api/categories`)
+                const res = await fetch('/api/categories')
                 const data = await res.json()
 
                 setCategories(data.categories)
-
 
             } catch (err) {
                 console.error(err)
@@ -64,19 +62,19 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
         await fetch('/api/cookie/settings', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                locale: nextLocale,
-            }),
-        });
+                locale: nextLocale
+            })
+        })
 
         const newPath = pathname.replace(
             `/${currentLocale}`,
             `/${nextLocale}`
-        );
+        )
 
-        router.push(newPath);
+        router.push(newPath)
     }
 
     return (
@@ -90,21 +88,24 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                     boxShadow: drawerOpen
                         ? 'none'
                         : '0 2px 8px rgba(0, 0, 0, 0.15)', // 👈 restore shadow
-                    transition: 'box-shadow 0.2s ease',
+                    transition: 'box-shadow 0.2s ease'
                 }}
             >
                 <Flex
                     justify="space-between"
                     align="center"
-                    style={{ width: '100%', height: '100%' }}
+                    style={{
+                        width: '100%',
+                        height: '100%' 
+                    }}
                 >
                     <Link
                         href="/"
                         className="text-white text-xl font-semibold no-underline"
                         onClick={() => {
-                            removeLocalStorage(LocalStorageKey.SelectedCategory);
-                            removeLocalStorage(LocalStorageKey.SearchSettings);
-                            removeLocalStorage(LocalStorageKey.HomePagination);
+                            removeLocalStorage(LocalStorageKey.SelectedCategory)
+                            removeLocalStorage(LocalStorageKey.SearchSettings)
+                            removeLocalStorage(LocalStorageKey.HomePagination)
                         }}
                     >
                         🌸 Flowers Shop
@@ -133,8 +134,8 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                         padding: 0,
                         display: 'flex',
                         flexDirection: 'column',
-                        height: '100%',
-                    },
+                        height: '100%'
+                    }
                 }}
                 title={t('Menu')}
             >
@@ -145,9 +146,14 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                     style={{
                         borderInlineEnd: 0,
                         flex: 1,
-                        overflowY: 'auto',
+                        overflowY: 'auto'
                     }}
-                    items={getMenuItems({ user, settings, categories, setDrawerOpen })}
+                    items={getMenuItems({
+                        user,
+                        settings,
+                        categories,
+                        setDrawerOpen 
+                    })}
                 />
 
                 <div style={{ padding: 12  }}>
@@ -155,7 +161,7 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                         style={{
                             padding: 12,
                             flexShrink: 0,
-                            borderTop: "1px solid rgba(255,255,255,0.06)",
+                            borderTop: '1px solid rgba(255,255,255,0.06)'
                         }}
                     >
                         {/* THEME ROW */}
@@ -164,10 +170,9 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                             <Space size={8} align="center">
                                 {isDark ? <MoonOutlined /> : <SunOutlined />}
                                 <Text type="secondary">
-                                    {isDark ? t("Dark mode") : t("Light mode")}
+                                    {isDark ? t('Dark mode') : t('Light mode')}
                                 </Text>
                             </Space>
-
 
                             <Switch
                                 checked={isDark}
@@ -184,7 +189,7 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                                 value={currentLocale}
                                 onChange={changeLanguage}
                                 options={languageOptions}
-                                style={{ width: "100%" }}
+                                style={{ width: '100%' }}
                             />
                         </div>
                     </div>
@@ -199,5 +204,5 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                 </div>
             </Drawer>
         </>
-    );
+    )
 }

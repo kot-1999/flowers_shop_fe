@@ -1,11 +1,12 @@
-import {getLocalStorage, removeLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers";
-import { LocalStorageKey} from "@/app/utils/enums";
-import {useEffect, useState} from 'react'
-import {Button, Checkbox, Col, Input, Row, Select, Space } from 'antd'
-import {DownOutlined, UpOutlined} from "@ant-design/icons";
+import { DownOutlined, UpOutlined } from '@ant-design/icons'
+import { Button, Checkbox, Col, Input, Row, Select, Space } from 'antd'
+import { useEffect, useState } from 'react'
+
+import { LocalStorageKey } from '@/app/utils/enums'
+import { getLocalStorage, removeLocalStorage, setLocalStorage, getTFunc } from '@/app/utils/helpers'
 
 export default function SearchBar({ fetchGoods, settings }: any) {
-    const t = useT()
+    const t = getTFunc()
 
     const [appliedSearch, setAppliedSearch] = useState('')
 
@@ -66,7 +67,7 @@ export default function SearchBar({ fetchGoods, settings }: any) {
 
     const handleSelectionistSearch = async (value?: string) => {
         if (!value && selectionists.length > 0) {
-            return;
+            return
         }
         try {
             const params = new URLSearchParams()
@@ -77,14 +78,14 @@ export default function SearchBar({ fetchGoods, settings }: any) {
 
             params.set('limit', '30')
 
-            const res = await fetch(`/api/selectionists?${params.toString()}`);
+            const res = await fetch(`/api/selectionists?${params.toString()}`)
 
-            const data = await res.json();
-            setSelectionists(data.selectionists);
+            const data = await res.json()
+            setSelectionists(data.selectionists)
         } catch (error) {
             console.error(error)
         }
-    };
+    }
 
     const handleTagSearch = async (value?: string) => {
         if (!value && tags.length > 0) {
@@ -99,10 +100,10 @@ export default function SearchBar({ fetchGoods, settings }: any) {
 
             params.set('limit', '30')
 
-            const res = await fetch(`/api/tags?${params.toString()}`);
+            const res = await fetch(`/api/tags?${params.toString()}`)
 
-            const data = await res.json();
-            setTags(data.tags);
+            const data = await res.json()
+            setTags(data.tags)
         } catch (error) {
             console.error(error)
         }
@@ -110,121 +111,132 @@ export default function SearchBar({ fetchGoods, settings }: any) {
 
     return (
         <div>
-        <Space.Compact style={{ width: '100%', marginBottom: 12 }}>
-        <Input
-            placeholder={t('searchGoods')}
-            value={appliedSearch}
-            onChange={(e) => setAppliedSearch(e.target.value)}
-        />
+            <Space.Compact style={{
+                width: '100%',
+                marginBottom: 12 
+            }}>
+                <Input
+                    placeholder={t('searchGoods')}
+                    value={appliedSearch}
+                    onChange={(e) => setAppliedSearch(e.target.value)}
+                />
 
-        <Button
-            type="primary"
-            onClick={() => {
-                removeLocalStorage(LocalStorageKey.HomePagination)
-                fetchGoods()
-            }}
-        >
-            {t('search')}
-        </Button>
-    </Space.Compact>
+                <Button
+                    type="primary"
+                    onClick={() => {
+                        removeLocalStorage(LocalStorageKey.HomePagination)
+                        fetchGoods()
+                    }}
+                >
+                    {t('search')}
+                </Button>
+            </Space.Compact>
 
-    {/* FILTERS ROW */}
-    <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
+            {/* FILTERS ROW */}
+            <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
 
-        <Col>
-            <Select
-                style={{ width: 260 }}
-                mode="multiple"
-                allowClear
-                placeholder={t('Filter by selectionist')}
-                value={appliedSelectionists.map((item) => ({
-                    label: item.name?.[settings?.locale],
-                    value: item.id,
-                    data: item,
-                }))}
-                showSearch={{
-                    onSearch: handleSelectionistSearch,
-                    filterOption: false
-                }}
-                onFocus={() => handleSelectionistSearch()}
-                options={selectionists.map((item) => ({
-                    label: item.name?.[settings?.locale],
-                    value: item.id,
-                    data: item,
-                }))}
-                onChange={(values, options) => {
-                    setAppliedSelectionists(
-                        (options as any[]).map((o) => o.data)
-                    )
-                }}
-            />
-        </Col>
+                <Col>
+                    <Select
+                        style={{ width: 260 }}
+                        mode="multiple"
+                        allowClear
+                        placeholder={t('Filter by selectionist')}
+                        value={appliedSelectionists.map((item) => ({
+                            label: item.name?.[settings?.locale],
+                            value: item.id,
+                            data: item
+                        }))}
+                        showSearch={{
+                            onSearch: handleSelectionistSearch,
+                            filterOption: false
+                        }}
+                        onFocus={() => handleSelectionistSearch()}
+                        options={selectionists.map((item) => ({
+                            label: item.name?.[settings?.locale],
+                            value: item.id,
+                            data: item
+                        }))}
+                        onChange={(values, options) => {
+                            setAppliedSelectionists((options as any[]).map((o) => o.data))
+                        }}
+                    />
+                </Col>
 
-        <Col>
-            <Select
-                style={{ width: 260 }}
-                mode="multiple"
-                allowClear
-                placeholder={t('Filter by tag')}
-                value={appliedTags.map((item) => ({
-                    label: item.name?.[settings?.locale],
-                    value: item.id,
-                    data: item,
-                }))}
-                showSearch={{
-                    onSearch: handleTagSearch,
-                    filterOption: false
-                }}
-                onFocus={() => handleTagSearch()}
-                options={tags.map((item) => ({
-                    label: item.name?.[settings?.locale],
-                    value: item.id,
-                    data: item,
-                }))}
-                onChange={(values, options) => {
-                    setAppliedTags(
-                        (options as any[]).map((o) => o.data)
-                    )
-                }}
-            />
-        </Col>
+                <Col>
+                    <Select
+                        style={{ width: 260 }}
+                        mode="multiple"
+                        allowClear
+                        placeholder={t('Filter by tag')}
+                        value={appliedTags.map((item) => ({
+                            label: item.name?.[settings?.locale],
+                            value: item.id,
+                            data: item
+                        }))}
+                        showSearch={{
+                            onSearch: handleTagSearch,
+                            filterOption: false
+                        }}
+                        onFocus={() => handleTagSearch()}
+                        options={tags.map((item) => ({
+                            label: item.name?.[settings?.locale],
+                            value: item.id,
+                            data: item
+                        }))}
+                        onChange={(values, options) => {
+                            setAppliedTags((options as any[]).map((o) => o.data))
+                        }}
+                    />
+                </Col>
 
-        <Col>
-            <Checkbox
-                checked={appliedShowOnly}
-                onChange={(e) => setAppliedShowOnly(e.target.checked)}
-            >
-                {t('Show only available')}
-            </Checkbox>
-        </Col>
+                <Col>
+                    <Checkbox
+                        checked={appliedShowOnly}
+                        onChange={(e) => setAppliedShowOnly(e.target.checked)}
+                    >
+                        {t('Show only available')}
+                    </Checkbox>
+                </Col>
 
-    </Row>
+            </Row>
 
-    {/* SORT ROW */}
-    <Space style={{ marginBottom: 16 }}>
+            {/* SORT ROW */}
+            <Space style={{ marginBottom: 16 }}>
 
-        <Select
-            style={{ width: 160 }}
-            value={sortBy}
-            onChange={setSortBy}
-            options={[
-                { value: 'createdAt', label: t('createdAt') },
-                { value: 'name', label: t('name') },
-                { value: 'selectionist', label: t('selectionist') },
-                { value: 'state', label: t('Availability') },
-            ]}
-        />
+                <Select
+                    style={{ width: 160 }}
+                    value={sortBy}
+                    onChange={setSortBy}
+                    options={[
+                        {
+                            value: 'createdAt',
+                            label: t('createdAt') 
+                        },
+                        {
+                            value: 'name',
+                            label: t('name') 
+                        },
+                        {
+                            value: 'selectionist',
+                            label: t('selectionist') 
+                        },
+                        {
+                            value: 'state',
+                            label: t('Availability') 
+                        }
+                    ]}
+                />
 
-        <Button
-            onClick={() =>
-                setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
-            }
-            icon={sortOrder === 'asc' ? <UpOutlined /> : <DownOutlined />}
-        >
-            {sortOrder.toUpperCase()}
-        </Button>
+                <Button
+                    onClick={() =>
+                        setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+                    }
+                    icon={sortOrder === 'asc' ? <UpOutlined /> : <DownOutlined />}
+                >
+                    {sortOrder.toUpperCase()}
+                </Button>
 
-    </Space>
+            </Space>
         </div>
-)
+    )
 }

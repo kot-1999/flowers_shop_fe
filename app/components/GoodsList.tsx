@@ -1,7 +1,6 @@
-import {Card, Col, Image, Row, Space, Tag} from 'antd'
+import { Card, Col, Image, Row, Space, Tag } from 'antd'
 
 export default function GoodsList({ goodsData, settings }: any) {
-
 
     return (
         <Row gutter={[16, 16]}>

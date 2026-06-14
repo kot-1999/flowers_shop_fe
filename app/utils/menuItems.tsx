@@ -3,11 +3,12 @@ import {
     SettingOutlined, ShopOutlined,
     ShoppingCartOutlined,
     ShoppingOutlined, TeamOutlined,
-    UserOutlined,
-} from '@ant-design/icons';
-import Link from 'next/link';
-import {removeLocalStorage, setLocalStorage, useT} from "@/app/utils/helpers";
-import {LocalStorageKey, UserRole} from "@/app/utils/enums";
+    UserOutlined
+} from '@ant-design/icons'
+import Link from 'next/link'
+
+import { LocalStorageKey, UserRole } from '@/app/utils/enums'
+import { removeLocalStorage, setLocalStorage, getTFunc } from '@/app/utils/helpers'
 
 export function getMenuItems({
     user,
@@ -20,9 +21,9 @@ export function getMenuItems({
     categories: any[]
     setDrawerOpen?: (v: boolean) => void;
 }) {
-    const t = useT()
+    const t = getTFunc()
 
-    const onClick = (key: string) => {
+    const onClick = () => {
         setDrawerOpen?.(false)
     }
 
@@ -32,10 +33,10 @@ export function getMenuItems({
                 key: '/auth/login',
                 icon: <UserOutlined />,
                 label: (
-                    <Link href="/auth/login" onClick={() => onClick('/auth/login')}>
+                    <Link href="/auth/login" onClick={() => onClick()}>
                         {t('Login')}
                     </Link>
-                ),
+                )
             }
             : null,
         user?.role === UserRole.Admin
@@ -50,11 +51,11 @@ export function getMenuItems({
                         label: (
                             <Link
                                 href="/management/dashboard"
-                                onClick={() => onClick('/management/dashboard')}
+                                onClick={() => onClick()}
                             >
                                 {t('Dashboard')}
                             </Link>
-                        ),
+                        )
                     },
                     {
                         key: '/management/goods',
@@ -62,11 +63,11 @@ export function getMenuItems({
                         label: (
                             <Link
                                 href="/management/goods"
-                                onClick={() => onClick('/management/goods')}
+                                onClick={() => onClick()}
                             >
                                 {t('Goods')}
                             </Link>
-                        ),
+                        )
                     },
                     {
                         key: '/management/orders',
@@ -74,11 +75,11 @@ export function getMenuItems({
                         label: (
                             <Link
                                 href="/management/orders"
-                                onClick={() => onClick('/management/orders')}
+                                onClick={() => onClick()}
                             >
                                 {t('Orders')}
                             </Link>
-                        ),
+                        )
                     },
                     {
                         key: '/management/users',
@@ -86,13 +87,13 @@ export function getMenuItems({
                         label: (
                             <Link
                                 href="/management/users"
-                                onClick={() => onClick('/management/users')}
+                                onClick={() => onClick()}
                             >
                                 {t('Users')}
                             </Link>
-                        ),
-                    },
-                ],
+                        )
+                    }
+                ]
             }
             : null,
         {
@@ -101,44 +102,44 @@ export function getMenuItems({
             label: t('Categories'),
             children: [
                 {
-                    key: `/`,
+                    key: '/',
                     label: (
                         <Link
-                            href={`/`}
+                            href={'/'}
                             onClick={() => {
-                                onClick(`/`);
-                                removeLocalStorage(LocalStorageKey.SearchSettings);
-                                removeLocalStorage(LocalStorageKey.HomePagination);
-                                removeLocalStorage(LocalStorageKey.SelectedCategory);
+                                onClick()
+                                removeLocalStorage(LocalStorageKey.SearchSettings)
+                                removeLocalStorage(LocalStorageKey.HomePagination)
+                                removeLocalStorage(LocalStorageKey.SelectedCategory)
                             }}
                         >
                             {t('All Categories')}
                         </Link>
-                    ),
+                    )
                 },
                 ...categories.map((category: any) => ({
-                key: `/${category.name[settings.locale + 'Slug']}`,
-                label: (
-                    <Link href={`/${category.name[settings.locale + 'Slug']}`} onClick={() => {
-                        onClick(category.name[settings.locale + 'Slug'])
-                        setLocalStorage(LocalStorageKey.SelectedCategory, category)
-                        removeLocalStorage(LocalStorageKey.SearchSettings)
-                        removeLocalStorage(LocalStorageKey.HomePagination)
-                    }}>
-                        {category.name[settings.locale as string]}
-                    </Link>
-                )
-            }))]
+                    key: `/${category.name[settings.locale + 'Slug']}`,
+                    label: (
+                        <Link href={`/${category.name[settings.locale + 'Slug']}`} onClick={() => {
+                            onClick()
+                            setLocalStorage(LocalStorageKey.SelectedCategory, category)
+                            removeLocalStorage(LocalStorageKey.SearchSettings)
+                            removeLocalStorage(LocalStorageKey.HomePagination)
+                        }}>
+                            {category.name[settings.locale as string]}
+                        </Link>
+                    )
+                }))]
         },
 
         {
             key: '/basket',
             icon: <ShoppingCartOutlined />,
             label: (
-                <Link href="/basket" onClick={() => onClick('/basket')}>
+                <Link href="/basket" onClick={() => onClick()}>
                     {t('Basket')}
                 </Link>
-            ),
+            )
         },
 
         user
@@ -154,19 +155,19 @@ export function getMenuItems({
                             <Link href="/profile" onClick={() => '/profile'}>
                                 {t('Profile')}
                             </Link>
-                        ),
+                        )
                     },
                     {
                         key: '/orders',
                         icon: <ShoppingOutlined />,
                         label: (
-                            <Link href="/orders" onClick={() => onClick('/orders')}>
+                            <Link href="/orders" onClick={() => onClick()}>
                                 {t('Orders')}
                             </Link>
-                        ),
-                    },
-                ],
+                        )
+                    }
+                ]
             }
-            : null,
-    ].filter(Boolean);
+            : null
+    ].filter(Boolean)
 }

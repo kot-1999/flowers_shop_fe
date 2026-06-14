@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { DeleteOutlined } from '@ant-design/icons'
 import {
     Button,
     Input,
@@ -8,40 +8,37 @@ import {
     Popconfirm,
     Space,
     Table,
-    Tag,
-} from 'antd';
+    Tag
+} from 'antd'
+import { useEffect, useState } from 'react'
 
+import SelectionistModal from '@/app/components/goodModals/selectionistModal'
+import SimplePagination from '@/app/components/SimplePagination'
 import {
     Defaults,
     Language,
-    LocalStorageKey,
-} from '@/app/utils/enums';
-
+    LocalStorageKey
+} from '@/app/utils/enums'
 import {
     getLocalStorage,
-    useT,
-} from '@/app/utils/helpers';
+    getTFunc
+} from '@/app/utils/helpers'
 
-import SimplePagination from '@/app/components/SimplePagination';
-import { DeleteOutlined } from '@ant-design/icons';
-import SelectionistModal from "@/app/components/goodModals/selectionistModal";
-
-
-type Selectionist = {
+interface Selectionist {
     id: string;
     nameTID?: string;
     name: Record<string, string>;
     country: string;
     createdAt: string;
     updatedAt: string;
-};
+}
 
 export default function SelectionistsTab({
-                                             settings,
-                                         }: {
+    settings
+}: {
     settings: { locale: Language };
 }) {
-    const t = useT();
+    const t = getTFunc()
 
     const [data, setData] = useState<{
         selectionists: Selectionist[];
@@ -50,108 +47,98 @@ export default function SelectionistsTab({
             limit: number;
             total: number;
         };
-    } | null>(null);
+    } | null>(null)
 
-    const [loading, setLoading] = useState(false);
-    const [search, setSearch] = useState('');
+    const [loading, setLoading] = useState(false)
+    const [search, setSearch] = useState('')
 
-    const [selectedSelectionist, setSelectedSelectionist] =
-        useState<Selectionist | null>(null);
+    const [selectedSelectionist, setSelectedSelectionist]
+        = useState<Selectionist | null>(null)
 
-    const [isModalOpen, setIsModalOpen] =
-        useState(false);
+    const [isModalOpen, setIsModalOpen]
+        = useState(false)
 
-    const pagination = data?.pagination;
+    const pagination = data?.pagination
 
-    const page =
-        pagination?.page ?? Defaults.Page;
+    const page
+        = pagination?.page ?? Defaults.Page
 
-    const limit =
-        pagination?.limit ?? Defaults.Limit;
+    const limit
+        = pagination?.limit ?? Defaults.Limit
 
     const fetchData = async () => {
-        setLoading(true);
+        setLoading(true)
 
         try {
-            const params = new URLSearchParams();
+            const params = new URLSearchParams()
 
-            const stored = getLocalStorage(
-                LocalStorageKey.SelectionistPagination
-            );
+            const stored = getLocalStorage(LocalStorageKey.SelectionistPagination)
 
             params.set(
                 'page',
                 String(stored?.page ?? Defaults.Page)
-            );
+            )
 
             params.set(
                 'limit',
                 String(stored?.limit ?? Defaults.Limit)
-            );
+            )
 
             if (search) {
-                params.set('search', search);
+                params.set('search', search)
             }
 
             const res = await fetch(
                 `/api/selectionists?${params.toString()}`,
                 {
-                    method: 'GET',
+                    method: 'GET'
                 }
-            );
+            )
 
-            const json = await res.json();
+            const json = await res.json()
 
-            setData(json);
+            setData(json)
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
-    const deleteSelectionist = async (
-        id: string
-    ) => {
+    const deleteSelectionist = async (id: string) => {
         try {
             const res = await fetch(
                 `/api/admin/selectionists/${id}`,
                 {
-                    method: 'DELETE',
+                    method: 'DELETE'
                 }
-            );
+            )
 
-            const data = await res.json();
+            const data = await res.json()
 
             if (res.ok) {
-                message.success(data.message);
+                message.success(data.message)
             } else {
                 if (data.message) {
-                    message.error(data.message);
+                    message.error(data.message)
                 } else if (data.messages) {
-                    data.messages.forEach(
-                        (item: string) =>
-                            message.error(item)
-                    );
+                    data.messages.forEach((item: string) =>
+                        message.error(item))
                 }
             }
 
-            fetchData();
+            fetchData()
         } catch {
-            message.error(
-                t('Failed to delete selectionist')
-            );
+            message.error(t('Failed to delete selectionist'))
         }
-    };
+    }
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        fetchData()
+    }, [])
 
-    const openEditModal = (
-        selectionist: Selectionist | null
-    ) => {
-        setSelectedSelectionist(selectionist);
-        setIsModalOpen(true);
-    };
+    const openEditModal = (selectionist: Selectionist | null) => {
+        setSelectedSelectionist(selectionist)
+        setIsModalOpen(true)
+    }
 
     const columns = [
         {
@@ -162,9 +149,9 @@ export default function SelectionistsTab({
                 __: unknown,
                 index: number
             ) =>
-                (page - 1) * limit +
-                index +
-                1,
+                (page - 1) * limit
+                + index
+                + 1
         },
         {
             title: t('Name'),
@@ -175,27 +162,23 @@ export default function SelectionistsTab({
             ) =>
                 record?.name?.[
                     settings.locale
-                    ] ?? '-',
+                ] ?? '-'
         },
         {
             title: t('Country'),
-            dataIndex: 'country',
+            dataIndex: 'country'
         },
         {
             title: t('Created'),
             dataIndex: 'createdAt',
             render: (value: string) =>
-                new Date(
-                    value
-                ).toLocaleDateString(),
+                new Date(value).toLocaleDateString()
         },
         {
             title: t('Updated'),
             dataIndex: 'updatedAt',
             render: (value: string) =>
-                new Date(
-                    value
-                ).toLocaleDateString(),
+                new Date(value).toLocaleDateString()
         },
         {
             width: 120,
@@ -204,15 +187,11 @@ export default function SelectionistsTab({
                 record: Selectionist
             ) => (
                 <Popconfirm
-                    title={t(
-                        'Delete selectionist?'
-                    )}
+                    title={t('Delete selectionist?')}
                     okText={t('Yes')}
                     cancelText={t('No')}
                     onConfirm={() =>
-                        deleteSelectionist(
-                            record.id
-                        )
+                        deleteSelectionist(record.id)
                     }
                     onPopupClick={(e) =>
                         e.stopPropagation()
@@ -231,9 +210,9 @@ export default function SelectionistsTab({
                         {t('Delete')}
                     </Button>
                 </Popconfirm>
-            ),
-        },
-    ];
+            )
+        }
+    ]
 
     return (
         <div>
@@ -242,21 +221,19 @@ export default function SelectionistsTab({
                 size={[12, 12]}
                 style={{
                     width: '100%',
-                    marginBottom: 16,
+                    marginBottom: 16
                 }}
             >
                 <Input.Search
-                    placeholder={t(
-                        'Search selectionists'
-                    )}
+                    placeholder={t('Search selectionists')}
                     allowClear
                     onChange={(event) => setSearch(event.target.value)}
                     onSearch={(value) => {
-                        setSearch(value);
-                        fetchData();
+                        setSearch(value)
+                        fetchData()
                     }}
                     style={{
-                        width: 250,
+                        width: 250
                     }}
                 />
 
@@ -266,15 +243,13 @@ export default function SelectionistsTab({
                         openEditModal(null)
                     }
                 >
-                    {t(
-                        'Create Selectionist'
-                    )}
+                    {t('Create Selectionist')}
                 </Button>
 
                 <Tag>
                     {t('Results')}:{' '}
-                    {pagination?.total ??
-                        0}
+                    {pagination?.total
+                        ?? 0}
                 </Tag>
             </Space>
 
@@ -282,23 +257,21 @@ export default function SelectionistsTab({
                 rowKey="id"
                 loading={loading}
                 scroll={{
-                    x: 'max-content',
+                    x: 'max-content'
                 }}
                 dataSource={
-                    data?.selectionists ??
-                    []
+                    data?.selectionists
+                    ?? []
                 }
                 columns={columns}
                 pagination={false}
                 onRow={(record) => ({
                     onClick: () =>
-                        openEditModal(
-                            record
-                        ),
+                        openEditModal(record),
                     style: {
                         cursor:
-                            'pointer',
-                    },
+                            'pointer'
+                    }
                 })}
             />
 
@@ -312,8 +285,8 @@ export default function SelectionistsTab({
                     setIsModalOpen(false)
                 }
                 onSuccess={() => {
-                    setIsModalOpen(false);
-                    fetchData();
+                    setIsModalOpen(false)
+                    fetchData()
                 }}
             />
 
@@ -327,5 +300,5 @@ export default function SelectionistsTab({
                 callFunc={fetchData}
             />
         </div>
-    );
+    )
 }

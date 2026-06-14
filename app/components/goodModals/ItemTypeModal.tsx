@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Button,
     Form,
@@ -8,22 +7,23 @@ import {
     InputNumber,
     message,
     Modal,
-    Tabs,
-} from 'antd';
+    Tabs
+} from 'antd'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { Language } from '@/app/utils/enums';
-import { useT } from '@/app/utils/helpers';
+import { Language } from '@/app/utils/enums'
+import { getTFunc } from '@/app/utils/helpers'
 
-type ItemType = {
+interface ItemType {
     id: string;
     nameTID?: string;
     name: Record<Language, string>;
     weight: number;
     createdAt?: string;
     updatedAt?: string;
-};
+}
 
-type Props = {
+interface Props {
     open: boolean;
     itemType: ItemType | null;
     settings: {
@@ -31,194 +31,189 @@ type Props = {
     };
     onClose: () => void;
     onSuccess: () => void;
-};
+}
 
-type FormValues = {
+interface FormValues {
     nameTranslations: Partial<Record<Language, string>>;
     weight: number;
-};
+}
 
 export default function ItemTypeModal({
     open,
     itemType,
     settings,
     onClose,
-    onSuccess,
+    onSuccess
 }: Props) {
-    const t = useT();
+    const t = getTFunc()
 
-    const [form] = Form.useForm<FormValues>();
+    const [form] = Form.useForm<FormValues>()
 
-    const [aiLoading, setAiLoading] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [activeLanguage, setActiveLanguage] = useState<Language>(settings.locale);
+    const [aiLoading, setAiLoading] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [activeLanguage, setActiveLanguage] = useState<Language>(settings.locale)
 
     const originalTranslations = useRef<
         Partial<Record<Language, string>> | null
-    >(null);
+    >(null)
 
     const emptyTranslations = useMemo(
         () =>
             Object.values(Language).reduce(
                 (acc, lang) => {
-                    acc[lang] = '';
-                    return acc;
+                    acc[lang] = ''
+                    return acc
                 },
                 {} as Record<Language, string>
             ),
         []
-    );
+    )
 
     useEffect(() => {
         if (!open) {
-            return;
+            return
         }
 
-        setActiveLanguage(settings.locale);
+        setActiveLanguage(settings.locale)
 
         if (!itemType) {
-            originalTranslations.current = null;
+            originalTranslations.current = null
 
-            form.resetFields();
+            form.resetFields()
 
             form.setFieldsValue({
                 weight: 1,
-                nameTranslations: emptyTranslations,
-            });
+                nameTranslations: emptyTranslations
+            })
 
-            return;
+            return
         }
 
-        originalTranslations.current = itemType.name;
+        originalTranslations.current = itemType.name
 
         form.setFieldsValue({
             weight: itemType.weight,
-            nameTranslations: itemType.name,
-        });
+            nameTranslations: itemType.name
+        })
     }, [
         open,
         itemType,
         settings.locale,
         form,
-        emptyTranslations,
-    ]);
+        emptyTranslations
+    ])
 
     const generateTranslations = async () => {
         try {
-            const values = form.getFieldsValue();
-            const sourceText =
-                values?.nameTranslations?.[activeLanguage];
+            const values = form.getFieldsValue()
+            const sourceText
+                = values?.nameTranslations?.[activeLanguage]
 
             if (!sourceText) {
-                message.warning(t('Enter text first'));
-                return;
+                message.warning(t('Enter text first'))
+                return
             }
 
-            setAiLoading(true);
+            setAiLoading(true)
 
             const res = await fetch('/api/ai/translations', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    text: [sourceText],
-                }),
-            });
+                    text: [sourceText]
+                })
+            })
 
-            const data = await res.json();
+            const data = await res.json()
 
             if (!res.ok) {
-                message.error(
-                    data?.message || t('AI translation failed')
-                );
-                return;
+                message.error(data?.message || t('AI translation failed'))
+                return
             }
 
-            const translations = data?.translations?.[0];
+            const translations = data?.translations?.[0]
 
-            const current = form.getFieldValue('nameTranslations') || {};
+            const current = form.getFieldValue('nameTranslations') || {}
 
             form.setFieldsValue({
                 nameTranslations: {
                     ...current,
-                    ...translations,
-                },
-            });
+                    ...translations
+                }
+            })
 
-            message.success(t('Translations generated'));
-        } catch (e) {
-            message.error(t('AI translation failed'));
+            message.success(t('Translations generated'))
+        } catch {
+            message.error(t('AI translation failed'))
         } finally {
-            setAiLoading(false);
+            setAiLoading(false)
         }
-    };
+    }
 
     const handleSubmit = async () => {
         try {
-            const values = await form.validateFields();
+            const values = await form.validateFields()
 
-            setLoading(true);
+            setLoading(true)
 
-            const translationsChanged =
-                JSON.stringify(values.nameTranslations) !==
-                JSON.stringify(originalTranslations.current);
+            const translationsChanged
+                = JSON.stringify(values.nameTranslations)
+                !== JSON.stringify(originalTranslations.current)
 
             const body: Record<string, unknown> = {
-                weight: values.weight,
-            };
+                weight: values.weight
+            }
 
             if (itemType?.id) {
-                body.itemTypeID = itemType.id;
+                body.itemTypeID = itemType.id
             }
 
             if (
-                itemType?.nameTID &&
-                !translationsChanged
+                itemType?.nameTID
+                && !translationsChanged
             ) {
-                body.nameTID = itemType.nameTID;
+                body.nameTID = itemType.nameTID
             } else {
-                body.nameTranslations = values.nameTranslations;
+                body.nameTranslations = values.nameTranslations
             }
 
             const res = await fetch('/api/admin/item-types', {
                 method: 'PUT',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(body),
-            });
+                body: JSON.stringify(body)
+            })
 
-            const data = await res.json();
+            const data = await res.json()
 
             if (!res.ok) {
                 if (data.message) {
-                    message.error(data.message);
+                    message.error(data.message)
                 } else if (data.messages) {
                     data.messages.forEach((item: string) =>
-                        message.error(item)
-                    );
+                        message.error(item))
                 } else {
-                    message.error(t('Failed to save item type'));
+                    message.error(t('Failed to save item type'))
                 }
 
-                return;
+                return
             }
 
-            message.success(
-                data.message ||
-                (itemType
+            message.success(data.message
+                || (itemType
                     ? t('Item type updated')
-                    : t('Item type created'))
-            );
+                    : t('Item type created')))
 
-            onSuccess();
-        } catch (error) {
-            message.error(t('Failed to save item type'));
+            onSuccess()
+        } catch {
+            message.error(t('Failed to save item type'))
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     return (
         <Modal
@@ -240,6 +235,7 @@ export default function ItemTypeModal({
                 </Button>,
 
                 <Button
+                    key='translate'
                     onClick={generateTranslations}
                     loading={aiLoading}
                     style={{ marginBottom: 12 }}
@@ -256,7 +252,7 @@ export default function ItemTypeModal({
                     {itemType
                         ? t('Update Item Type')
                         : t('Create Item Type')}
-                </Button>,
+                </Button>
             ]}
             width={700}
         >
@@ -277,21 +273,19 @@ export default function ItemTypeModal({
                             <Form.Item
                                 name={[
                                     'nameTranslations',
-                                    lang,
+                                    lang
                                 ]}
                                 label={t('Name')}
                                 rules={[
                                     {
                                         required: true,
-                                        message: t(
-                                            'Name is required'
-                                        ),
-                                    },
+                                        message: t('Name is required')
+                                    }
                                 ]}
                             >
                                 <Input />
                             </Form.Item>
-                        ),
+                        )
                     }))}
                 />
 
@@ -301,10 +295,8 @@ export default function ItemTypeModal({
                     rules={[
                         {
                             required: true,
-                            message: t(
-                                'Weight is required'
-                            ),
-                        },
+                            message: t('Weight is required')
+                        }
                     ]}
                 >
                     <InputNumber
@@ -314,5 +306,5 @@ export default function ItemTypeModal({
                 </Form.Item>
             </Form>
         </Modal>
-    );
+    )
 }

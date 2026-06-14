@@ -1,63 +1,67 @@
-'use client';
+'use client'
 
-import {Form, Input, Button, Card, Tabs, message, Divider} from "antd";
-import {useRouter} from "next/navigation";
-import {useState} from "react";
-import {useAuth} from "@/app/components/AuthContent";
-import {GoogleOutlined} from "@ant-design/icons";
-import {useT} from "@/app/utils/helpers";
+import { GoogleOutlined } from '@ant-design/icons'
+import { Form, Input, Button, Card, Tabs, message, Divider } from 'antd'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+
+import { useAuth } from '@/app/components/AuthContent'
+import { getTFunc } from '@/app/utils/helpers'
 
 export default function AuthCard() {
-    const { checkAuth } = useAuth();
-    const router = useRouter();
-    const [activeTab, setActiveTab] = useState('login');
-    const t = useT()
+    const { checkAuth } = useAuth()
+    const router = useRouter()
+    const [activeTab, setActiveTab] = useState('login')
+    const t = getTFunc()
 
     const onLoginFinish = (values: unknown) => {
-        onFinish(values, 'login');
+        onFinish(values, 'login')
     }
 
     const onRegisterFinish = (values: unknown) => {
-        onFinish(values, 'register');
+        onFinish(values, 'register')
     }
 
     const onFinish = async (values: any, mode: 'login' | 'register') => {
         try {
-            const payload = { ...values, mode };
-            const res = mode === 'login' ? await fetch("/api/auth/login", {
+            const payload = {
+                ...values,
+                mode 
+            }
+            const res = mode === 'login' ? await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: payload.email,
-                    password: payload.password,
-                }),
-            }) : await fetch("/api/auth/register", {
+                    password: payload.password
+                })
+            }) : await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: payload.email,
                     password: payload.password,
                     firstName: payload.firstName,
-                    lastName: payload.lastName,
-                }),
+                    lastName: payload.lastName
+                })
             })
 
-            const data = await res.json();
+            const data = await res.json()
             await checkAuth()
 
             if (res.ok) {
-                message.success(data.message);
+                message.success(data.message)
 
                 if (mode === 'register') {
-                    setActiveTab('login');
+                    setActiveTab('login')
                 } else {
-                    router.push('/');
+                    router.push('/')
                 }
             } else {
                 if (data.messages) {
                     data.messages.forEach((msg: string) => message.error(msg))
                 } else if (data.message) {
-                    message.error(data.message);
+                    message.error(data.message)
                 } else {
                     throw new Error(data)
                 }
@@ -65,29 +69,35 @@ export default function AuthCard() {
         } catch (err: any) {
             message.error(err.message)
         }
-    };
+    }
 
     const items = [
         {
-            key: "login",
-            label: t("Login"),
+            key: 'login',
+            label: t('Login'),
             children: (
                 <Form layout="vertical" onFinish={onLoginFinish}>
                     <Form.Item
-                        label={t("Email")}
+                        label={t('Email')}
                         name="email"
                         rules={[
-                            { required: true, message: t("Email required") },
-                            { type: "email" },
+                            {
+                                required: true,
+                                message: t('Email required') 
+                            },
+                            { type: 'email' }
                         ]}
                     >
                         <Input placeholder="email@example.com" />
                     </Form.Item>
 
                     <Form.Item
-                        label={t("Password")}
+                        label={t('Password')}
                         name="password"
-                        rules={[{ required: true, message: t("Password required") }]}
+                        rules={[{
+                            required: true,
+                            message: t('Password required') 
+                        }]}
                     >
                         <Input.Password />
                     </Form.Item>
@@ -106,64 +116,77 @@ export default function AuthCard() {
                         {t('Login')}
                     </Button>
                 </Form>
-            ),
+            )
         },
         {
-            key: "register",
-            label: t("Register"),
+            key: 'register',
+            label: t('Register'),
             children: (
                 <Form layout="vertical" onFinish={onRegisterFinish}>
                     <Form.Item
-                        label={t("First Name")}
+                        label={t('First Name')}
                         name="firstName"
-                        rules={[{ required: true, message: t("Name required") }]}
+                        rules={[{
+                            required: true,
+                            message: t('Name required') 
+                        }]}
                     >
                         <Input placeholder="John" />
                     </Form.Item>
 
                     <Form.Item
-                        label={t("Last Name")}
+                        label={t('Last Name')}
                         name="lastName"
-                        rules={[{ required: true, message: t("Name required") }]}
+                        rules={[{
+                            required: true,
+                            message: t('Name required') 
+                        }]}
                     >
                         <Input placeholder="Doe" />
                     </Form.Item>
 
                     <Form.Item
-                        label={t("Email")}
+                        label={t('Email')}
                         name="email"
                         rules={[
-                            { required: true, message: t("Email required") },
-                            { type: "email" },
+                            {
+                                required: true,
+                                message: t('Email required') 
+                            },
+                            { type: 'email' }
                         ]}
                     >
                         <Input placeholder="email@example.com" />
                     </Form.Item>
 
                     <Form.Item
-                        label={t("Password")}
+                        label={t('Password')}
                         name="password"
-                        rules={[{ required: true, message: t("Password required") }]}
+                        rules={[{
+                            required: true,
+                            message: t('Password required') 
+                        }]}
                     >
                         <Input.Password />
                     </Form.Item>
 
                     <Form.Item
-                        label={t("Repeat password")}
+                        label={t('Repeat password')}
                         name="passwordRepeat"
-                        dependencies={["password"]}
+                        dependencies={['password']}
                         rules={[
-                            { required: true, message: t("Please repeat password") },
+                            {
+                                required: true,
+                                message: t('Please repeat password') 
+                            },
                             ({ getFieldValue }) => ({
                                 validator(_, value) {
-                                    if (!value || getFieldValue("password") === value) {
-                                        return Promise.resolve();
+                                    if (!value || getFieldValue('password') === value) {
+                                        return Promise.resolve()
                                     }
-                                    return Promise.reject(
-                                        new Error(t("Passwords do not match"))
-                                    );
-                                },
-                            }),
+                                    return Promise.reject(new Error(t('Passwords do not match')))
+                                }
+                            })
                         ]}
                     >
                         <Input.Password />
@@ -173,13 +196,17 @@ export default function AuthCard() {
                         {t('Register')}
                     </Button>
                 </Form>
-            ),
-        },
-    ];
+            )
+        }
+    ]
 
     return (
-        <div style={{ display: "flex", justifyContent: "center", paddingTop: 80 }}>
-            <Card title={t("Authorization")} style={{ width: 400 }}>
+        <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            paddingTop: 80 
+        }}>
+            <Card title={t('Authorization')} style={{ width: 400 }}>
                 <Tabs
                     activeKey={activeTab}
                     onChange={setActiveTab}
@@ -187,7 +214,7 @@ export default function AuthCard() {
                     centered
                 />
 
-                <Divider>{t("OR")}</Divider>
+                <Divider>{t('OR')}</Divider>
 
                 <Button
                     block
@@ -201,5 +228,5 @@ export default function AuthCard() {
                 </Button>
             </Card>
         </div>
-    );
+    )
 }
