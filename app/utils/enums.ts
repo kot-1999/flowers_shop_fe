@@ -20,7 +20,7 @@ export enum LocalStorageKey {
     HomePagination = 'homePagination',
     SelectedCategory = 'selectedCategory',
     ItemTypePagination = 'itemTypesPagination',
-    TabPagination = 'tabPagination',
+    TagPagination = 'tagPagination',
     SelectionistPagination = 'selectionistPagination',
     GoodPagination = 'goodPagination',
 }
