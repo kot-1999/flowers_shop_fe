@@ -44,7 +44,7 @@ export default function GoodsPage() {
         {
             key: 'tags',
             label: t('Tags'),
-            children: <TagTab />
+            children: <TagTab settings={settings}/>
         },
         {
             key: 'item-types',

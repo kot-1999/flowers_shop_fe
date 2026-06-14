@@ -8,8 +8,11 @@ export async function GET(req: NextRequest) {
     try {
         const headers = await getRequiredHeaders(req)
 
+        const url = new URL(req.url)
+        const query = url.searchParams.toString()
+
         const response = await fetch(
-            `${BACKEND_URL}/api/v1/admin/tags`,
+            `${BACKEND_URL}/api/v1/admin/tags?${query}`,
             {
                 method: 'GET',
                 headers
@@ -37,7 +40,7 @@ export async function PUT(req: NextRequest) {
         ])
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/admin/tags`,
+            `${BACKEND_URL}/api/v1/admin/tags`,
             {
                 method: 'PUT',
                 headers,

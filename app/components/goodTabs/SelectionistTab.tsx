@@ -21,7 +21,7 @@ import {
 } from '@/app/utils/enums'
 import {
     getLocalStorage,
-    getTFunc
+    getTFunc, removeLocalStorage
 } from '@/app/utils/helpers'
 
 interface Selectionist {
@@ -116,6 +116,7 @@ export default function SelectionistsTab({
 
             if (res.ok) {
                 message.success(data.message)
+                fetchData()
             } else {
                 if (data.message) {
                     message.error(data.message)
@@ -230,6 +231,7 @@ export default function SelectionistsTab({
                     onChange={(event) => setSearch(event.target.value)}
                     onSearch={(value) => {
                         setSearch(value)
+                        removeLocalStorage(LocalStorageKey.SelectionistPagination)
                         fetchData()
                     }}
                     style={{

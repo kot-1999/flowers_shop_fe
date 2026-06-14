@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import ItemTypeModal from '@/app/components/goodModals/ItemTypeModal'
 import SimplePagination from '@/app/components/SimplePagination'
 import { Defaults, Language, LocalStorageKey } from '@/app/utils/enums'
-import { getLocalStorage, getTFunc } from '@/app/utils/helpers'
+import { getLocalStorage, getTFunc, removeLocalStorage } from '@/app/utils/helpers'
 
 interface ItemType {
     id: string;
@@ -78,6 +78,7 @@ export default function ItemTypesTab({
 
             if (res.ok) {
                 message.success(data.message)
+                fetchData()
             } else {
                 if (data.message) {
                     message.error(data.message)
@@ -167,6 +168,7 @@ export default function ItemTypesTab({
                     onChange={(event) => setSearch(event.target.value)}
                     onSearch={(value) => {
                         setSearch(value)
+                        removeLocalStorage(LocalStorageKey.ItemTypePagination)
                         fetchData()
                     }}
                     style={{ width: 250 }}
@@ -176,7 +178,7 @@ export default function ItemTypesTab({
                     type="primary"
                     onClick={() => openEditModal(null)}
                 >
-                    {t('Create Product Type')}
+                    {t('Add Product Type')}
                 </Button>
 
                 <Tag>
