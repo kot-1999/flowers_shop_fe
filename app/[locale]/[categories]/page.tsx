@@ -5,7 +5,7 @@ import {Spin} from 'antd'
 import SimplePagination from '@/app/components/SimplePagination'
 import {usePathname} from 'next/navigation'
 import {fetchSettings, getLocalStorage, useT} from '@/app/utils/helpers'
-import {GoodState, LocalStorageKey} from "@/app/utils/enums";
+import {Defaults, GoodState, LocalStorageKey} from "@/app/utils/enums";
 import SearchBar from "@/app/components/SearchBar";
 import GoodsList from "@/app/components/GoodsList";
 
@@ -51,8 +51,8 @@ export default function Categories() {
             const selectedCategory = getLocalStorage(LocalStorageKey.SelectedCategory)
 
 
-            params.set('page', homePagination?.page ?? '1')
-            params.set('limit', homePagination?.limit ?? '24')
+            params.set('page', homePagination?.page ?? Defaults.Page.toString())
+            params.set('limit', homePagination?.limit ?? Defaults.Limit.toString())
             params.set('sortBy', searchSettings?.sortBy ?? 'createdAt')
             params.set('sortOrder', searchSettings?.sortOrder ?? 'desc')
 
@@ -110,9 +110,9 @@ export default function Categories() {
                     <GoodsList goodsData={goodsData} settings={settings}/>
                     <SimplePagination
                         storageKey={LocalStorageKey.HomePagination}
-                        current={goodsData?.pagination?.page ?? 1}
+                        current={goodsData?.pagination?.page ?? Defaults.Page}
                         total={goodsData?.pagination?.total ?? 0}
-                        pageSize={goodsData?.pagination?.limit ?? 24}
+                        pageSize={goodsData?.pagination?.limit ?? Defaults.Limit}
                         callFunc={fetchHome}
                     />
                 </div>

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import {Button, Input, message, Popconfirm, Space, Table, Tag} from 'antd';
 
-import { Language, LocalStorageKey } from "@/app/utils/enums";
+import {Defaults, Language, LocalStorageKey} from "@/app/utils/enums";
 import {getLocalStorage, useT} from "@/app/utils/helpers";
 import SimplePagination from "@/app/components/SimplePagination";
-import {DeleteColumnOutlined, DeleteOutlined} from "@ant-design/icons";
+import {DeleteOutlined} from "@ant-design/icons";
 import ItemTypeModal from "@/app/components/goodModals/ItemTypeModal";
 
 type ItemType = {
@@ -37,8 +37,8 @@ export default function ItemTypesTab({
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const pagination = data?.pagination;
-    const page = pagination?.page ?? 1;
-    const limit = pagination?.limit ?? 24;
+    const page = pagination?.page ?? Defaults.Page;
+    const limit = pagination?.limit ?? Defaults.Limit;
 
     const fetchData = async () => {
         setLoading(true);
@@ -48,8 +48,8 @@ export default function ItemTypesTab({
 
             const stored = getLocalStorage(LocalStorageKey.ItemTypePagination);
 
-            params.set('page', String(stored?.page ?? 1));
-            params.set('limit', String(stored?.limit ?? 24));
+            params.set('page', String(stored?.page ?? Defaults.Page));
+            params.set('limit', String(stored?.limit ?? Defaults.Limit));
 
             if (search) {
                 params.set('search', search);
@@ -101,8 +101,7 @@ export default function ItemTypesTab({
         {
             title: '#',
             width: 70,
-            render: (_: any, __: any, index: number) =>
-                (page - 1) * limit + index + 1,
+            render: (_: any, __: any, index: number) => (page - 1) * limit + index + 1,
         },
         {
             title: t('Name'),

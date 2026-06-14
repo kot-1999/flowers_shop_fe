@@ -31,3 +31,8 @@ export enum GoodState{
     Awaiting = 'Awaiting',
     Deleted = 'Deleted'
 }
+
+export enum Defaults {
+    Page = 1,
+    Limit = 24
+}

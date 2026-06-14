@@ -49,9 +49,7 @@ export default function ItemTypeModal({
 
     const [aiLoading, setAiLoading] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [activeLanguage, setActiveLanguage] = useState<Language>(
-        settings.locale
-    );
+    const [activeLanguage, setActiveLanguage] = useState<Language>(settings.locale);
 
     const originalTranslations = useRef<
         Partial<Record<Language, string>> | null
@@ -137,7 +135,6 @@ export default function ItemTypeModal({
             }
 
             const translations = data?.translations?.[0];
-            if (!translations) return;
 
             const current = form.getFieldValue('nameTranslations') || {};
 
