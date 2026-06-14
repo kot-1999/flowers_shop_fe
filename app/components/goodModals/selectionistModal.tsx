@@ -1,0 +1,361 @@
+'use client'
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+    Button,
+    Form,
+    Input,
+    message,
+    Modal,
+    Tabs,
+} from 'antd';
+
+import { Language } from '@/app/utils/enums';
+import { useT } from '@/app/utils/helpers';
+
+type Selectionist = {
+    id: string;
+    nameTID?: string;
+    name: Record<Language, string>;
+    country: string;
+    createdAt?: string;
+    updatedAt?: string;
+};
+
+type Props = {
+    open: boolean;
+    selectionist: Selectionist | null;
+    settings: {
+        locale: Language;
+    };
+    onClose: () => void;
+    onSuccess: () => void;
+};
+
+type FormValues = {
+    nameTranslations: Partial<Record<Language, string>>;
+    country: string;
+};
+
+export default function SelectionistModal({
+                                              open,
+                                              selectionist,
+                                              settings,
+                                              onClose,
+                                              onSuccess,
+                                          }: Props) {
+    const t = useT();
+
+    const [form] = Form.useForm<FormValues>();
+
+    const [loading, setLoading] = useState(false);
+    const [aiLoading, setAiLoading] = useState(false);
+
+    const [activeLanguage, setActiveLanguage] =
+        useState<Language>(settings.locale);
+
+    const originalTranslations = useRef<
+        Partial<Record<Language, string>> | null
+    >(null);
+
+    const emptyTranslations = useMemo(
+        () =>
+            Object.values(Language).reduce(
+                (acc, lang) => {
+                    acc[lang] = '';
+                    return acc;
+                },
+                {} as Record<Language, string>
+            ),
+        []
+    );
+
+    useEffect(() => {
+        if (!open) {
+            return;
+        }
+
+        setActiveLanguage(settings.locale);
+
+        if (!selectionist) {
+            originalTranslations.current = null;
+
+            form.resetFields();
+
+            form.setFieldsValue({
+                country: '',
+                nameTranslations: emptyTranslations,
+            });
+
+            return;
+        }
+
+        originalTranslations.current = selectionist.name;
+
+        form.setFieldsValue({
+            country: selectionist.country,
+            nameTranslations: selectionist.name,
+        });
+    }, [
+        open,
+        selectionist,
+        settings.locale,
+        form,
+        emptyTranslations,
+    ]);
+
+    const generateTranslations = async () => {
+        try {
+            const values = form.getFieldsValue();
+
+            const sourceText =
+                values?.nameTranslations?.[activeLanguage];
+
+            if (!sourceText) {
+                message.warning(t('Enter text first'));
+                return;
+            }
+
+            setAiLoading(true);
+
+            const res = await fetch('/api/ai/translations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: [sourceText],
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                message.error(
+                    data?.message ||
+                    t('AI translation failed')
+                );
+                return;
+            }
+
+            const translations =
+                data?.translations?.[0];
+
+            const current =
+                form.getFieldValue('nameTranslations') || {};
+
+            form.setFieldsValue({
+                nameTranslations: {
+                    ...current,
+                    ...translations,
+                },
+            });
+
+            message.success(
+                t('Translations generated')
+            );
+        } catch {
+            message.error(
+                t('AI translation failed')
+            );
+        } finally {
+            setAiLoading(false);
+        }
+    };
+
+    const handleSubmit = async () => {
+        try {
+            const values =
+                await form.validateFields();
+
+            setLoading(true);
+
+            const translationsChanged =
+                JSON.stringify(
+                    values.nameTranslations
+                ) !==
+                JSON.stringify(
+                    originalTranslations.current
+                );
+
+            const body: Record<string, unknown> = {
+                country: values.country,
+            };
+
+            if (selectionist?.id) {
+                body.selectionistID =
+                    selectionist.id;
+            }
+
+            if (
+                selectionist?.nameTID &&
+                !translationsChanged
+            ) {
+                body.nameTID =
+                    selectionist.nameTID;
+            } else {
+                body.nameTranslations =
+                    values.nameTranslations;
+            }
+
+            const res = await fetch(
+                '/api/admin/selectionists',
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type':
+                            'application/json',
+                    },
+                    body: JSON.stringify(body),
+                }
+            );
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (data.message) {
+                    message.error(data.message);
+                } else if (data.messages) {
+                    data.messages.forEach(
+                        (item: string) =>
+                            message.error(item)
+                    );
+                } else {
+                    message.error(
+                        t(
+                            'Failed to save selectionist'
+                        )
+                    );
+                }
+
+                return;
+            }
+
+            message.success(
+                data.message ||
+                (selectionist
+                    ? t(
+                        'Selectionist updated'
+                    )
+                    : t(
+                        'Selectionist created'
+                    ))
+            );
+
+            onSuccess();
+        } catch {
+            message.error(
+                t(
+                    'Failed to save selectionist'
+                )
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Modal
+            open={open}
+            title={
+                selectionist
+                    ? t('Edit Selectionist')
+                    : t('Create Selectionist')
+            }
+            onCancel={onClose}
+            destroyOnHidden
+            width={700}
+            footer={[
+                <Button
+                    key="cancel"
+                    onClick={onClose}
+                >
+                    {t('Cancel')}
+                </Button>,
+
+                <Button
+                    key="ai"
+                    onClick={
+                        generateTranslations
+                    }
+                    loading={aiLoading}
+                >
+                    {t(
+                        'Generate translations'
+                    )}
+                </Button>,
+
+                <Button
+                    key="submit"
+                    type="primary"
+                    loading={loading}
+                    onClick={handleSubmit}
+                >
+                    {selectionist
+                        ? t(
+                            'Update Selectionist'
+                        )
+                        : t(
+                            'Create Selectionist'
+                        )}
+                </Button>,
+            ]}
+        >
+            <Form
+                form={form}
+                layout="vertical"
+            >
+                <Tabs
+                    type="card"
+                    activeKey={activeLanguage}
+                    onChange={(key) =>
+                        setActiveLanguage(
+                            key as Language
+                        )
+                    }
+                    items={Object.values(
+                        Language
+                    ).map((lang) => ({
+                        key: lang,
+                        label:
+                            lang.toUpperCase(),
+                        children: (
+                            <Form.Item
+                                name={[
+                                    'nameTranslations',
+                                    lang,
+                                ]}
+                                label={t('Name')}
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: t(
+                                            'Name is required'
+                                        ),
+                                    },
+                                ]}
+                            >
+                                <Input />
+                            </Form.Item>
+                        ),
+                    }))}
+                />
+
+                <Form.Item
+                    name="country"
+                    label={t('Country')}
+                    rules={[
+                        {
+                            required: true,
+                            message: t(
+                                'Country is required'
+                            ),
+                        },
+                    ]}
+                >
+                    <Input />
+                </Form.Item>
+            </Form>
+        </Modal>
+    );
+}

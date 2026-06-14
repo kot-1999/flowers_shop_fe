@@ -56,7 +56,7 @@ export default function GoodsPage() {
         {
             key: 'selectionists',
             label: t('Selectionists'),
-            children: <SelectionistTab />,
+            children: <SelectionistTab settings={settings}/>,
         },
     ];
 
