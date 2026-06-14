@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Button,
@@ -125,7 +127,6 @@ export default function ItemTypeModal({
             });
 
             const data = await res.json();
-            console.log('!!!!!!!!', data)
 
             if (!res.ok) {
                 message.error(

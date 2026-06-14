@@ -165,6 +165,7 @@ export default function ItemTypesTab({
                 <Input.Search
                     placeholder={t('Search product types')}
                     allowClear
+                    onChange={(event) => setSearch(event.target.value)}
                     onSearch={(value) => {
                         setSearch(value);
                         fetchData();
