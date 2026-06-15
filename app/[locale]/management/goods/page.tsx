@@ -39,7 +39,7 @@ export default function GoodsPage() {
         {
             key: 'categories',
             label: t('Categories'),
-            children: <CategoryTab />
+            children: <CategoryTab settings={settings}/>
         },
         {
             key: 'tags',
