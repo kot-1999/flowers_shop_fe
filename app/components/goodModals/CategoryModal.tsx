@@ -1,0 +1,309 @@
+'use client'
+
+import { Button, Form, Input, message, Modal, Tabs } from 'antd'
+import { useEffect, useMemo, useRef, useState } from 'react'
+
+import { Language } from '@/app/utils/enums'
+import { getTFunc } from '@/app/utils/helpers'
+
+interface Category {
+    id: string
+    nameTID?: string
+    descriptionTID?: string
+    name: Record<Language, string>
+    description: Record<Language, string>
+    coverImage?: string | null
+    createdAt?: string
+    updatedAt?: string
+}
+
+interface Props {
+    open: boolean
+    category: Category | null
+    settings: {
+        locale: Language
+    }
+    onClose: () => void
+    onSuccess: () => void
+}
+
+interface FormValues {
+    nameTranslations: Record<Language, string>
+    descriptionTranslations: Record<Language, string>
+    coverImage?: string
+}
+
+export default function CategoryModal({
+    open,
+    category,
+    settings,
+    onClose,
+    onSuccess
+}: Props) {
+    const t = getTFunc()
+    const [form] = Form.useForm<FormValues>()
+
+    const [loading, setLoading] = useState(false)
+    const [aiLoading, setAiLoading] = useState(false)
+
+    const [activeLanguage, setActiveLanguage]
+        = useState<Language>(settings.locale)
+
+    const originalName = useRef<Record<Language, string> | null>(null)
+    const originalDescription = useRef<Record<Language, string> | null>(null)
+
+    const emptyTranslations = useMemo(() => {
+        return Object.values(Language).reduce((acc, lang) => {
+            acc[lang] = ''
+            return acc
+        }, {} as Record<Language, string>)
+    }, [])
+
+    useEffect(() => {
+        if (!open) {return}
+
+        setActiveLanguage(settings.locale)
+
+        if (!category) {
+            originalName.current = null
+            originalDescription.current = null
+
+            form.resetFields()
+            form.setFieldsValue({
+                nameTranslations: emptyTranslations,
+                descriptionTranslations: emptyTranslations,
+                coverImage: ''
+            })
+
+            return
+        }
+
+        originalName.current = category.name
+        originalDescription.current = category.description
+
+        form.setFieldsValue({
+            nameTranslations: category.name,
+            descriptionTranslations: category.description,
+            coverImage: category.coverImage || ''
+        })
+    }, [open, category, settings.locale, form, emptyTranslations])
+
+    const generateTranslations = async () => {
+        try {
+            const values = form.getFieldsValue()
+
+            const sourceName
+                = values?.nameTranslations?.[activeLanguage]
+
+            const sourceDescription
+                = values?.descriptionTranslations?.[activeLanguage]
+
+            if (!sourceName && !sourceDescription) {
+                message.warning(t('Enter text first'))
+                return
+            }
+
+            setAiLoading(true)
+
+            const res = await fetch('/api/ai/translations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: [
+                        sourceName || '',
+                        sourceDescription || ''
+                    ]
+                })
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                message.error(data?.message || t('AI translation failed'))
+                return
+            }
+
+            const [nameTranslations, descriptionTranslations]
+            = data?.translations || []
+
+            const currentName
+                = form.getFieldValue('nameTranslations') || {}
+
+            const currentDescription
+                = form.getFieldValue('descriptionTranslations') || {}
+
+            form.setFieldsValue({
+                nameTranslations: {
+                    ...currentName,
+                    ...nameTranslations
+                },
+                descriptionTranslations: {
+                    ...currentDescription,
+                    ...descriptionTranslations
+                }
+            })
+
+            message.success(t('Translations generated'))
+        } catch {
+            message.error(t('AI translation failed'))
+        } finally {
+            setAiLoading(false)
+        }
+    }
+
+    const handleSubmit = async () => {
+        try {
+            const values = await form.validateFields()
+            setLoading(true)
+
+            const nameChanged
+                = JSON.stringify(values.nameTranslations)
+                !== JSON.stringify(originalName.current)
+
+            const descChanged
+                = JSON.stringify(values.descriptionTranslations)
+                !== JSON.stringify(originalDescription.current)
+
+            const body: Record<string, unknown> = {
+                coverImage: values.coverImage
+            }
+
+            if (category?.id) {
+                body.categoryID = category.id
+            }
+
+            if (category?.nameTID && !nameChanged) {
+                body.nameTID = category.nameTID
+            } else {
+                body.nameTranslations = values.nameTranslations
+            }
+
+            if (category?.descriptionTID && !descChanged) {
+                body.descriptionTID = category.descriptionTID
+            } else {
+                body.descriptionTranslations
+                    = values.descriptionTranslations
+            }
+
+            const res = await fetch('/api/admin/categories', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                message.error(data?.message || t('Failed to save category'))
+                return
+            }
+
+            message.success(data?.message
+                || (category
+                    ? t('Category updated')
+                    : t('Category created')))
+
+            onSuccess()
+        } catch {
+            message.error(t('Failed to save category'))
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    return (
+        <Modal
+            open={open}
+            onCancel={onClose}
+            destroyOnHidden
+            width={750}
+            title={
+                category ? t('Edit Category') : t('Create Category')
+            }
+            footer={[
+                <Button key="cancel" onClick={onClose}>
+                    {t('Cancel')}
+                </Button>,
+
+                <Button
+                    key="ai"
+                    loading={aiLoading}
+                    onClick={generateTranslations}
+                >
+                    {t('Generate translations')}
+                </Button>,
+
+                <Button
+                    key="submit"
+                    type="primary"
+                    loading={loading}
+                    onClick={handleSubmit}
+                >
+                    {category
+                        ? t('Update Category')
+                        : t('Create Category')}
+                </Button>
+            ]}
+        >
+            <Form form={form} layout="vertical">
+                <Form.Item
+                    name="coverImage"
+                    label={t('Cover Image URL')}
+                >
+                    <Input />
+                </Form.Item>
+
+                <Tabs
+                    type="card"
+                    activeKey={activeLanguage}
+                    onChange={(key) =>
+                        setActiveLanguage(key as Language)
+                    }
+                    items={Object.values(Language).map((lang) => ({
+                        key: lang,
+                        label: lang.toUpperCase(),
+                        children: (
+                            <>
+                                <Form.Item
+                                    name={[
+                                        'nameTranslations',
+                                        lang
+                                    ]}
+                                    label={t('Name')}
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: t('Name is required')
+                                        }
+                                    ]}
+                                >
+                                    <Input />
+                                </Form.Item>
+
+                                <Form.Item
+                                    name={[
+                                        'descriptionTranslations',
+                                        lang
+                                    ]}
+                                    label={t('Description')}
+                                    rules={[
+                                        {
+                                            required: true,
+                                            message: t('Description is required')
+                                        }
+                                    ]}
+                                >
+                                    <Input.TextArea rows={3} />
+                                </Form.Item>
+                            </>
+                        )
+                    }))}
+                />
+            </Form>
+        </Modal>
+    )
+}
