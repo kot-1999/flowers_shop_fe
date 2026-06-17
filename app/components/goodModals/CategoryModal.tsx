@@ -1,10 +1,11 @@
 'use client'
 
-import { Button, Form, Input, message, Modal, Tabs } from 'antd'
+import { UploadOutlined } from '@ant-design/icons'
+import { Button, Form, Input, message, Modal, Tabs, Upload } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { Language } from '@/app/utils/enums'
-import { getTFunc } from '@/app/utils/helpers'
+import { extractS3Key, getTFunc } from '@/app/utils/helpers'
 
 interface Category {
     id: string
@@ -20,9 +21,7 @@ interface Category {
 interface Props {
     open: boolean
     category: Category | null
-    settings: {
-        locale: Language
-    }
+    settings: { locale: Language }
     onClose: () => void
     onSuccess: () => void
 }
@@ -30,7 +29,7 @@ interface Props {
 interface FormValues {
     nameTranslations: Record<Language, string>
     descriptionTranslations: Record<Language, string>
-    coverImage?: string
+    coverImage?: any
 }
 
 export default function CategoryModal({
@@ -46,12 +45,14 @@ export default function CategoryModal({
     const [loading, setLoading] = useState(false)
     const [aiLoading, setAiLoading] = useState(false)
 
-    const [activeLanguage, setActiveLanguage]
-        = useState<Language>(settings.locale)
+    const [activeLanguage, setActiveLanguage] = useState<Language>(settings.locale)
 
     const originalName = useRef<Record<Language, string> | null>(null)
     const originalDescription = useRef<Record<Language, string> | null>(null)
 
+    const [latestName, setLatestName] = useState<Record<Language, string> | null>(null)
+    const [latestDescription, setLatestDescription] = useState<Record<Language, string> | null>(null)
+    
     const emptyTranslations = useMemo(() => {
         return Object.values(Language).reduce((acc, lang) => {
             acc[lang] = ''
@@ -60,7 +61,9 @@ export default function CategoryModal({
     }, [])
 
     useEffect(() => {
-        if (!open) {return}
+        if (!open) {
+            return
+        }
 
         setActiveLanguage(settings.locale)
 
@@ -81,10 +84,22 @@ export default function CategoryModal({
         originalName.current = category.name
         originalDescription.current = category.description
 
+        setLatestName(originalName.current)
+        setLatestDescription(originalDescription.current)
+        
         form.setFieldsValue({
             nameTranslations: category.name,
             descriptionTranslations: category.description,
-            coverImage: category.coverImage || ''
+            coverImage: category.coverImage
+                ? [
+                    {
+                        uid: '-1',
+                        name: 'cover',
+                        status: 'done',
+                        url: category.coverImage
+                    }
+                ]
+                : []
         })
     }, [open, category, settings.locale, form, emptyTranslations])
 
@@ -125,26 +140,30 @@ export default function CategoryModal({
                 return
             }
 
-            const [nameTranslations, descriptionTranslations]
-            = data?.translations || []
+            const [nameTranslations, descriptionTranslations] = data?.translations || []
 
-            const currentName
-                = form.getFieldValue('nameTranslations') || {}
+            const currentName = form.getFieldValue('nameTranslations') || {}
 
-            const currentDescription
-                = form.getFieldValue('descriptionTranslations') || {}
+            const currentDescription = form.getFieldValue('descriptionTranslations') || {}
 
+            const updatedNameTranslations = {
+                ...currentName,
+                ...nameTranslations
+            }
+            
+            const updatedDescriptionTranslations = {
+                ...currentDescription,
+                ...descriptionTranslations
+            }
+            
             form.setFieldsValue({
-                nameTranslations: {
-                    ...currentName,
-                    ...nameTranslations
-                },
-                descriptionTranslations: {
-                    ...currentDescription,
-                    ...descriptionTranslations
-                }
+                nameTranslations: updatedNameTranslations,
+                descriptionTranslations: updatedDescriptionTranslations
             })
-
+            
+            setLatestName(updatedNameTranslations)
+            setLatestDescription(updatedDescriptionTranslations)
+            
             message.success(t('Translations generated'))
         } catch {
             message.error(t('AI translation failed'))
@@ -159,15 +178,45 @@ export default function CategoryModal({
             setLoading(true)
 
             const nameChanged
-                = JSON.stringify(values.nameTranslations)
+                = JSON.stringify({
+                    ...latestName,
+                    ...values.nameTranslations
+                })
                 !== JSON.stringify(originalName.current)
 
             const descChanged
-                = JSON.stringify(values.descriptionTranslations)
+                = JSON.stringify({
+                    ...latestDescription,
+                    ...values.descriptionTranslations
+                })
                 !== JSON.stringify(originalDescription.current)
 
+            // File upload
+            let coverImage: string | undefined | null
+            const file = values.coverImage?.[0]?.originFileObj
+
+            if (file) {
+                const formData = new FormData()
+                formData.append('files', file)
+
+                const res = await fetch('/api/files/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+
+                const data = await res.json()
+
+                coverImage = data.files?.[0]?.key
+            } else if (values.coverImage?.length === 0) {
+                // user explicitly removed image
+                coverImage = null
+            } else {
+                coverImage = extractS3Key(category?.coverImage)
+            }
+
+            // Fields update
             const body: Record<string, unknown> = {
-                coverImage: values.coverImage
+                coverImage
             }
 
             if (category?.id) {
@@ -177,14 +226,21 @@ export default function CategoryModal({
             if (category?.nameTID && !nameChanged) {
                 body.nameTID = category.nameTID
             } else {
-                body.nameTranslations = values.nameTranslations
+                body.nameTranslations = {
+                    ...latestName,
+                    ...values.nameTranslations,
+                    id: undefined
+                }
             }
 
             if (category?.descriptionTID && !descChanged) {
                 body.descriptionTID = category.descriptionTID
             } else {
-                body.descriptionTranslations
-                    = values.descriptionTranslations
+                body.descriptionTranslations = {
+                    ...latestDescription,
+                    ...values.descriptionTranslations,
+                    id: undefined
+                }
             }
 
             const res = await fetch('/api/admin/categories', {
@@ -198,14 +254,19 @@ export default function CategoryModal({
             const data = await res.json()
 
             if (!res.ok) {
-                message.error(data?.message || t('Failed to save category'))
+                if (data.message) {
+                    message.error(data.message)
+                } else if (data.messages) {
+                    data.messages.forEach((item: string) =>
+                        message.error(item))
+                } else {
+                    message.error(data?.message || t('Failed to save category'))
+                }
+
                 return
             }
 
-            message.success(data?.message
-                || (category
-                    ? t('Category updated')
-                    : t('Category created')))
+            message.success(data?.message || (category ? t('Category updated') : t('Category created')))
 
             onSuccess()
         } catch {
@@ -250,12 +311,6 @@ export default function CategoryModal({
             ]}
         >
             <Form form={form} layout="vertical">
-                <Form.Item
-                    name="coverImage"
-                    label={t('Cover Image URL')}
-                >
-                    <Input />
-                </Form.Item>
 
                 <Tabs
                     type="card"
@@ -298,6 +353,25 @@ export default function CategoryModal({
                                     ]}
                                 >
                                     <Input.TextArea rows={3} />
+                                </Form.Item>
+
+                                <Form.Item
+                                    name="coverImage"
+                                    label={t('Cover Image')}
+                                    valuePropName="fileList"
+                                    getValueFromEvent={(e) =>
+                                        Array.isArray(e) ? e : e?.fileList
+                                    }
+                                >
+                                    <Upload
+                                        maxCount={1}
+                                        beforeUpload={() => false}
+                                        listType="picture"
+                                    >
+                                        <Button icon={<UploadOutlined />}>
+                                            {t('Upload')}
+                                        </Button>
+                                    </Upload>
                                 </Form.Item>
                             </>
                         )
