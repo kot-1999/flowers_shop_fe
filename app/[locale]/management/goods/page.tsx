@@ -34,7 +34,7 @@ export default function GoodsPage() {
         {
             key: 'goods',
             label: t('Goods'),
-            children: <GoodTab />
+            children: <GoodTab settings={settings}/>
         },
         {
             key: 'categories',
