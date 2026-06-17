@@ -65,7 +65,7 @@ export const languageOptions = [
     }
 ]
 
-export function extractS3Key(url: string | null): string | null {
+export function extractS3Key(url: string | null | undefined): string | null {
     try {
         if (!url) {
             return null
