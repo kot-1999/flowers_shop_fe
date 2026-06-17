@@ -53,6 +53,11 @@ export const lightTheme = {
             triggerBg: '#ffffff'
         },
 
+        Carousel: {
+            arrowSize: 32,
+            arrowOffset: 12
+        },
+
         Card: {
             colorBgContainer: '#ffffff',
             borderRadiusLG: 24,
@@ -184,6 +189,12 @@ export const darkTheme = {
             headerBg: '#121c2e',
             siderBg: '#121c2e',
             triggerBg: '#121c2e'
+        },
+
+        Carousel: {
+            arrowSize: 32,
+            arrowOffset: 12
+
         },
 
         Card: {
