@@ -64,3 +64,16 @@ export const languageOptions = [
         label: '🇸🇰 Slovak' 
     }
 ]
+
+export function extractS3Key(url: string | null): string | null {
+    try {
+        if (!url) {
+            return null
+        }
+
+        return url.split('/').slice(2)
+            .join('/') || null
+    } catch {
+        return null
+    }
+}
