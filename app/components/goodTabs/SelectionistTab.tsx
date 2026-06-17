@@ -12,7 +12,7 @@ import {
 } from 'antd'
 import { useEffect, useState } from 'react'
 
-import SelectionistModal from '@/app/components/goodModals/selectionistModal'
+import SelectionistModal from '@/app/components/goodModals/SelectionistModal'
 import SimplePagination from '@/app/components/SimplePagination'
 import {
     Defaults,

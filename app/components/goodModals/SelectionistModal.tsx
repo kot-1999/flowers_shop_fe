@@ -57,6 +57,7 @@ export default function SelectionistModal({
     const originalTranslations = useRef<
         Partial<Record<Language, string>> | null
     >(null)
+    const [nameTranslations, setNameTranslations] = useState({})
 
     const emptyTranslations = useMemo(
         () =>
@@ -91,6 +92,7 @@ export default function SelectionistModal({
         }
 
         originalTranslations.current = selectionist.name
+        setNameTranslations(originalTranslations.current)
 
         form.setFieldsValue({
             country: selectionist.country,
@@ -108,8 +110,7 @@ export default function SelectionistModal({
         try {
             const values = form.getFieldsValue()
 
-            const sourceText
-                = values?.nameTranslations?.[activeLanguage]
+            const sourceText = values?.nameTranslations?.[activeLanguage]
 
             if (!sourceText) {
                 message.warning(t('Enter text first'))
@@ -139,15 +140,15 @@ export default function SelectionistModal({
             const translations
                 = data?.translations?.[0]
 
-            const current
-                = form.getFieldValue('nameTranslations') || {}
+            const current = form.getFieldValue('nameTranslations') || {}
 
-            form.setFieldsValue({
-                nameTranslations: {
-                    ...current,
-                    ...translations
-                }
-            })
+            const updatedNameTranslations =  {
+                ...current,
+                ...translations
+            }
+
+            form.setFieldsValue(updatedNameTranslations)
+            setNameTranslations(updatedNameTranslations)
 
             message.success(t('Translations generated'))
         } catch {
@@ -164,28 +165,28 @@ export default function SelectionistModal({
 
             setLoading(true)
 
-            const translationsChanged
-                = JSON.stringify(values.nameTranslations)
-                !== JSON.stringify(originalTranslations.current)
+            const translationsChanged = JSON.stringify({
+                ...nameTranslations,
+                ...values.nameTranslations
+            }) !== JSON.stringify(originalTranslations.current)
 
             const body: Record<string, unknown> = {
                 country: values.country
             }
 
             if (selectionist?.id) {
-                body.selectionistID
-                    = selectionist.id
+                body.selectionistID = selectionist.id
             }
 
-            if (
-                selectionist?.nameTID
-                && !translationsChanged
-            ) {
+            if (selectionist?.nameTID && !translationsChanged) {
                 body.nameTID
                     = selectionist.nameTID
             } else {
-                body.nameTranslations
-                    = values.nameTranslations
+                body.nameTranslations = {
+                    ...nameTranslations,
+                    ...values.nameTranslations,
+                    id: undefined
+                }
             }
 
             const res = await fetch(
@@ -215,10 +216,7 @@ export default function SelectionistModal({
                 return
             }
 
-            message.success(data.message
-                || (selectionist
-                    ? t('Selectionist updated')
-                    : t('Selectionist created')))
+            message.success(data.message || (selectionist ? t('Selectionist updated') : t('Selectionist created')))
 
             onSuccess()
         } catch {

@@ -1,5 +1,5 @@
 import { DeleteOutlined, UndoOutlined } from '@ant-design/icons'
-import { Button, Input, message, Space, Table, Tag, Popconfirm } from 'antd'
+import {Button, Input, message, Space, Table, Tag, Popconfirm, Image} from 'antd'
 import { useEffect, useState } from 'react'
 
 import CategoryModal from '@/app/components/goodModals/CategoryModal'
@@ -159,7 +159,7 @@ export default function CategoriesTab({ settings }: Props) {
             width: 120,
             render: (_: any, record: CategoryEntity) =>
                 record.coverImage ? (
-                    <img
+                    <Image
                         src={record.coverImage}
                         style={{
                             width: 50,

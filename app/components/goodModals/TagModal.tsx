@@ -42,6 +42,7 @@ export default function TagModal({
     const [activeLanguage, setActiveLanguage] = useState<Language>(settings.locale)
 
     const originalTranslations = useRef<Record<Language, string> | null>(null)
+    const [nameTranslations, setNameTranslations] = useState({})
 
     const emptyTranslations = useMemo(() => {
         return Object.values(Language).reduce((acc, lang) => {
@@ -67,6 +68,7 @@ export default function TagModal({
         }
 
         originalTranslations.current = tag.name
+        setNameTranslations(originalTranslations.current)
 
         form.setFieldsValue({
             nameTranslations: tag.name
@@ -102,12 +104,13 @@ export default function TagModal({
 
             const current = form.getFieldValue('nameTranslations') || {}
 
-            form.setFieldsValue({
-                nameTranslations: {
-                    ...current,
-                    ...translations
-                }
-            })
+            const updatedNameTranslations =  {
+                ...current,
+                ...translations
+            }
+
+            form.setFieldsValue(updatedNameTranslations)
+            setNameTranslations(updatedNameTranslations)
 
             message.success(t('Translations generated'))
         } catch {
@@ -122,9 +125,10 @@ export default function TagModal({
             const values = await form.validateFields()
             setLoading(true)
 
-            const translationsChanged
-                = JSON.stringify(values.nameTranslations)
-                !== JSON.stringify(originalTranslations.current)
+            const translationsChanged = JSON.stringify({
+                ...nameTranslations,
+                ...values.nameTranslations
+            }) !== JSON.stringify(originalTranslations.current)
 
             const body: Record<string, unknown> = {}
 
@@ -135,7 +139,11 @@ export default function TagModal({
             if (tag?.nameTID && !translationsChanged) {
                 body.nameTID = tag.nameTID
             } else {
-                body.nameTranslations = values.nameTranslations
+                body.nameTranslations = {
+                    ...nameTranslations,
+                    ...values.nameTranslations,
+                    id: undefined
+                }
             }
 
             const res = await fetch('/api/admin/tags', {
@@ -149,13 +157,19 @@ export default function TagModal({
             const data = await res.json()
 
             if (!res.ok) {
-                message.error(data?.message
-                    || t('Failed to save tag'))
+                if (data.message) {
+                    message.error(data.message)
+                } else if (data.messages) {
+                    data.messages.forEach((item: string) =>
+                        message.error(item))
+                } else {
+                    message.error(t('Failed to save tag'))
+                }
+
                 return
             }
 
-            message.success(data?.message
-                || (tag ? t('Tag updated') : t('Tag created')))
+            message.success(data?.message || (tag ? t('Tag updated') : t('Tag created')))
 
             onSuccess()
         } catch {

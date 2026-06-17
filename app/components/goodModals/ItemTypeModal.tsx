@@ -52,6 +52,7 @@ export default function ItemTypeModal({
     const [aiLoading, setAiLoading] = useState(false)
     const [loading, setLoading] = useState(false)
     const [activeLanguage, setActiveLanguage] = useState<Language>(settings.locale)
+    const [nameTranslations, setNameTranslations] = useState({})
 
     const originalTranslations = useRef<
         Partial<Record<Language, string>> | null
@@ -91,6 +92,8 @@ export default function ItemTypeModal({
 
         originalTranslations.current = itemType.name
 
+        setNameTranslations(originalTranslations.current)
+
         form.setFieldsValue({
             weight: itemType.weight,
             nameTranslations: itemType.name
@@ -106,8 +109,7 @@ export default function ItemTypeModal({
     const generateTranslations = async () => {
         try {
             const values = form.getFieldsValue()
-            const sourceText
-                = values?.nameTranslations?.[activeLanguage]
+            const sourceText = values?.nameTranslations?.[activeLanguage]
 
             if (!sourceText) {
                 message.warning(t('Enter text first'))
@@ -137,13 +139,14 @@ export default function ItemTypeModal({
 
             const current = form.getFieldValue('nameTranslations') || {}
 
-            form.setFieldsValue({
-                nameTranslations: {
-                    ...current,
-                    ...translations
-                }
-            })
-
+            const updatedNameTranslations =  {
+                ...current,
+                ...translations
+            }
+            
+            form.setFieldsValue(updatedNameTranslations)
+            setNameTranslations(updatedNameTranslations)
+            
             message.success(t('Translations generated'))
         } catch {
             message.error(t('AI translation failed'))
@@ -158,9 +161,10 @@ export default function ItemTypeModal({
 
             setLoading(true)
 
-            const translationsChanged
-                = JSON.stringify(values.nameTranslations)
-                !== JSON.stringify(originalTranslations.current)
+            const translationsChanged = JSON.stringify({
+                ...nameTranslations,
+                ...values.nameTranslations
+            }) !== JSON.stringify(originalTranslations.current)
 
             const body: Record<string, unknown> = {
                 weight: values.weight
@@ -170,13 +174,14 @@ export default function ItemTypeModal({
                 body.itemTypeID = itemType.id
             }
 
-            if (
-                itemType?.nameTID
-                && !translationsChanged
-            ) {
+            if (itemType?.nameTID && !translationsChanged) {
                 body.nameTID = itemType.nameTID
             } else {
-                body.nameTranslations = values.nameTranslations
+                body.nameTranslations = {
+                    ...nameTranslations,
+                    ...values.nameTranslations,
+                    id: undefined
+                }
             }
 
             const res = await fetch('/api/admin/item-types', {
@@ -202,10 +207,7 @@ export default function ItemTypeModal({
                 return
             }
 
-            message.success(data.message
-                || (itemType
-                    ? t('Item type updated')
-                    : t('Item type created')))
+            message.success(data.message || (itemType ? t('Item type updated') : t('Item type created')))
 
             onSuccess()
         } catch {
