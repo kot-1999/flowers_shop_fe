@@ -117,7 +117,7 @@ export function getMenuItems({
                         </Link>
                     )
                 },
-                ...categories.map((category: any) => ({
+                ...categories?.map((category: any) => ({
                     key: `/${category.name[settings.locale + 'Slug']}`,
                     label: (
                         <Link href={`/${category.name[settings.locale + 'Slug']}`} onClick={() => {
