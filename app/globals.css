@@ -1,9 +1,7 @@
 @import "tailwindcss";
 @tailwind utilities;
 
-/* =========================
-   🌱 ROOT THEME VARIABLES
-========================= */
+/* ROOT THEME VARIABLES */
 :root {
     --bg-base: #f6f8fc;
     --bg-glow-1: rgba(79, 140, 255, 0.12);
@@ -17,10 +15,7 @@
     --surface-active: rgba(79, 140, 255, 0.08);
 }
 
-/* =========================
-   🌙 DARK THEME OVERRIDE
-   (toggle via .dark on body or html)
-========================= */
+/* DARK THEME OVERRIDE (toggle via .dark on body or html)= */
 .dark {
     --bg-base: #0b1220;
     --bg-glow-1: rgba(90, 162, 255, 0.18);
@@ -34,9 +29,7 @@
     --surface-active: rgba(90, 162, 255, 0.12);
 }
 
-/* =========================
-   🌿 BODY BACKGROUND (WORKS BOTH THEMES)
-========================= */
+/* BODY BACKGROUND (WORKS BOTH THEMES) */
 body {
     background:
             radial-gradient(circle at 50% 40%, var(--bg-glow-1), transparent 55%),
@@ -46,9 +39,7 @@ body {
     color: var(--text-base);
 }
 
-/* =========================
-   🧊 GLASS SYSTEM (THE CORE OF YOUR DESIGN)
-========================= */
+/* GLASS SYSTEM (THE CORE OF YOUR DESIGN) */
 .glass-card {
     background: var(--glass) !important;
 
@@ -88,9 +79,6 @@ body {
             0 10px 30px rgba(0,0,0,0.15);
 }
 
-/* =========================
-   🧱 ANT DESIGN CLEAN RESET
-========================= */
 .ant-card {
     background: transparent !important;
     border: none !important;
@@ -107,4 +95,41 @@ body {
 .ant-layout,
 .ant-layout-content {
     background: transparent !important;
+}
+
+/* PRICING PULSE */
+
+.pricing-error {
+    position: relative;
+    border-radius: 8px;
+}
+
+.pricing-error.pulse::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 0;
+
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+
+    animation: pulseBorderSmooth 1s cubic-bezier(0.4, 0, 0.2, 1) 2;
+}
+
+.pricing-error > * {
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes pulseBorderSmooth {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+    }
+    20% {
+        box-shadow: 0 0 0 4px rgba(255, 77, 79, 0.25);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+    }
 }
