@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react'
 
 import TagModal from '@/app/components/goodModals/TagModal'
 import SimplePagination from '@/app/components/SimplePagination'
+import { commonFetch } from '@/app/utils/clientFetchFuntions'
 import { Defaults, Language, LocalStorageKey } from '@/app/utils/enums'
 import {
-    getLocalStorage,
     getTFunc,
     removeLocalStorage
 } from '@/app/utils/helpers'
@@ -45,30 +45,6 @@ export default function TagsTab({ settings }: Props) {
     const page = pagination?.page ?? Defaults.Page
     const limit = pagination?.limit ?? Defaults.Limit
 
-    const fetchData = async () => {
-        setLoading(true)
-
-        try {
-            const params = new URLSearchParams()
-
-            const stored = getLocalStorage(LocalStorageKey.TagPagination)
-
-            params.set('page', String(stored?.page ?? Defaults.Page))
-            params.set('limit', String(stored?.limit ?? Defaults.Limit))
-
-            if (search) {
-                params.set('search', search)
-            }
-
-            const res = await fetch(`/api/admin/tags?${params.toString()}`)
-            const json = await res.json()
-
-            setData(json)
-        } finally {
-            setLoading(false)
-        }
-    }
-
     const updateTag = async (body: Record<string, any>) => {
         try {
             const res = await fetch('/api/admin/tags', {
@@ -81,7 +57,13 @@ export default function TagsTab({ settings }: Props) {
 
             if (res.ok) {
                 message.success(data.message)
-                fetchData()
+                commonFetch({
+                    type: 'adminTags',
+                    setLoading,
+                    search,
+                    setData,
+                    paginationKey: LocalStorageKey.TagPagination
+                })
             } else {
                 if (data.message) {
                     message.error(data.message)
@@ -114,7 +96,13 @@ export default function TagsTab({ settings }: Props) {
 
             if (res.ok) {
                 message.success(data.message)
-                fetchData()
+                commonFetch({
+                    type: 'adminTags',
+                    setLoading,
+                    search,
+                    setData,
+                    paginationKey: LocalStorageKey.TagPagination
+                })
             } else {
                 if (data.message) {
                     message.error(data.message)
@@ -129,7 +117,13 @@ export default function TagsTab({ settings }: Props) {
     }
 
     useEffect(() => {
-        fetchData()
+        commonFetch({
+            type: 'adminTags',
+            setLoading,
+            search,
+            setData,
+            paginationKey: LocalStorageKey.TagPagination
+        })
     }, [])
 
     const openModal = (tag: TagEntity | null) => {
@@ -222,7 +216,13 @@ export default function TagsTab({ settings }: Props) {
                     onChange={(e) => setSearch(e.target.value)}
                     onSearch={() => {
                         removeLocalStorage(LocalStorageKey.TagPagination)
-                        fetchData()
+                        commonFetch({
+                            type: 'adminTags',
+                            setLoading,
+                            search,
+                            setData,
+                            paginationKey: LocalStorageKey.TagPagination
+                        })
                     }}
                     style={{ width: 250 }}
                 />
@@ -254,7 +254,13 @@ export default function TagsTab({ settings }: Props) {
                 current={page}
                 total={pagination?.total ?? 0}
                 pageSize={limit}
-                callFunc={fetchData}
+                callFunc={() => commonFetch({
+                    type: 'adminTags',
+                    setLoading,
+                    search,
+                    setData,
+                    paginationKey: LocalStorageKey.TagPagination
+                })}
             />
 
             <TagModal
@@ -264,7 +270,13 @@ export default function TagsTab({ settings }: Props) {
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => {
                     setIsModalOpen(false)
-                    fetchData()
+                    commonFetch({
+                        type: 'adminTags',
+                        setLoading,
+                        search,
+                        setData,
+                        paginationKey: LocalStorageKey.TagPagination
+                    })
                 }}
             />
         </div>

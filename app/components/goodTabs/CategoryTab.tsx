@@ -1,19 +1,14 @@
 import { DeleteOutlined, UndoOutlined } from '@ant-design/icons'
-import {Button, Input, message, Space, Table, Tag, Popconfirm, Image} from 'antd'
+import { Button, Input, message, Space, Table, Tag, Popconfirm, Image } from 'antd'
 import { useEffect, useState } from 'react'
 
 import CategoryModal from '@/app/components/goodModals/CategoryModal'
-import SimplePagination from '@/app/components/SimplePagination'
+import { commonFetch } from '@/app/utils/clientFetchFuntions'
 import {
     Defaults,
-    Language,
-    LocalStorageKey
+    Language
 } from '@/app/utils/enums'
-import {
-    getLocalStorage,
-    getTFunc,
-    removeLocalStorage
-} from '@/app/utils/helpers'
+import { getTFunc } from '@/app/utils/helpers'
 
 interface CategoryEntity {
     id: string
@@ -51,30 +46,6 @@ export default function CategoriesTab({ settings }: Props) {
     const page = pagination?.page ?? Defaults.Page
     const limit = pagination?.limit ?? Defaults.Limit
 
-    const fetchData = async () => {
-        setLoading(true)
-
-        try {
-            const params = new URLSearchParams()
-
-            const stored = getLocalStorage(LocalStorageKey.CategoryPagination)
-
-            params.set('page', String(stored?.page ?? Defaults.Page))
-            params.set('limit', String(stored?.limit ?? Defaults.Limit))
-
-            if (search) {
-                params.set('search', search)
-            }
-
-            const res = await fetch(`/api/admin/categories?${params.toString()}`)
-            const json = await res.json()
-
-            setData(json)
-        } finally {
-            setLoading(false)
-        }
-    }
-
     const updateCategory = async (body: Record<string, any>) => {
         try {
             const res = await fetch('/api/admin/categories', {
@@ -87,7 +58,12 @@ export default function CategoriesTab({ settings }: Props) {
 
             if (res.ok) {
                 message.success(data.message)
-                fetchData()
+                commonFetch({
+                    search,
+                    setLoading: setLoading,
+                    setData: setData,
+                    type: 'categories'
+                })
             } else {
                 if (data.message) {
                     message.error(data.message)
@@ -119,7 +95,12 @@ export default function CategoriesTab({ settings }: Props) {
 
             if (res.ok) {
                 message.success(json.message)
-                fetchData()
+                commonFetch({
+                    search,
+                    setLoading: setLoading,
+                    setData: setData,
+                    type: 'categories'
+                })
             } else {
                 message.error(json.message || t('Failed to delete category'))
             }
@@ -134,7 +115,12 @@ export default function CategoriesTab({ settings }: Props) {
     }
 
     useEffect(() => {
-        fetchData()
+        commonFetch({
+            search,
+            setLoading: setLoading,
+            setData: setData,
+            type: 'categories'
+        })
     }, [])
 
     const columns = [
@@ -162,8 +148,8 @@ export default function CategoriesTab({ settings }: Props) {
                     <Image
                         src={record.coverImage}
                         style={{
-                            width: 50,
-                            height: 50,
+                            width: 100,
+                            height: 100,
                             objectFit: 'cover'
                         }}
                     />
@@ -241,8 +227,12 @@ export default function CategoriesTab({ settings }: Props) {
                     allowClear
                     onChange={(e) => setSearch(e.target.value)}
                     onSearch={() => {
-                        removeLocalStorage(LocalStorageKey.CategoryPagination)
-                        fetchData()
+                        commonFetch({
+                            search,
+                            setLoading: setLoading,
+                            setData: setData,
+                            type: 'categories'
+                        })
                     }}
                     style={{ width: 250 }}
                 />
@@ -276,16 +266,13 @@ export default function CategoriesTab({ settings }: Props) {
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => {
                     setIsModalOpen(false)
-                    fetchData()
+                    commonFetch({
+                        search,
+                        setLoading: setLoading,
+                        setData: setData,
+                        type: 'categories'
+                    })
                 }}
-            />
-
-            <SimplePagination
-                storageKey={LocalStorageKey.CategoryPagination}
-                current={page}
-                total={pagination?.total ?? 0}
-                pageSize={limit}
-                callFunc={fetchData}
             />
         </div>
     )

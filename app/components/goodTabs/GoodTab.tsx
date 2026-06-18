@@ -3,6 +3,7 @@
 import { Button, Image, Input, Space, Table, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 
+import GoodModal from '@/app/components/goodModals/GoodModal'
 import SimplePagination from '@/app/components/SimplePagination'
 import { Defaults, GoodState, Language, LocalStorageKey } from '@/app/utils/enums'
 import { getLocalStorage, getTFunc, removeLocalStorage } from '@/app/utils/helpers'
@@ -112,11 +113,6 @@ export default function GoodsTab({ settings }: Props) {
                 record.name?.[settings.locale] ?? '-'
         },
         {
-            title: t('Description'),
-            render: (_: any, record: GoodEntity) =>
-                record.description?.[settings.locale] ?? '-'
-        },
-        {
             title: t('Photos'),
             width: 120,
             render: (_: any, record: GoodEntity) =>
@@ -124,8 +120,8 @@ export default function GoodsTab({ settings }: Props) {
                     <Image
                         src={record.photos[0]}
                         style={{
-                            width: 50,
-                            height: 50,
+                            width: 100,
+                            height: 100,
                             objectFit: 'cover'
                         }}
                     />
@@ -215,8 +211,6 @@ export default function GoodsTab({ settings }: Props) {
                 })}
             />
 
-            {/* 🔥 OPEN GOOD MODAL (same pattern as CategoryModal) */}
-            {/*
             <GoodModal
                 open={isModalOpen}
                 good={selectedGood}
@@ -227,7 +221,6 @@ export default function GoodsTab({ settings }: Props) {
                     fetchData()
                 }}
             />
-            */}
 
             <SimplePagination
                 storageKey={LocalStorageKey.GoodPagination}

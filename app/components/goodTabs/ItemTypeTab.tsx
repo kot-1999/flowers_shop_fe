@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 
 import ItemTypeModal from '@/app/components/goodModals/ItemTypeModal'
 import SimplePagination from '@/app/components/SimplePagination'
+import { commonFetch } from '@/app/utils/clientFetchFuntions'
 import { Defaults, Language, LocalStorageKey } from '@/app/utils/enums'
-import { getLocalStorage, getTFunc, removeLocalStorage } from '@/app/utils/helpers'
+import { getTFunc, removeLocalStorage } from '@/app/utils/helpers'
 
 interface ItemType {
     id: string;
@@ -40,34 +41,6 @@ export default function ItemTypesTab({
     const page = pagination?.page ?? Defaults.Page
     const limit = pagination?.limit ?? Defaults.Limit
 
-    const fetchData = async () => {
-        setLoading(true)
-
-        try {
-            const params = new URLSearchParams()
-
-            const stored = getLocalStorage(LocalStorageKey.ItemTypePagination)
-
-            params.set('page', String(stored?.page ?? Defaults.Page))
-            params.set('limit', String(stored?.limit ?? Defaults.Limit))
-
-            if (search) {
-                params.set('search', search)
-            }
-
-            const res = await fetch(
-                `/api/admin/item-types?${params.toString()}`,
-                { method: 'GET' }
-            )
-
-            const data = await res.json()
-            setData(data)
-
-        } finally {
-            setLoading(false)
-        }
-    }
-
     const deleteItemType = async (id: string) => {
         try {
             const res = await fetch(`/api/admin/item-types/${id}`, {
@@ -78,7 +51,13 @@ export default function ItemTypesTab({
 
             if (res.ok) {
                 message.success(data.message)
-                fetchData()
+                commonFetch({
+                    search,
+                    setLoading: setLoading,
+                    setData: setData,
+                    type: 'adminItemTypes',
+                    paginationKey: LocalStorageKey.ItemTypePagination
+                })
             } else {
                 if (data.message) {
                     message.error(data.message)
@@ -86,15 +65,20 @@ export default function ItemTypesTab({
                     data.messages.forEach((item: string) => message.error(item))
                 }
             }
-
-            fetchData()
+            
         } catch {
             message.error(t('Failed to delete item Type'))
         }
     }
 
     useEffect(() => {
-        fetchData()
+        commonFetch({
+            search,
+            setLoading: setLoading,
+            setData: setData,
+            type: 'adminItemTypes',
+            paginationKey: LocalStorageKey.ItemTypePagination
+        })
     }, [])
 
     const columns = [
@@ -169,7 +153,13 @@ export default function ItemTypesTab({
                     onSearch={(value) => {
                         setSearch(value)
                         removeLocalStorage(LocalStorageKey.ItemTypePagination)
-                        fetchData()
+                        commonFetch({
+                            search,
+                            setLoading: setLoading,
+                            setData: setData,
+                            type: 'adminItemTypes',
+                            paginationKey: LocalStorageKey.ItemTypePagination
+                        })
                     }}
                     style={{ width: 250 }}
                 />
@@ -207,7 +197,13 @@ export default function ItemTypesTab({
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => {
                     setIsModalOpen(false)
-                    fetchData()
+                    commonFetch({
+                        search,
+                        setLoading: setLoading,
+                        setData: setData,
+                        type: 'adminItemTypes',
+                        paginationKey: LocalStorageKey.ItemTypePagination
+                    })
                 }}
             />
 
@@ -217,7 +213,13 @@ export default function ItemTypesTab({
                 current={page}
                 total={pagination?.total ?? 0}
                 pageSize={limit}
-                callFunc={fetchData}
+                callFunc={() => commonFetch({
+                    search,
+                    setLoading: setLoading,
+                    setData: setData,
+                    type: 'adminItemTypes',
+                    paginationKey: LocalStorageKey.ItemTypePagination
+                })}
             />
         </div>
     )

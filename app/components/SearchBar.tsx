@@ -2,6 +2,7 @@ import { DownOutlined, UpOutlined } from '@ant-design/icons'
 import { Button, Checkbox, Col, Input, Row, Select, Space } from 'antd'
 import { useEffect, useState } from 'react'
 
+import { commonFetch } from '@/app/utils/clientFetchFuntions'
 import { LocalStorageKey } from '@/app/utils/enums'
 import { getLocalStorage, removeLocalStorage, setLocalStorage, getTFunc } from '@/app/utils/helpers'
 
@@ -10,10 +11,10 @@ export default function SearchBar({ fetchGoods, settings }: any) {
 
     const [appliedSearch, setAppliedSearch] = useState('')
 
-    const [selectionists, setSelectionists] = useState<any[]>([])
+    const [selectionistRes, setSelectionistRes] = useState<{ selectionists: any[]}>({ selectionists: [] })
     const [appliedSelectionists, setAppliedSelectionists] = useState<any[]>([])
 
-    const [tags, setTags] = useState<any[]>([])
+    const [tagRes, setTagRes] = useState<{ tags: any[] }>({ tags: [] })
     const [appliedTags, setAppliedTags] = useState<any[]>([])
 
     const [appliedShowOnly, setAppliedShowOnly] = useState(false)
@@ -65,50 +66,6 @@ export default function SearchBar({ fetchGoods, settings }: any) {
         sortOrder
     ])
 
-    const handleSelectionistSearch = async (value?: string) => {
-        if (!value && selectionists.length > 0) {
-            return
-        }
-        try {
-            const params = new URLSearchParams()
-
-            if (value) {
-                params.set('search', value)
-            }
-
-            params.set('limit', '30')
-
-            const res = await fetch(`/api/selectionists?${params.toString()}`)
-
-            const data = await res.json()
-            setSelectionists(data.selectionists)
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
-    const handleTagSearch = async (value?: string) => {
-        if (!value && tags.length > 0) {
-            return
-        }
-        try {
-            const params = new URLSearchParams()
-
-            if (value) {
-                params.set('search', value)
-            }
-
-            params.set('limit', '30')
-
-            const res = await fetch(`/api/tags?${params.toString()}`)
-
-            const data = await res.json()
-            setTags(data.tags)
-        } catch (error) {
-            console.error(error)
-        }
-    }
-
     return (
         <div>
             <Space.Compact style={{
@@ -147,11 +104,18 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                             data: item
                         }))}
                         showSearch={{
-                            onSearch: handleSelectionistSearch,
+                            onSearch: (value) => commonFetch({
+                                type: 'selectionists',
+                                setData: setSelectionistRes,
+                                search: value
+                            }),
                             filterOption: false
                         }}
-                        onFocus={() => handleSelectionistSearch()}
-                        options={selectionists.map((item) => ({
+                        onFocus={() => !selectionistRes.selectionists?.length && commonFetch({
+                            type: 'selectionists',
+                            setData: setSelectionistRes
+                        })}
+                        options={selectionistRes.selectionists?.map((item) => ({
                             label: item.name?.[settings?.locale],
                             value: item.id,
                             data: item
@@ -174,11 +138,18 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                             data: item
                         }))}
                         showSearch={{
-                            onSearch: handleTagSearch,
+                            onSearch: (value) => commonFetch({
+                                type: 'tags',
+                                setData: setTagRes,
+                                search: value
+                            }),
                             filterOption: false
                         }}
-                        onFocus={() => handleTagSearch()}
-                        options={tags.map((item) => ({
+                        onFocus={() => !tagRes.tags?.length && commonFetch({
+                            type: 'tags',
+                            setData: setTagRes
+                        })}
+                        options={tagRes.tags?.map((item) => ({
                             label: item.name?.[settings?.locale],
                             value: item.id,
                             data: item

@@ -7,6 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { useAuth } from '@/app/components/AuthContent'
+import { commonFetch } from '@/app/utils/clientFetchFuntions'
 import { Language, LocalStorageKey } from '@/app/utils/enums'
 import { fetchSettings, languageOptions, removeLocalStorage, getTFunc } from '@/app/utils/helpers'
 import { getMenuItems } from '@/app/utils/menuItems'
@@ -24,23 +25,13 @@ export default function AppSidebar({ isDark, setDark }: { isDark: boolean, setDa
     const [collapsed, setCollapsed] = useState(false)
     const [settings, setSettings] = useState<any>(null)
     const [, locale, ...rest] = pathname.split('/')
-    const [categories, setCategories] = useState<any>([])
+    const [categoryRes, setCategoryRes] = useState<{ categories: any[] }>({ categories: [] })
 
     useEffect(() => {
-        const loadCategories = async () => {
-            try {
-                const res = await fetch('/api/categories')
-                const data = await res.json()
-
-                setCategories(data.categories)
-                console.log(data.categories, settings)
-
-            } catch (err) {
-                console.error(err)
-            }
-        }
-
-        loadCategories()
+        commonFetch({
+            type: 'categories',
+            setData: setCategoryRes
+        })
     }, [locale])
 
     // Load application settings
@@ -130,7 +121,7 @@ export default function AppSidebar({ isDark, setDark }: { isDark: boolean, setDa
                         items={getMenuItems({
                             user,
                             settings,
-                            categories 
+                            categories: categoryRes.categories
                         })}
                     />
                 </div>
