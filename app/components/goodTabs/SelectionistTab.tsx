@@ -1,28 +1,14 @@
 'use client'
 
 import { DeleteOutlined } from '@ant-design/icons'
-import {
-    Button,
-    Input,
-    message,
-    Popconfirm,
-    Space,
-    Table,
-    Tag
-} from 'antd'
+import { Button, Input, message, Popconfirm, Space, Table, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 
 import SelectionistModal from '@/app/components/goodModals/SelectionistModal'
 import SimplePagination from '@/app/components/SimplePagination'
-import {
-    Defaults,
-    Language,
-    LocalStorageKey
-} from '@/app/utils/enums'
-import {
-    getLocalStorage,
-    getTFunc, removeLocalStorage
-} from '@/app/utils/helpers'
+import { commonFetch } from '@/app/utils/clientFetchFuntions'
+import { Defaults, Language, LocalStorageKey } from '@/app/utils/enums'
+import { getTFunc, removeLocalStorage } from '@/app/utils/helpers'
 
 interface Selectionist {
     id: string;
@@ -66,43 +52,6 @@ export default function SelectionistsTab({
     const limit
         = pagination?.limit ?? Defaults.Limit
 
-    const fetchData = async () => {
-        setLoading(true)
-
-        try {
-            const params = new URLSearchParams()
-
-            const stored = getLocalStorage(LocalStorageKey.SelectionistPagination)
-
-            params.set(
-                'page',
-                String(stored?.page ?? Defaults.Page)
-            )
-
-            params.set(
-                'limit',
-                String(stored?.limit ?? Defaults.Limit)
-            )
-
-            if (search) {
-                params.set('search', search)
-            }
-
-            const res = await fetch(
-                `/api/selectionists?${params.toString()}`,
-                {
-                    method: 'GET'
-                }
-            )
-
-            const json = await res.json()
-
-            setData(json)
-        } finally {
-            setLoading(false)
-        }
-    }
-
     const deleteSelectionist = async (id: string) => {
         try {
             const res = await fetch(
@@ -116,7 +65,13 @@ export default function SelectionistsTab({
 
             if (res.ok) {
                 message.success(data.message)
-                fetchData()
+                commonFetch({
+                    type: 'selectionists',
+                    setLoading,
+                    search,
+                    setData,
+                    paginationKey: LocalStorageKey.SelectionistPagination
+                })
             } else {
                 if (data.message) {
                     message.error(data.message)
@@ -125,15 +80,19 @@ export default function SelectionistsTab({
                         message.error(item))
                 }
             }
-
-            fetchData()
         } catch {
             message.error(t('Failed to delete selectionist'))
         }
     }
 
     useEffect(() => {
-        fetchData()
+        commonFetch({
+            type: 'selectionists',
+            setLoading,
+            search,
+            setData,
+            paginationKey: LocalStorageKey.SelectionistPagination
+        })
     }, [])
 
     const openEditModal = (selectionist: Selectionist | null) => {
@@ -232,7 +191,13 @@ export default function SelectionistsTab({
                     onSearch={(value) => {
                         setSearch(value)
                         removeLocalStorage(LocalStorageKey.SelectionistPagination)
-                        fetchData()
+                        commonFetch({
+                            type: 'selectionists',
+                            setLoading,
+                            search,
+                            setData,
+                            paginationKey: LocalStorageKey.SelectionistPagination
+                        })
                     }}
                     style={{
                         width: 250
@@ -288,7 +253,13 @@ export default function SelectionistsTab({
                 }
                 onSuccess={() => {
                     setIsModalOpen(false)
-                    fetchData()
+                    commonFetch({
+                        type: 'selectionists',
+                        setLoading,
+                        search,
+                        setData,
+                        paginationKey: LocalStorageKey.SelectionistPagination
+                    })
                 }}
             />
 
@@ -299,7 +270,13 @@ export default function SelectionistsTab({
                 current={page}
                 total={pagination?.total ?? 0}
                 pageSize={limit}
-                callFunc={fetchData}
+                callFunc={() => commonFetch({
+                    type: 'selectionists',
+                    setLoading,
+                    search,
+                    setData,
+                    paginationKey: LocalStorageKey.SelectionistPagination
+                })}
             />
         </div>
     )
