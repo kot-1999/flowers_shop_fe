@@ -4,6 +4,7 @@ import { UploadOutlined } from '@ant-design/icons'
 import { Button, Form, Input, message, Modal, Tabs, Upload } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { generateAndFetchTranslations } from '@/app/utils/clientFetchFuntions'
 import { Language } from '@/app/utils/enums'
 import { extractS3Key, getTFunc } from '@/app/utils/helpers'
 
@@ -102,75 +103,6 @@ export default function CategoryModal({
                 : []
         })
     }, [open, category, settings.locale, form, emptyTranslations])
-
-    const generateTranslations = async () => {
-        try {
-            const values = form.getFieldsValue()
-
-            const sourceName
-                = values?.nameTranslations?.[activeLanguage]
-
-            const sourceDescription
-                = values?.descriptionTranslations?.[activeLanguage]
-
-            if (!sourceName && !sourceDescription) {
-                message.warning(t('Enter text first'))
-                return
-            }
-
-            setAiLoading(true)
-
-            const res = await fetch('/api/ai/translations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    text: [
-                        sourceName || '',
-                        sourceDescription || ''
-                    ]
-                })
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                message.error(data?.message || t('AI translation failed'))
-                return
-            }
-
-            const [nameTranslations, descriptionTranslations] = data?.translations || []
-
-            const currentName = form.getFieldValue('nameTranslations') || {}
-
-            const currentDescription = form.getFieldValue('descriptionTranslations') || {}
-
-            const updatedNameTranslations = {
-                ...currentName,
-                ...nameTranslations
-            }
-            
-            const updatedDescriptionTranslations = {
-                ...currentDescription,
-                ...descriptionTranslations
-            }
-            
-            form.setFieldsValue({
-                nameTranslations: updatedNameTranslations,
-                descriptionTranslations: updatedDescriptionTranslations
-            })
-            
-            setLatestName(updatedNameTranslations)
-            setLatestDescription(updatedDescriptionTranslations)
-            
-            message.success(t('Translations generated'))
-        } catch {
-            message.error(t('AI translation failed'))
-        } finally {
-            setAiLoading(false)
-        }
-    }
 
     const handleSubmit = async () => {
         try {
@@ -293,7 +225,13 @@ export default function CategoryModal({
                 <Button
                     key="ai"
                     loading={aiLoading}
-                    onClick={generateTranslations}
+                    onClick={() => generateAndFetchTranslations({
+                        form,
+                        activeLanguage,
+                        fields: ['nameTranslations', 'descriptionTranslations'],
+                        t,
+                        setAiLoading
+                    })}
                 >
                     {t('Generate translations')}
                 </Button>,

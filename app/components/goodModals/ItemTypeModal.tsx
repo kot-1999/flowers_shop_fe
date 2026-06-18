@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { Language } from '@/app/utils/enums'
 import { getTFunc } from '@/app/utils/helpers'
+import {generateAndFetchTranslations} from "@/app/utils/clientFetchFuntions";
 
 interface ItemType {
     id: string;
@@ -106,55 +107,6 @@ export default function ItemTypeModal({
         emptyTranslations
     ])
 
-    const generateTranslations = async () => {
-        try {
-            const values = form.getFieldsValue()
-            const sourceText = values?.nameTranslations?.[activeLanguage]
-
-            if (!sourceText) {
-                message.warning(t('Enter text first'))
-                return
-            }
-
-            setAiLoading(true)
-
-            const res = await fetch('/api/ai/translations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    text: [sourceText]
-                })
-            })
-
-            const data = await res.json()
-
-            if (!res.ok) {
-                message.error(data?.message || t('AI translation failed'))
-                return
-            }
-
-            const translations = data?.translations?.[0]
-
-            const current = form.getFieldValue('nameTranslations') || {}
-
-            const updatedNameTranslations =  {
-                ...current,
-                ...translations
-            }
-            
-            form.setFieldsValue(updatedNameTranslations)
-            setNameTranslations(updatedNameTranslations)
-            
-            message.success(t('Translations generated'))
-        } catch {
-            message.error(t('AI translation failed'))
-        } finally {
-            setAiLoading(false)
-        }
-    }
-
     const handleSubmit = async () => {
         try {
             const values = await form.validateFields()
@@ -238,7 +190,13 @@ export default function ItemTypeModal({
 
                 <Button
                     key='translate'
-                    onClick={generateTranslations}
+                    onClick={() => generateAndFetchTranslations({
+                        form,
+                        activeLanguage,
+                        fields: ['nameTranslations'],
+                        t,
+                        setAiLoading
+                    })}
                     loading={aiLoading}
                     style={{ marginBottom: 12 }}
                 >
