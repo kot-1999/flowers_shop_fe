@@ -27,9 +27,7 @@ export async function POST(req: NextRequest) {
             }
         )
 
-
         const uploads: any = await presignResponse.json()
-        console.log(uploads)
 
         await Promise.all(files.map((file, index) =>
             fetch(uploads.files[index].uploadUrl, {
@@ -45,7 +43,6 @@ export async function POST(req: NextRequest) {
             { status: 200 }
         )
     } catch (error: any) {
-        console.log(error)
         return NextResponse.json(
             { message: error.message },
             { status: 500 }
