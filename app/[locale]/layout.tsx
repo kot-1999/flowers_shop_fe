@@ -17,7 +17,7 @@ export default async function RootLayout({ children, params }: { children: React
     if (!supportedLocales.includes(locale)) {
         notFound()
     }
-    console.log('Root', locale)
+
     return (
         <html lang="en">
             <body suppressHydrationWarning>
