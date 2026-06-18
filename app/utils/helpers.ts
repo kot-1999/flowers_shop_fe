@@ -71,8 +71,10 @@ export function extractS3Key(url: string | null | undefined): string | null {
             return null
         }
 
-        return url.split('/').slice(2)
+        const res =  url.split('/').slice(4)
             .join('/') || null
+
+        return res
     } catch {
         return null
     }
