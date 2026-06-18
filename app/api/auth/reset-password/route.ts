@@ -12,7 +12,10 @@ export async function POST(req: NextRequest) {
             `${BACKEND_URL}/api/v1/authorization/reset-password`,
             {
                 method: 'POST',
-                headers,
+                headers: {
+                    ...headers,
+                    Authorization: req.headers.get('authorization') ?? ''
+                },
                 body: JSON.stringify({
                     newPassword: await encryptAES(body.newPassword)
                 })
