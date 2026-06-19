@@ -9,8 +9,9 @@ export const commonFetch = async (options: {
     search?: string,
     paginationKey?: LocalStorageKey,
     setData?: (value: any) => void,
+    categoryKey?: LocalStorageKey,
 }) => {
-    const { setLoading, search, paginationKey, setData, type } = options
+    const { setLoading, search, paginationKey, setData, type, categoryKey } = options
     if (setLoading) {
         setLoading(true)
     }
@@ -31,6 +32,13 @@ export const commonFetch = async (options: {
 
         if (search && type !== 'categories') {
             params.set('search', search)
+        }
+
+        if (categoryKey) {
+            const category = getLocalStorage(categoryKey)
+            if (category?.id) {
+                params.set('categoryID', category.id)
+            }
         }
 
         let url = ''

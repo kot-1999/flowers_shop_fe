@@ -107,7 +107,8 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                             onSearch: (value) => commonFetch({
                                 type: 'selectionists',
                                 setData: setSelectionistRes,
-                                search: value
+                                search: value,
+                                categoryKey: LocalStorageKey.SelectedCategory
                             }),
                             filterOption: false
                         }}
@@ -141,7 +142,8 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                             onSearch: (value) => commonFetch({
                                 type: 'tags',
                                 setData: setTagRes,
-                                search: value
+                                search: value,
+                                categoryKey: LocalStorageKey.SelectedCategory
                             }),
                             filterOption: false
                         }}
