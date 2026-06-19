@@ -25,7 +25,7 @@
   "Enter your email address and we'll send you a link to reset your password.": "Geben Sie Ihre E-Mail-Adresse ein, und wir senden Ihnen einen Link zum Zurücksetzen Ihres Passworts.",
   "Email is required": "E-Mail ist erforderlich",
   "Please enter a valid email": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
-  "[email@example.com](mailto:email@example.com)": "[email@example.com](mailto:email@example.com)",
+  "email@example.com": "email@example.com",
   "Send Reset Link": "Link zum Zurücksetzen senden",
   "Back to Login": "Zur Anmeldung zurück",
   "Login": "Anmelden",
