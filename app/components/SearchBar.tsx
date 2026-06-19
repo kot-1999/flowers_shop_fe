@@ -134,9 +134,9 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                         mode="multiple"
                         allowClear
                         placeholder={t('Filter by tag')}
-                        value={appliedTags.map((item) => ({
-                            label: item.name?.[settings?.locale],
-                            value: item.id,
+                        value={appliedTags?.map((item) => ({
+                            label: item?.name?.[settings?.locale],
+                            value: item?.id,
                             data: item
                         }))}
                         showSearch={{
@@ -159,7 +159,7 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                             data: item
                         }))}
                         onChange={(values, options) => {
-                            setAppliedTags((options as any[]).map((o) => o.data))
+                            setAppliedTags((options as any[])?.map((o) => o.data))
                         }}
                     />
                 </Col>
