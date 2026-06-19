@@ -14,3 +14,25 @@ export enum Language {
 export enum CookieKey {
     Settings = 'appSettings'
 }
+
+export enum LocalStorageKey {
+    SearchSettings = 'searchSettings',
+    HomePagination = 'homePagination',
+    SelectedCategory = 'selectedCategory',
+    ItemTypePagination = 'itemTypesPagination',
+    TagPagination = 'tagPagination',
+    SelectionistPagination = 'selectionistPagination',
+    GoodPagination = 'goodPagination',
+}
+
+export enum GoodState{
+    Available = 'Available',
+    NoShow = 'NoShow',
+    Awaiting = 'Awaiting',
+    Deleted = 'Deleted'
+}
+
+export enum Defaults {
+    Page = 1,
+    Limit = 24
+}

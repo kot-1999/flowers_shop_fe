@@ -1,15 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Card, Input, Button, Form, Spin } from 'antd'
 import { useRouter } from 'next/navigation'
-import {useT} from "@/app/utils/helpers";
+import { useEffect, useState } from 'react'
+
+import { getTFunc } from '@/app/utils/helpers'
 
 export default function CompleteRegistrationPage() {
     const [loading, setLoading] = useState(false)
     const [user, setUser] = useState<any>(null)
     const router = useRouter()
-    const t = useT()
+    const t = getTFunc()
 
     useEffect(() => {
         const load = async () => {
@@ -40,32 +41,40 @@ export default function CompleteRegistrationPage() {
             body: JSON.stringify({
                 firstName: values.firstName,
                 lastName: values.lastName,
-                password: values.password,
-            }),
+                password: values.password
+            })
         })
 
         setLoading(false)
 
-        if (res.ok) router.push('/')
+        if (res.ok) {router.push('/')}
     }
 
     if (!user) {
         return (
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                paddingTop: 80 
+            }}>
                 <Spin />
             </div>
         )
     }
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
+        <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            paddingTop: 80 
+        }}>
             <Card title={t('Complete registration')} style={{ width: 420 }}>
                 <Form
                     layout="vertical"
                     onFinish={onFinish}
                     initialValues={{
                         firstName: user.firstName,
-                        lastName: user.lastName,
+                        lastName: user.lastName
                     }}
                 >
                     <Form.Item label={t('Email')}>
@@ -109,11 +118,9 @@ export default function CompleteRegistrationPage() {
                                     if (!value || getFieldValue('password') === value) {
                                         return Promise.resolve()
                                     }
-                                    return Promise.reject(
-                                        new Error(t('Passwords do not match'))
-                                    )
-                                },
-                            }),
+                                    return Promise.reject(new Error(t('Passwords do not match')))
+                                }
+                            })
                         ]}
                     >
                         <Input.Password />

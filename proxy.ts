@@ -1,63 +1,64 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { CookieKey, Language } from '@/app/utils/enums';
-import { getCookie, setCookie } from '@/app/utils/serverFunctions';
+import { NextRequest, NextResponse } from 'next/server'
 
-const supportedLocales = Object.values(Language);
+import { CookieKey, Language } from '@/app/utils/enums'
+import { getCookie, setCookie } from '@/app/utils/serverFunctions'
+
+const supportedLocales = Object.values(Language)
 
 function isAssetRequest(pathname: string) {
     return (
-        pathname.startsWith('/_next') ||
-        pathname.startsWith('/api') ||
-        pathname === '/favicon.ico' ||
-        pathname.includes('.') // .css .js .ico etc
-    );
+        pathname.startsWith('/_next')
+        || pathname.startsWith('/api')
+        || pathname === '/favicon.ico'
+        || pathname.includes('.') // .css .js .ico etc
+    )
 }
 
 function extractLocale(pathname: string) {
-    const segment = pathname.split('/')[1];
+    const segment = pathname.split('/')[1]
     return supportedLocales.includes(segment as Language)
         ? (segment as Language)
-        : null;
+        : null
 }
 
 export async function proxy(request: NextRequest) {
-    const { pathname } = request.nextUrl;
+    const { pathname } = request.nextUrl
 
     // Hard stop for assets
     if (isAssetRequest(pathname)) {
-        return NextResponse.next();
+        return NextResponse.next()
     }
 
-    const url = request.nextUrl.clone();
+    const url = request.nextUrl.clone()
 
-    const currentLocale = extractLocale(pathname);
+    const currentLocale = extractLocale(pathname)
 
     // Read settings
-    const settings = await getCookie(CookieKey.Settings);
-    const cookieLocale =
-        settings?.locale && supportedLocales.includes(settings.locale)
+    const settings = await getCookie(CookieKey.Settings)
+    const cookieLocale
+        = settings?.locale && supportedLocales.includes(settings.locale)
             ? settings.locale
-            : null;
+            : null
 
-    const preferredLocale = cookieLocale ?? Language.en;
+    const preferredLocale = cookieLocale ?? Language.en
 
     // If locale missing → redirect to localized URL
     if (!currentLocale) {
-        url.pathname =
-            pathname === '/'
+        url.pathname
+            = pathname === '/'
                 ? `/${preferredLocale}`
-                : `/${preferredLocale}${pathname}`;
+                : `/${preferredLocale}${pathname}`
 
-        return NextResponse.redirect(url);
+        return NextResponse.redirect(url)
     }
 
     // Optional: persist locale if missing in cookie
     if (!cookieLocale) {
         await setCookie(CookieKey.Settings, {
             ...settings,
-            locale: preferredLocale,
-        });
+            locale: preferredLocale
+        })
     }
 
-    return NextResponse.next();
+    return NextResponse.next()
 }

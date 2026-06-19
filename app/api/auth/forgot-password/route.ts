@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {getRequiredHeaders} from "@/app/utils/serverFunctions";
+
+import { getRequiredHeaders } from '@/app/utils/serverFunctions'
 
 const BACKEND_URL = process.env.BACKEND_URL
 
@@ -13,15 +14,15 @@ export async function POST(req: NextRequest) {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
-                    email: body.email,
-                }),
+                    email: body.email
+                })
             }
         )
 
         const data = await response.json()
 
         return NextResponse.json(data, {
-            status: response.status,
+            status: response.status
         })
     } catch (error: any) {
         return NextResponse.json(

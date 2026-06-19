@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import {encryptAES, getRequiredHeaders} from "@/app/utils/serverFunctions"
+
+import { encryptAES, getRequiredHeaders } from '@/app/utils/serverFunctions'
 
 const BACKEND_URL = process.env.BACKEND_URL
 
@@ -14,8 +15,8 @@ export async function POST(req: NextRequest) {
                 headers,
                 body: JSON.stringify({
                     ...body,
-                    password: await encryptAES(body.password),
-                }),
+                    password: await encryptAES(body.password)
+                })
             }
         )
 
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
 
         // Create response
         const nextResponse = NextResponse.json(data, {
-            status: response.status,
+            status: response.status
         })
 
         // Extract and forward session cookie from backend
@@ -36,10 +37,10 @@ export async function POST(req: NextRequest) {
     } catch (error: any) {
         return NextResponse.json(
             {
-                message: error.message,
+                message: error.message
             },
             {
-                status: 500,
+                status: 500
             }
         )
     }
