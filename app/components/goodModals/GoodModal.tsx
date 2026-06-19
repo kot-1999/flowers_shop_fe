@@ -147,6 +147,7 @@ export default function GoodModal({
 
     const handleSubmit = async () => {
         try {
+            // TODO: Make PATCH to update only fields which have been really changed
             const values = await form.validateFields()
 
             setLoading(true)
