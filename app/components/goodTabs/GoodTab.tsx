@@ -19,7 +19,10 @@ interface GoodEntity {
     state: GoodState
     createdAt: string
     updatedAt: string
-
+    category: {
+        id: string,
+        name: Record<Language, string>
+    }
     pricings?: {
         id: string
         price: number
@@ -175,6 +178,10 @@ export default function GoodsTab({ settings }: Props) {
                 ) : (
                     '-'
                 )
+        },
+        {
+            title: t('Category'),
+            render: (_: any, record: GoodEntity) => record.category?.name?.[settings.locale]
         },
         {
             title: t('Created'),

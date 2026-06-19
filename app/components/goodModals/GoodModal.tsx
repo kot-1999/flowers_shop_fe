@@ -90,6 +90,7 @@ export default function GoodModal({
         const load = async () => {
             if (!goodID) {
                 form.resetFields()
+                setGood(null)
                 return
             }
 
@@ -112,7 +113,10 @@ export default function GoodModal({
             return
         }
         form.setFieldsValue({
-            categoryID: good.categoryID,
+            categoryID: {
+                value: good.category?.id,
+                label: good.category?.name[settings.locale],
+            },
             selectionistID: {
                 value: good.selectionist?.id,
                 label: good.selectionist?.name?.[settings.locale]
@@ -151,6 +155,7 @@ export default function GoodModal({
 
             const body: any = {
                 ...values,
+                categoryID: isEdit ? values.categoryID.value : values.categoryID,
                 photos: values.photos.map((item: any) => item.s3Key),
                 selectionistID: isEdit ? values.selectionistID.value : values.selectionistID,
                 tagIDs: isEdit ? values.tagIDs.map((item: any) => item.value) : values.tagIDs,
