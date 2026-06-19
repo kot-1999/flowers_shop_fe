@@ -114,7 +114,8 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                         }}
                         onFocus={() => !selectionistRes.selectionists?.length && commonFetch({
                             type: 'selectionists',
-                            setData: setSelectionistRes
+                            setData: setSelectionistRes,
+                            categoryKey: LocalStorageKey.SelectedCategory
                         })}
                         options={selectionistRes.selectionists?.map((item) => ({
                             label: item.name?.[settings?.locale],
@@ -149,7 +150,8 @@ export default function SearchBar({ fetchGoods, settings }: any) {
                         }}
                         onFocus={() => !tagRes.tags?.length && commonFetch({
                             type: 'tags',
-                            setData: setTagRes
+                            setData: setTagRes,
+                            categoryKey: LocalStorageKey.SelectedCategory
                         })}
                         options={tagRes.tags?.map((item) => ({
                             label: item.name?.[settings?.locale],
