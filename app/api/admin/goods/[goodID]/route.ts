@@ -46,7 +46,7 @@ export async function DELETE(
         const headers = await getRequiredHeaders(req)
 
         const response = await fetch(
-            `${BACKEND_URL}/v1/admin/goods/${goodID}`,
+            `${BACKEND_URL}/api/v1/admin/goods/${goodID}`,
             {
                 method: 'DELETE',
                 headers
