@@ -195,7 +195,8 @@ export default function ItemTypeModal({
                         activeLanguage,
                         fields: ['nameTranslations'],
                         t,
-                        setAiLoading
+                        setAiLoading,
+                        setLatestTranslations: [setNameTranslations]
                     })}
                     loading={aiLoading}
                     style={{ marginBottom: 12 }}

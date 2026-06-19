@@ -93,7 +93,6 @@ export default function TagsTab({ settings }: Props) {
             })
 
             const data = await res.json()
-
             if (res.ok) {
                 message.success(data.message)
                 commonFetch({

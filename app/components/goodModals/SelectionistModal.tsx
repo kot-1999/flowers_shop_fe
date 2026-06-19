@@ -201,7 +201,8 @@ export default function SelectionistModal({
                         activeLanguage,
                         fields: ['nameTranslations'],
                         t,
-                        setAiLoading
+                        setAiLoading,
+                        setLatestTranslations: [setNameTranslations]
                     })}
                     loading={aiLoading}
                 >

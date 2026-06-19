@@ -230,7 +230,8 @@ export default function CategoryModal({
                         activeLanguage,
                         fields: ['nameTranslations', 'descriptionTranslations'],
                         t,
-                        setAiLoading
+                        setAiLoading,
+                        setLatestTranslations: [setLatestName, setLatestDescription]
                     })}
                 >
                     {t('Generate translations')}
@@ -262,10 +263,7 @@ export default function CategoryModal({
                         children: (
                             <>
                                 <Form.Item
-                                    name={[
-                                        'nameTranslations',
-                                        lang
-                                    ]}
+                                    name={['nameTranslations', lang]}
                                     label={t('Name')}
                                     rules={[
                                         {

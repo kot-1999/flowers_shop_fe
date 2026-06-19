@@ -154,7 +154,8 @@ export default function TagModal({
                         activeLanguage,
                         fields: ['nameTranslations'],
                         t,
-                        setAiLoading
+                        setAiLoading,
+                        setLatestTranslations: [setNameTranslations]
                     })}
                     loading={aiLoading}
                 >

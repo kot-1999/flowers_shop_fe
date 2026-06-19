@@ -1,6 +1,7 @@
 'use client'
 
-import { Button, Image, Input, Space, Table, Tag } from 'antd'
+import { DeleteOutlined } from '@ant-design/icons'
+import { Button, Image, Input, message, Popconfirm, Space, Table, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 
 import GoodModal from '@/app/components/goodModals/GoodModal'
@@ -100,6 +101,25 @@ export default function GoodsTab({ settings }: Props) {
         fetchData()
     }, [])
 
+    const deleteGood = async (id: string) => {
+        try {
+            const res = await fetch(`/api/admin/goods/${id}`, {
+                method: 'DELETE'
+            })
+
+            const json = await res.json()
+
+            if (res.ok) {
+                message.success(json.message)
+                fetchData()
+            } else {
+                message.error(json.message || t('Failed to delete product'))
+            }
+        } catch {
+            message.error(t('Failed to delete product'))
+        }
+    }
+
     const columns = [
         {
             title: '#',
@@ -165,6 +185,29 @@ export default function GoodsTab({ settings }: Props) {
             title: t('Updated'),
             render: (_: any, record: GoodEntity) =>
                 new Date(record.updatedAt).toLocaleDateString()
+        },
+        {
+            width: 140,
+            render: (_: any, record: GoodEntity) =>
+                <Popconfirm
+                    title={t('Delete product?')}
+                    okText={t('Yes')}
+                    cancelText={t('No')}
+                    onConfirm={(e) => {
+                        e?.stopPropagation?.()
+                        deleteGood(record.id)
+                    }}
+                >
+                    <Button
+                        danger
+                        type="link"
+                        icon={<DeleteOutlined />}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {t('Delete')}
+                    </Button>
+                </Popconfirm>
+                
         }
     ]
 
@@ -213,7 +256,7 @@ export default function GoodsTab({ settings }: Props) {
 
             <GoodModal
                 open={isModalOpen}
-                good={selectedGood}
+                goodID={selectedGood?.id ?? null}
                 settings={settings}
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => {

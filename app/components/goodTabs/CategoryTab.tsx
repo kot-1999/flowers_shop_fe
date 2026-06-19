@@ -62,7 +62,7 @@ export default function CategoriesTab({ settings }: Props) {
                     search,
                     setLoading: setLoading,
                     setData: setData,
-                    type: 'categories'
+                    type: 'adminCategories'
                 })
             } else {
                 if (data.message) {
@@ -99,7 +99,7 @@ export default function CategoriesTab({ settings }: Props) {
                     search,
                     setLoading: setLoading,
                     setData: setData,
-                    type: 'categories'
+                    type: 'adminCategories'
                 })
             } else {
                 message.error(json.message || t('Failed to delete category'))
@@ -119,7 +119,7 @@ export default function CategoriesTab({ settings }: Props) {
             search,
             setLoading: setLoading,
             setData: setData,
-            type: 'categories'
+            type: 'adminCategories'
         })
     }, [])
 
@@ -231,7 +231,7 @@ export default function CategoriesTab({ settings }: Props) {
                             search,
                             setLoading: setLoading,
                             setData: setData,
-                            type: 'categories'
+                            type: 'adminCategories'
                         })
                     }}
                     style={{ width: 250 }}
@@ -270,7 +270,7 @@ export default function CategoriesTab({ settings }: Props) {
                         search,
                         setLoading: setLoading,
                         setData: setData,
-                        type: 'categories'
+                        type: 'adminCategories'
                     })
                 }}
             />
