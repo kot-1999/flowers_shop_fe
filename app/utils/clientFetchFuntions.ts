@@ -4,14 +4,13 @@ import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { getLocalStorage } from '@/app/utils/helpers'
 
 export const commonFetch = async (options: {
-    type: 'selectionists' | 'tags' | 'categories' | 'adminTags' | 'itemTypes' | 'adminItemTypes'
+    type: 'selectionists' | 'tags' | 'categories' | 'adminTags' | 'itemTypes' | 'adminItemTypes' | 'adminCategories'
     setLoading?: (value: boolean) => void
     search?: string,
     paginationKey?: LocalStorageKey,
     setData?: (value: any) => void,
 }) => {
     const { setLoading, search, paginationKey, setData, type } = options
-
     if (setLoading) {
         setLoading(true)
     }
@@ -55,6 +54,9 @@ export const commonFetch = async (options: {
         case 'categories':
             url = '/api/categories'
             break
+        case 'adminCategories':
+            url = '/api/admin/categories'
+            break
         default:
             throw new Error(`Unknown type ${type} in commonFetch`)
         }
@@ -83,13 +85,15 @@ export const generateAndFetchTranslations = async ({
     activeLanguage,
     fields,
     t,
-    setAiLoading
+    setAiLoading,
+    setLatestTranslations
 }: {
     form: any
     activeLanguage: string
     fields: string[]
     t: (key: string) => string
-    setAiLoading: (value: boolean) => void
+    setAiLoading: (value: boolean) => void,
+    setLatestTranslations: Array<(val: any) => void>
 }) => {
     try {
         const values = form.getFieldsValue()
@@ -102,7 +106,7 @@ export const generateAndFetchTranslations = async ({
         }
 
         setAiLoading(true)
-        console.log(texts)
+
         const res = await fetch('/api/ai/translations', {
             method: 'POST',
             headers: {
@@ -113,7 +117,6 @@ export const generateAndFetchTranslations = async ({
             })
         })
         const data = await res.json()
-        console.log(res, data)
 
         if (!res.ok) {
             message.error(data?.message || t('AI translation failed'))
@@ -123,10 +126,12 @@ export const generateAndFetchTranslations = async ({
         const updates: Record<string, any> = {}
 
         fields.forEach((field, index) => {
-            updates[field] = {
+            const translations = {
                 ...(form.getFieldValue(field) || {}),
                 ...(data.translations?.[index] || {})
             }
+            updates[field] = translations
+            setLatestTranslations[index]?.(translations)
         })
 
         form.setFieldsValue(updates)
