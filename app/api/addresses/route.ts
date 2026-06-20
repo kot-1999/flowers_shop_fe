@@ -4,22 +4,12 @@ import { getRequiredHeaders } from '@/app/utils/serverFunctions'
 
 const BACKEND_URL = process.env.BACKEND_URL
 
-interface Props {
-    params: Promise<{
-        userID: string
-    }>
-}
-
-export async function GET(
-    req: NextRequest,
-    { params }: Props
-) {
+export async function GET(req: NextRequest) {
     try {
         const headers = await getRequiredHeaders(req)
-        const { userID } = await params
 
         const response = await fetch(
-            `${BACKEND_URL}/api/v1/users/${userID}`,
+            `${BACKEND_URL}/api/v1/addresses`,
             {
                 method: 'GET',
                 headers
@@ -39,19 +29,15 @@ export async function GET(
     }
 }
 
-export async function PATCH(
-    req: NextRequest,
-    { params }: Props
-) {
+export async function PUT(req: NextRequest) {
     try {
         const headers = await getRequiredHeaders(req)
-        const { userID } = await params
         const body = await req.json()
 
         const response = await fetch(
-            `${BACKEND_URL}/api/v1/users/${userID}`,
+            `${BACKEND_URL}/api/v1/addresses`,
             {
-                method: 'PATCH',
+                method: 'PUT',
                 headers,
                 body: JSON.stringify(body)
             }
