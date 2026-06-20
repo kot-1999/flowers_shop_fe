@@ -3,6 +3,34 @@ import { message } from 'antd'
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { getLocalStorage } from '@/app/utils/helpers'
 
+export async function uploadFile(file: File): Promise<{
+    publicUrl: string,
+    key: string,
+}> {
+    const formData = new FormData()
+
+    formData.append('files', file)
+
+    const res = await fetch('/api/files/upload', {
+        method: 'POST',
+        body: formData
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+        throw new Error(data?.message || 'Upload failed')
+    }
+
+    const uploaded = data.files?.[0]
+
+    if (!uploaded) {
+        throw new Error('Upload failed')
+    }
+
+    return uploaded
+}
+
 export const commonFetch = async (options: {
     type: 'selectionists' | 'tags' | 'categories' | 'adminTags' | 'itemTypes' | 'adminItemTypes' | 'adminCategories'
     setLoading?: (value: boolean) => void
