@@ -1,0 +1,96 @@
+'use client'
+
+import { Button, Space, Spin, message } from 'antd'
+import { useEffect, useState } from 'react'
+
+import { getTFunc } from '@/app/utils/helpers'
+
+import AddressCard from './AddressCard'
+import AddressModal from './AddressModal'
+
+export default function AddressList() {
+    const t = getTFunc()
+
+    const [addresses, setAddresses] = useState<any[]>([])
+    const [loading, setLoading] = useState(false)
+    const [open, setOpen] = useState(false)
+    const [editing, setEditing] = useState<any | null>(null)
+
+    const fetchAddresses = async () => {
+        setLoading(true)
+
+        try {
+            const res = await fetch('/api/addresses')
+            const data = await res.json()
+
+            setAddresses(data.addresses || [])
+        } catch {
+            message.error(t('Failed to load addresses'))
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchAddresses()
+    }, [])
+
+    const handleDelete = async (id: string) => {
+        try {
+            const res = await fetch(`/api/addresses/${id}`, {
+                method: 'DELETE'
+            })
+
+            if (!res.ok) {
+                throw new Error()
+            }
+
+            message.success(t('Address deleted'))
+            fetchAddresses()
+        } catch {
+            message.error(t('Failed to delete'))
+        }
+    }
+
+    return (
+        <div>
+            <Space style={{ marginBottom: 16 }}>
+                <Button type="primary" onClick={() => setOpen(true)}>
+                    {t('Add address')}
+                </Button>
+            </Space>
+
+            {loading ? (
+                <Spin />
+            ) : (
+                <Space orientation="vertical" style={{ width: '100%' }}>
+                    {addresses.map((addr: any) => (
+                        <AddressCard
+                            key={addr.id}
+                            address={addr}
+                            onEdit={(a: any) => {
+                                setEditing(a)
+                                setOpen(true)
+                            }}
+                            onDelete={handleDelete}
+                        />
+                    ))}
+                </Space>
+            )}
+
+            <AddressModal
+                open={open}
+                address={editing}
+                onClose={() => {
+                    setOpen(false)
+                    setEditing(null)
+                }}
+                onSuccess={() => {
+                    setOpen(false)
+                    setEditing(null)
+                    fetchAddresses()
+                }}
+            />
+        </div>
+    )
+}
