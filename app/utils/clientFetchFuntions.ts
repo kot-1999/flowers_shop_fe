@@ -2,6 +2,7 @@ import { message } from 'antd'
 
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
+import {useState} from "react";
 
 export async function uploadFile(file: File): Promise<{
     publicUrl: string,
@@ -178,5 +179,32 @@ export const generateAndFetchTranslations = async ({
         message.error(t('AI translation failed'))
     } finally {
         setAiLoading(false)
+    }
+}
+
+export const addToBasket = async (
+    pricingID: string,
+    goodID: string,
+    quantity: number,
+    t: (key: string) => string
+) => {
+    try {
+        const response = await fetch('/api/basket-items', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                pricingID,
+                goodID,
+                quantity
+            })
+        })
+
+        const data = await response.json()
+
+        await checkRes(response, data, t('Failed to add item to basket'))
+    } catch (error: any) {
+        message.error(error.message || t('Failed to add item to basket'))
     }
 }

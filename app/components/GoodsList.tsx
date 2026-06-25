@@ -20,19 +20,12 @@ import { useState } from 'react'
 const { Text, Paragraph } = Typography
 
 import { GoodState } from '@/app/utils/enums'
-import { getTFunc } from '@/app/utils/helpers'
+import { checkRes, getTFunc } from '@/app/utils/helpers'
+import {addToBasket} from "@/app/utils/clientFetchFuntions";
 
 export default function GoodsList({ goodsData, settings }: any) {
     const t = getTFunc()
     const pathname = usePathname()
-
-    const addToBasket = async (pricingId: string, quantity: number) => {
-        console.log('Add to basket', {
-            pricingId,
-            quantity
-        })
-        message.success('Added to basket ' + quantity + ' ' + pricingId)
-    }
 
     const [quantities, setQuantities] = useState<Record<string, number>>({})
 
@@ -210,7 +203,7 @@ export default function GoodsList({ goodsData, settings }: any) {
                                                 type='primary'
                                                 size="large"
                                                 icon={<ShoppingCartOutlined />}
-                                                onClick={() => {
+                                                onClick={async () => {
                                                     if (!currentPricing) {
                                                         setPricingError((prev) => ({
                                                             ...prev,
@@ -234,7 +227,7 @@ export default function GoodsList({ goodsData, settings }: any) {
                                                         [good.id]: false 
                                                     }))
 
-                                                    addToBasket(currentPricing.id, quantities[good.id] ?? 1)
+                                                    await addToBasket(currentPricing.id, good.id, quantities[good.id] ?? 1, t)
                                                 }}
                                             >
                                                 {t('Add to Cart')}

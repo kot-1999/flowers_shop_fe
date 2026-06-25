@@ -19,6 +19,7 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { getTFunc } from '@/app/utils/helpers'
+import {addToBasket} from "@/app/utils/clientFetchFuntions";
 
 const { Title, Text, Paragraph } = Typography
 
@@ -47,7 +48,7 @@ export default function GoodDetailsPage() {
         load()
     }, [id])
 
-    const addToBasket = async () => {
+    const onAddCheck = async () => {
         if (!selectedPricing) {
             message.warning(t('Select option'))
             return
@@ -62,7 +63,7 @@ export default function GoodDetailsPage() {
             return
         }
 
-        message.success(t('Added to cart'))
+        await addToBasket(pricing.id, good.id, quantity, t)
     }
 
     if (!good) {return null}
@@ -162,7 +163,7 @@ export default function GoodDetailsPage() {
                                         width: '100%',
                                         marginTop: 16
                                     }}
-                                    onClick={addToBasket}
+                                    onClick={onAddCheck}
                                     disabled={!selectedPricing}
                                 >
                                     {t('Add to cart')}
