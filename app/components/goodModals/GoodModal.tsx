@@ -17,7 +17,7 @@ import {
 } from 'antd'
 import { useEffect, useState } from 'react'
 
-import { commonFetch, generateAndFetchTranslations } from '@/app/utils/clientFetchFuntions'
+import { commonFetch, generateAndFetchTranslations, uploadFile } from '@/app/utils/clientFetchFuntions'
 import { Language } from '@/app/utils/enums'
 import { extractS3Key, getTFunc } from '@/app/utils/helpers'
 
@@ -115,7 +115,7 @@ export default function GoodModal({
         form.setFieldsValue({
             categoryID: {
                 value: good.category?.id,
-                label: good.category?.name[settings.locale],
+                label: good.category?.name[settings.locale]
             },
             selectionistID: {
                 value: good.selectionist?.id,
@@ -350,23 +350,8 @@ export default function GoodModal({
                         multiple
                         customRequest={async ({ file, onSuccess, onError }) => {
                             try {
-                                const formData = new FormData()
-                                formData.append('files', file as File)
+                                const uploaded = await uploadFile(file as File)
 
-                                const res = await fetch('/api/files/upload', {
-                                    method: 'POST',
-                                    body: formData
-                                })
-
-                                const data = await res.json()
-
-                                const uploaded = data.files?.[0]
-
-                                if (!uploaded) {
-                                    throw new Error(t('Upload failed'))
-                                }
-
-                                // IMPORTANT: mark success with S3 key
                                 onSuccess?.(uploaded, file as any)
                             } catch (err) {
                                 onError?.(err as any)

@@ -4,7 +4,7 @@ import { UploadOutlined } from '@ant-design/icons'
 import { Button, Form, Input, message, Modal, Tabs, Upload } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { generateAndFetchTranslations } from '@/app/utils/clientFetchFuntions'
+import { generateAndFetchTranslations, uploadFile } from '@/app/utils/clientFetchFuntions'
 import { Language } from '@/app/utils/enums'
 import { extractS3Key, getTFunc } from '@/app/utils/helpers'
 
@@ -128,17 +128,9 @@ export default function CategoryModal({
             const file = values.coverImage?.[0]?.originFileObj
 
             if (file) {
-                const formData = new FormData()
-                formData.append('files', file)
+                const uploaded = await uploadFile(file)
 
-                const res = await fetch('/api/files/upload', {
-                    method: 'POST',
-                    body: formData
-                })
-
-                const data = await res.json()
-
-                coverImage = data.files?.[0]?.key
+                coverImage = uploaded.key
             } else if (values.coverImage?.length === 0) {
                 // user explicitly removed image
                 coverImage = null

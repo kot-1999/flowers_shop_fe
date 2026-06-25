@@ -44,6 +44,10 @@ export default function SimplePagination({
             locale={{
                 items_per_page: t('/ page') // 👈 this changes "page"
             }}
+            style={{
+                marginTop: 36,
+                marginBottom: 36
+            }}
         />
     )
 }
