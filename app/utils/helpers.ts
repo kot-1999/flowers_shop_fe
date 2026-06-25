@@ -1,3 +1,4 @@
+import { message } from 'antd'
 import { useIntl } from 'react-intl'
 
 import { Language, LocalStorageKey } from '@/app/utils/enums'
@@ -78,4 +79,31 @@ export function extractS3Key(url: string | null | undefined): string | null {
     } catch {
         return null
     }
+}
+
+interface ErrorResponse {
+    message?: string
+    messages?: string[]
+}
+
+export const checkRes = async (
+    res: Response,
+    data: ErrorResponse,
+    fallbackMessage: string
+): Promise<boolean> => {
+    if (!res.ok) {
+        if (data?.message) {
+            message.error(data.message)
+        } else if (data?.messages) {
+            data.messages.forEach((item: string) => message.error(item))
+        } else {
+            message.error(fallbackMessage)
+        }
+
+        return false
+    } else if (data.message) {
+        message.success(data.message)
+    }
+
+    return true
 }

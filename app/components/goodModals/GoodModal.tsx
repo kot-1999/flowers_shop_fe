@@ -19,7 +19,7 @@ import { useEffect, useState } from 'react'
 
 import { commonFetch, generateAndFetchTranslations, uploadFile } from '@/app/utils/clientFetchFuntions'
 import { Language } from '@/app/utils/enums'
-import { extractS3Key, getTFunc } from '@/app/utils/helpers'
+import { checkRes, extractS3Key, getTFunc } from '@/app/utils/helpers'
 
 interface Props {
     open: boolean
@@ -184,21 +184,12 @@ export default function GoodModal({
             )
 
             const data = await res.json()
-            if (!res.ok) {
-                if (data.message) {
-                    message.error(data.message)
-                } else if (data.messages) {
-                    data.messages.forEach((item: string) =>
-                        message.error(item))
-                } else {
-                    message.error(data?.message || t('Failed to save product'))
-                }
 
-                return
+            const isSuccess = await checkRes(res, data, t('Failed to save product'))
+
+            if (isSuccess) {
+                onSuccess()
             }
-
-            message.success(data.message || t('Saved'))
-            onSuccess()
         } catch {
             message.error(t('Operation failed'))
         } finally {

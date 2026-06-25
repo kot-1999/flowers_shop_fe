@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { generateAndFetchTranslations, uploadFile } from '@/app/utils/clientFetchFuntions'
 import { Language } from '@/app/utils/enums'
-import { extractS3Key, getTFunc } from '@/app/utils/helpers'
+import { checkRes, extractS3Key, getTFunc } from '@/app/utils/helpers'
 
 interface Category {
     id: string
@@ -177,22 +177,11 @@ export default function CategoryModal({
 
             const data = await res.json()
 
-            if (!res.ok) {
-                if (data.message) {
-                    message.error(data.message)
-                } else if (data.messages) {
-                    data.messages.forEach((item: string) =>
-                        message.error(item))
-                } else {
-                    message.error(data?.message || t('Failed to save category'))
-                }
+            const isSuccess = await checkRes(res, data, t('Failed to save category'))
 
-                return
+            if (isSuccess) {
+                onSuccess()
             }
-
-            message.success(data?.message || (category ? t('Category updated') : t('Category created')))
-
-            onSuccess()
         } catch {
             message.error(t('Failed to save category'))
         } finally {

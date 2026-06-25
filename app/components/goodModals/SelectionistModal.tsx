@@ -10,9 +10,9 @@ import {
 } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
+import { generateAndFetchTranslations } from '@/app/utils/clientFetchFuntions'
 import { Language } from '@/app/utils/enums'
-import { getTFunc } from '@/app/utils/helpers'
-import {generateAndFetchTranslations} from "@/app/utils/clientFetchFuntions";
+import { checkRes, getTFunc } from '@/app/utils/helpers'
 
 interface Selectionist {
     id: string;
@@ -152,22 +152,11 @@ export default function SelectionistModal({
 
             const data = await res.json()
 
-            if (!res.ok) {
-                if (data.message) {
-                    message.error(data.message)
-                } else if (data.messages) {
-                    data.messages.forEach((item: string) =>
-                        message.error(item))
-                } else {
-                    message.error(t('Failed to save selectionist'))
-                }
+            const isSuccess = await checkRes(res, data, t('Failed to save selectionist'))
 
-                return
+            if (isSuccess) {
+                onSuccess()
             }
-
-            message.success(data.message || (selectionist ? t('Selectionist updated') : t('Selectionist created')))
-
-            onSuccess()
         } catch {
             message.error(t('Failed to save selectionist'))
         } finally {

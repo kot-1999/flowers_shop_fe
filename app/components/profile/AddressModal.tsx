@@ -3,8 +3,8 @@
 import { Modal, Form, Input, Checkbox, Select, message } from 'antd'
 import { useEffect } from 'react'
 
-import { getTFunc } from '@/app/utils/helpers'
-import {Country} from "@/app/utils/enums";
+import { Country } from '@/app/utils/enums'
+import { checkRes, getTFunc } from '@/app/utils/helpers'
 
 export default function AddressModal({
     open,
@@ -36,11 +36,14 @@ export default function AddressModal({
                 })
             })
 
-            if (!res.ok) {throw new Error()}
+            const data = await res.json()
 
-            message.success(address ? t('Address updated') : t('Address created'))
+            const isSuccess = await checkRes(res, data, t('Failed to save address'))
 
-            onSuccess?.()
+            if (isSuccess) {
+                onSuccess?.()
+            }
+
         } catch {
             message.error(t('Failed to save address'))
         }

@@ -1,7 +1,7 @@
 import { message } from 'antd'
 
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
-import { getLocalStorage } from '@/app/utils/helpers'
+import { checkRes, getLocalStorage } from '@/app/utils/helpers'
 
 export async function uploadFile(file: File): Promise<{
     publicUrl: string,
@@ -154,8 +154,9 @@ export const generateAndFetchTranslations = async ({
         })
         const data = await res.json()
 
-        if (!res.ok) {
-            message.error(data?.message || t('AI translation failed'))
+        const isSuccess = await checkRes(res, data,  t('AI translation failed'))
+
+        if (!isSuccess) {
             return
         }
 

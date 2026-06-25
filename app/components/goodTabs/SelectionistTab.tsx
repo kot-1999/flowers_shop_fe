@@ -8,7 +8,7 @@ import SelectionistModal from '@/app/components/goodModals/SelectionistModal'
 import SimplePagination from '@/app/components/SimplePagination'
 import { commonFetch } from '@/app/utils/clientFetchFuntions'
 import { Defaults, Language, LocalStorageKey } from '@/app/utils/enums'
-import { getTFunc, removeLocalStorage } from '@/app/utils/helpers'
+import { checkRes, getTFunc, removeLocalStorage } from '@/app/utils/helpers'
 
 interface Selectionist {
     id: string;
@@ -63,8 +63,9 @@ export default function SelectionistsTab({
 
             const data = await res.json()
 
-            if (res.ok) {
-                message.success(data.message)
+            const isSuccess = await checkRes(res, data, t('Failed to delete selectionist'))
+
+            if (isSuccess) {
                 commonFetch({
                     type: 'selectionists',
                     setLoading,
@@ -72,13 +73,6 @@ export default function SelectionistsTab({
                     setData,
                     paginationKey: LocalStorageKey.SelectionistPagination
                 })
-            } else {
-                if (data.message) {
-                    message.error(data.message)
-                } else if (data.messages) {
-                    data.messages.forEach((item: string) =>
-                        message.error(item))
-                }
             }
         } catch {
             message.error(t('Failed to delete selectionist'))

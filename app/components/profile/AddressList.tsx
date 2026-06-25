@@ -3,7 +3,7 @@
 import { Button, Space, Spin, message } from 'antd'
 import { useEffect, useState } from 'react'
 
-import { getTFunc } from '@/app/utils/helpers'
+import { checkRes, getTFunc } from '@/app/utils/helpers'
 
 import AddressCard from './AddressCard'
 import AddressModal from './AddressModal'
@@ -41,12 +41,13 @@ export default function AddressList() {
                 method: 'DELETE'
             })
 
-            if (!res.ok) {
-                throw new Error()
-            }
+            const data = await res.json()
 
-            message.success(t('Address deleted'))
-            fetchAddresses()
+            const isSuccess = await checkRes(res, data, t('Failed to delete'))
+
+            if (isSuccess) {
+                fetchAddresses()
+            }
         } catch {
             message.error(t('Failed to delete'))
         }
