@@ -8,8 +8,8 @@ export default function AddressCard({
     address,
     onEdit,
     onDelete,
-    onSetDefault,
-    loadingDefault
+    // onSetDefault,
+    // loadingDefault
 }: any) {
     const t = getTFunc()
 
@@ -42,15 +42,15 @@ export default function AddressCard({
                         {t('Edit')}
                     </Button>
 
-                    {!address.isDefault && (
-                        <Button
-                            type="default"
-                            loading={loadingDefault}
-                            onClick={() => onSetDefault?.(address.id)}
-                        >
-                            {t('Make default')}
-                        </Button>
-                    )}
+                    {/*{!address.isDefault && (*/}
+                    {/*    <Button*/}
+                    {/*        type="default"*/}
+                    {/*        loading={loadingDefault}*/}
+                    {/*        onClick={() => onSetDefault?.(address.id)}*/}
+                    {/*    >*/}
+                    {/*        {t('Make default')}*/}
+                    {/*    </Button>*/}
+                    {/*)}*/}
 
                     <Popconfirm
                         title={t('Delete address?')}
