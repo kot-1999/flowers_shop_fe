@@ -2,7 +2,6 @@ import { message } from 'antd'
 
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
-import {useState} from "react";
 
 export async function uploadFile(file: File): Promise<{
     publicUrl: string,
@@ -204,7 +203,7 @@ export const addToBasket = async (
 
         const data = await response.json()
 
-        await checkRes(response, data, t('Failed to add item to basket'))
+        await checkRes(response, data, t('Failed to add item to basket'), !user ?  t('Item added to cart') : null)
     } catch (error: any) {
         message.error(error.message || t('Failed to add item to basket'))
     }

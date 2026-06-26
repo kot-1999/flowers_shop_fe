@@ -89,7 +89,8 @@ interface ErrorResponse {
 export const checkRes = async (
     res: Response,
     data: ErrorResponse,
-    fallbackMessage: string
+    fallbackMessage: string,
+    successMessage: string | null = null
 ): Promise<boolean> => {
     if (!res.ok) {
         if (data?.message) {
@@ -101,8 +102,8 @@ export const checkRes = async (
         }
 
         return false
-    } else if (data.message) {
-        message.success(data.message)
+    } else if (data.message || successMessage) {
+        message.success(successMessage ?? data.message)
     }
 
     return true

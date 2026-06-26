@@ -75,7 +75,7 @@ export default function Cart() {
 
             const data = await res.json()
 
-            const ok = await checkRes(res, data, t('Failed to update item'))
+            const ok = await checkRes(res, data, t('Failed to update item'), !user ?  t('Items updated') : null)
             if (ok) {
                 await fetchCart()
             }
@@ -115,7 +115,7 @@ export default function Cart() {
 
             const data = await res.json()
 
-            const ok = await checkRes(res, data, t('Failed to remove item'))
+            const ok = await checkRes(res, data, t('Failed to remove item'), !user ?  t('Items deleted') : null)
             if (ok) {
                 await fetchCart()
             }
