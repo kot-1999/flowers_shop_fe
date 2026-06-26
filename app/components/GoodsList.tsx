@@ -19,9 +19,9 @@ import { useState } from 'react'
 
 const { Text, Paragraph } = Typography
 
+import { addToBasket } from '@/app/utils/clientFetchFuntions'
 import { GoodState } from '@/app/utils/enums'
-import { checkRes, getTFunc } from '@/app/utils/helpers'
-import {addToBasket} from "@/app/utils/clientFetchFuntions";
+import { getTFunc } from '@/app/utils/helpers'
 
 export default function GoodsList({ goodsData, settings }: any) {
     const t = getTFunc()
