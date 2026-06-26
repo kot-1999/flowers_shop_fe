@@ -7,7 +7,7 @@ import { getTFunc } from '@/app/utils/helpers'
 export default function AddressCard({
     address,
     onEdit,
-    onDelete,
+    onDelete
     // onSetDefault,
     // loadingDefault
 }: any) {

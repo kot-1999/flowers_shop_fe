@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { generateAndFetchTranslations } from '@/app/utils/clientFetchFuntions'
 import { Language } from '@/app/utils/enums'
-import { getTFunc } from '@/app/utils/helpers'
+import { checkRes, getTFunc } from '@/app/utils/helpers'
 
 interface Tag {
     id: string;
@@ -112,22 +112,11 @@ export default function TagModal({
 
             const data = await res.json()
 
-            if (!res.ok) {
-                if (data.message) {
-                    message.error(data.message)
-                } else if (data.messages) {
-                    data.messages.forEach((item: string) =>
-                        message.error(item))
-                } else {
-                    message.error(t('Failed to save tag'))
-                }
+            const isSuccess = await checkRes(res, data, t('Failed to save tag'))
 
-                return
+            if (isSuccess) {
+                onSuccess()
             }
-
-            message.success(data?.message || (tag ? t('Tag updated') : t('Tag created')))
-
-            onSuccess()
         } catch {
             message.error(t('Failed to save tag'))
         } finally {

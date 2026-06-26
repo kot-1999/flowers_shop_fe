@@ -8,7 +8,7 @@ import {
     Defaults,
     Language
 } from '@/app/utils/enums'
-import { getTFunc } from '@/app/utils/helpers'
+import { checkRes, getTFunc } from '@/app/utils/helpers'
 
 interface CategoryEntity {
     id: string
@@ -91,19 +91,9 @@ export default function CategoriesTab({ settings }: Props) {
                 method: 'DELETE'
             })
 
-            const json = await res.json()
+            const data = await res.json()
+            await checkRes(res, data, t('Failed to delete category'))
 
-            if (res.ok) {
-                message.success(json.message)
-                commonFetch({
-                    search,
-                    setLoading: setLoading,
-                    setData: setData,
-                    type: 'adminCategories'
-                })
-            } else {
-                message.error(json.message || t('Failed to delete category'))
-            }
         } catch {
             message.error(t('Failed to delete category'))
         }

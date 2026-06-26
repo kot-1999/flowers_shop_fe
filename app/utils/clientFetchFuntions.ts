@@ -1,7 +1,7 @@
 import { message } from 'antd'
 
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
-import { getLocalStorage } from '@/app/utils/helpers'
+import { checkRes, getLocalStorage } from '@/app/utils/helpers'
 
 export async function uploadFile(file: File): Promise<{
     publicUrl: string,
@@ -154,8 +154,9 @@ export const generateAndFetchTranslations = async ({
         })
         const data = await res.json()
 
-        if (!res.ok) {
-            message.error(data?.message || t('AI translation failed'))
+        const isSuccess = await checkRes(res, data,  t('AI translation failed'))
+
+        if (!isSuccess) {
             return
         }
 
@@ -177,5 +178,33 @@ export const generateAndFetchTranslations = async ({
         message.error(t('AI translation failed'))
     } finally {
         setAiLoading(false)
+    }
+}
+
+export const addToBasket = async (
+    pricingID: string,
+    goodID: string,
+    quantity: number,
+    t: (key: string) => string,
+    user: any
+) => {
+    try {
+        const response = await fetch(user ? '/api/basket-items' : '/api/cookie/basket', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                pricingID,
+                goodID,
+                quantity
+            })
+        })
+
+        const data = await response.json()
+
+        await checkRes(response, data, t('Failed to add item to basket'), !user ?  t('Item added to cart') : null)
+    } catch (error: any) {
+        message.error(error.message || t('Failed to add item to basket'))
     }
 }

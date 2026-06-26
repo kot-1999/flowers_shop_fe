@@ -20,7 +20,7 @@ import { useState } from 'react'
 
 import { useAuth } from '@/app/components/AuthContent'
 import { uploadFile } from '@/app/utils/clientFetchFuntions'
-import { getTFunc } from '@/app/utils/helpers'
+import { checkRes, getTFunc } from '@/app/utils/helpers'
 
 interface Props {
     user: any
@@ -54,13 +54,13 @@ export default function ProfileForm({ user, authUser, onUpdated }: Props) {
                 })
             })
 
-            if (!res.ok) {
-                message.error(t('Failed to update'))
-                return
-            }
+            const data = await res.json()
 
-            message.success(t('Profile updated'))
-            onUpdated?.()
+            const isSuccess = await checkRes(res, data, t('Failed to update'))
+
+            if (isSuccess) {
+                onUpdated?.()
+            }
         } catch (err: any) {
             message.error(err.message)
         } finally {
@@ -78,12 +78,13 @@ export default function ProfileForm({ user, authUser, onUpdated }: Props) {
                 headers: { 'Content-Type': 'application/json' }
             })
 
-            if (res.ok) {
-                message.success(t('Account deleted'))
+            const data = await res.json()
+
+            const isSuccess = await checkRes(res, data, t('Failed to delete'))
+
+            if (isSuccess) {
                 await checkAuth?.()
                 router.push('/')
-            } else {
-                message.error(t('Failed to delete'))
             }
         } catch (err: any) {
             message.error(err.message)

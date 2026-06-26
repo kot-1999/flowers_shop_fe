@@ -12,7 +12,8 @@ export enum Language {
 }
 
 export enum CookieKey {
-    Settings = 'appSettings'
+    Settings = 'appSettings',
+    Basket = 'basket',
 }
 
 export enum LocalStorageKey {

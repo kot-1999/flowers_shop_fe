@@ -6,7 +6,7 @@ import ItemTypeModal from '@/app/components/goodModals/ItemTypeModal'
 import SimplePagination from '@/app/components/SimplePagination'
 import { commonFetch } from '@/app/utils/clientFetchFuntions'
 import { Defaults, Language, LocalStorageKey } from '@/app/utils/enums'
-import { getTFunc, removeLocalStorage } from '@/app/utils/helpers'
+import { checkRes, getTFunc, removeLocalStorage } from '@/app/utils/helpers'
 
 interface ItemType {
     id: string;
@@ -49,8 +49,9 @@ export default function ItemTypesTab({
 
             const data = await res.json()
 
-            if (res.ok) {
-                message.success(data.message)
+            const isSuccess = await checkRes(res, data, t('Failed to delete item Type'))
+
+            if (isSuccess) {
                 commonFetch({
                     search,
                     setLoading: setLoading,
@@ -58,12 +59,6 @@ export default function ItemTypesTab({
                     type: 'adminItemTypes',
                     paginationKey: LocalStorageKey.ItemTypePagination
                 })
-            } else {
-                if (data.message) {
-                    message.error(data.message)
-                } else if (data.messages) {
-                    data.messages.forEach((item: string) => message.error(item))
-                }
             }
             
         } catch {

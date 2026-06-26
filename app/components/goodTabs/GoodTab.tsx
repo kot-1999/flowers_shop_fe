@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import GoodModal from '@/app/components/goodModals/GoodModal'
 import SimplePagination from '@/app/components/SimplePagination'
 import { Defaults, GoodState, Language, LocalStorageKey } from '@/app/utils/enums'
-import { getLocalStorage, getTFunc, removeLocalStorage } from '@/app/utils/helpers'
+import { checkRes, getLocalStorage, getTFunc, removeLocalStorage } from '@/app/utils/helpers'
 
 // import GoodModal from '@/app/components/goodModals/GoodModal'
 
@@ -110,14 +110,9 @@ export default function GoodsTab({ settings }: Props) {
                 method: 'DELETE'
             })
 
-            const json = await res.json()
+            const data = await res.json()
 
-            if (res.ok) {
-                message.success(json.message)
-                fetchData()
-            } else {
-                message.error(json.message || t('Failed to delete product'))
-            }
+            await checkRes(res, data, t('Failed to delete product'))
         } catch {
             message.error(t('Failed to delete product'))
         }

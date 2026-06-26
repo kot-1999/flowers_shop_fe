@@ -18,6 +18,8 @@ import {
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { useAuth } from '@/app/components/AuthContent'
+import { addToBasket } from '@/app/utils/clientFetchFuntions'
 import { getTFunc } from '@/app/utils/helpers'
 
 const { Title, Text, Paragraph } = Typography
@@ -29,6 +31,7 @@ export default function GoodDetailsPage() {
     const [good, setGood] = useState<any>(null)
     const [selectedPricing, setSelectedPricing] = useState<string | null>(null)
     const [quantity, setQuantity] = useState(1)
+    const { user } = useAuth()
 
     useEffect(() => {
         if (!id) {return}
@@ -47,7 +50,7 @@ export default function GoodDetailsPage() {
         load()
     }, [id])
 
-    const addToBasket = async () => {
+    const onAddCheck = async () => {
         if (!selectedPricing) {
             message.warning(t('Select option'))
             return
@@ -62,7 +65,7 @@ export default function GoodDetailsPage() {
             return
         }
 
-        message.success(t('Added to cart'))
+        await addToBasket(pricing.id, good.id, quantity, t, user)
     }
 
     if (!good) {return null}
@@ -162,7 +165,7 @@ export default function GoodDetailsPage() {
                                         width: '100%',
                                         marginTop: 16
                                     }}
-                                    onClick={addToBasket}
+                                    onClick={onAddCheck}
                                     disabled={!selectedPricing}
                                 >
                                     {t('Add to cart')}

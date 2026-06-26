@@ -7,6 +7,7 @@ import SimplePagination from '@/app/components/SimplePagination'
 import { commonFetch } from '@/app/utils/clientFetchFuntions'
 import { Defaults, Language, LocalStorageKey } from '@/app/utils/enums'
 import {
+    checkRes,
     getTFunc,
     removeLocalStorage
 } from '@/app/utils/helpers'
@@ -93,8 +94,10 @@ export default function TagsTab({ settings }: Props) {
             })
 
             const data = await res.json()
-            if (res.ok) {
-                message.success(data.message)
+
+            const isSuccess = await checkRes(res, data, t('Failed to delete tag'))
+
+            if (isSuccess) {
                 commonFetch({
                     type: 'adminTags',
                     setLoading,
@@ -102,13 +105,6 @@ export default function TagsTab({ settings }: Props) {
                     setData,
                     paginationKey: LocalStorageKey.TagPagination
                 })
-            } else {
-                if (data.message) {
-                    message.error(data.message)
-                } else if (data.messages) {
-                    data.messages.forEach((item: string) =>
-                        message.error(item))
-                }
             }
         } catch {
             message.error(t('Failed to delete tag'))
