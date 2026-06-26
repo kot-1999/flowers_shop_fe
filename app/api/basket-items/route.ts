@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest) {
         const headers = await getRequiredHeaders(req)
         const body = await req.json()
 
-        const res = await fetch(`${BACKEND_URL}/api/v1/basket-items/public`, {
+        const res = await fetch(`${BACKEND_URL}/api/v1/basket-items`, {
             method: 'PATCH',
             headers,
             body: JSON.stringify(body)
@@ -85,10 +85,14 @@ export async function DELETE(req: NextRequest) {
         const headers = await getRequiredHeaders(req)
         const body = await req.json()
 
-        const res = await fetch(`${BACKEND_URL}/api/v1/basket-items/public`, {
+        const res = await fetch(`${BACKEND_URL}/api/v1/basket-items`, {
             method: 'DELETE',
             headers,
-            body: JSON.stringify(body)
+            body: JSON.stringify({
+                basketItems: body.basketItems.map((item: any) => ({
+                    id: item.id
+                }))
+            })
         })
 
         const data = await res.json()
