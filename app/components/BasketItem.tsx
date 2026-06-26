@@ -73,7 +73,7 @@ export default function BasketItem({
 
                     <div>
                         <Link href={getLink(slug, good.id)}>
-                            <Text strong style={{ fontSize: 16 }}>
+                            <Text strong>
                                 {good?.name?.[locale]}
                             </Text>
                         </Link>
@@ -83,6 +83,9 @@ export default function BasketItem({
                                 {good?.selectionist?.name?.[locale]} • {good?.selectionist?.country}
                             </Text>
                         </div>
+                        <Text>
+                            {good?.description?.[locale]}
+                        </Text>
                     </div>
                 </Space>
 
