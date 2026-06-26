@@ -186,10 +186,11 @@ export const addToBasket = async (
     pricingID: string,
     goodID: string,
     quantity: number,
-    t: (key: string) => string
+    t: (key: string) => string,
+    user: any
 ) => {
     try {
-        const response = await fetch('/api/basket-items', {
+        const response = await fetch(user ? '/api/basket-items' : '/api/cookie/basket', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

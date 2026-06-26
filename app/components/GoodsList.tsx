@@ -23,7 +23,7 @@ import { addToBasket } from '@/app/utils/clientFetchFuntions'
 import { GoodState } from '@/app/utils/enums'
 import { getTFunc } from '@/app/utils/helpers'
 
-export default function GoodsList({ goodsData, settings }: any) {
+export default function GoodsList({ goodsData, settings, user }: any) {
     const t = getTFunc()
     const pathname = usePathname()
 
@@ -227,7 +227,7 @@ export default function GoodsList({ goodsData, settings }: any) {
                                                         [good.id]: false 
                                                     }))
 
-                                                    await addToBasket(currentPricing.id, good.id, quantities[good.id] ?? 1, t)
+                                                    await addToBasket(currentPricing.id, good.id, quantities[good.id] ?? 1, t, user)
                                                 }}
                                             >
                                                 {t('Add to Cart')}

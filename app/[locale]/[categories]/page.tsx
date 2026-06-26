@@ -4,6 +4,7 @@ import { Spin } from 'antd'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { useAuth } from '@/app/components/AuthContent'
 import GoodsList from '@/app/components/GoodsList'
 import SearchBar from '@/app/components/SearchBar'
 import SimplePagination from '@/app/components/SimplePagination'
@@ -24,6 +25,7 @@ export default function Categories() {
 
     const [settings, setSettings] = useState<any>(null)
     const [settingsLoaded, setSettingsLoaded] = useState(false)
+    const { user } = useAuth()
 
     const pathname = usePathname()
     // Load application settings
@@ -105,7 +107,7 @@ export default function Categories() {
             ) : (
                 <div>
 
-                    <GoodsList goodsData={goodsData} settings={settings}/>
+                    <GoodsList goodsData={goodsData} settings={settings} user={user}/>
                     <SimplePagination
                         storageKey={LocalStorageKey.HomePagination}
                         current={goodsData?.pagination?.page ?? Defaults.Page}

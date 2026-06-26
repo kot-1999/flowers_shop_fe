@@ -4,6 +4,7 @@ import { Row, Col, Typography, message, Spin, Divider, Card, Space, Button } fro
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { useAuth } from '@/app/components/AuthContent'
 import BasketItem from '@/app/components/BasketItem'
 import { checkRes, getTFunc } from '@/app/utils/helpers'
 
@@ -15,12 +16,13 @@ export default function Cart() {
 
     const [loading, setLoading] = useState(false)
     const [cartData, setCartData] = useState<any>(null)
+    const { user } = useAuth()
     
     const fetchCart = async () => {
         try {
             setLoading(true)
 
-            const res = await fetch('/api/basket-items')
+            const res = user ? await fetch('/api/basket-items') : await fetch('/api/basket-items/public', { method: 'POST' })
             const data = await res.json()
 
             const ok = await checkRes(res, data, t('Failed to load cart'))
@@ -40,20 +42,41 @@ export default function Cart() {
         fetchCart()
     }, [])
 
-    const updateItem = async (basketItemID: string, quantity: number) => {
+    const updateItem = async (basketItemID: string, quantity: number, pricingID: string, goodID: string) => {
         try {
-            const res = await fetch(`/api/basket-items/${basketItemID}`, {
+            const endpoint = user
+                ? '/api/basket-items'
+                : '/api/cookie/basket'
+
+            const body = user ? {
+                basketItems: [
+                    {
+                        basketItemID,
+                        quantity
+                    }
+                ]
+            } : {
+                basketItems: [
+                    {
+                        goodID,
+                        pricingID,
+                        quantity
+                    }
+                ]
+            }
+
+            const res = await fetch(endpoint, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ quantity })
+                body: JSON.stringify(body)
             })
 
             const data = await res.json()
 
-            const isSuccess = await checkRes(res, data, t('Failed to update item'))
-            if (isSuccess) {
+            const ok = await checkRes(res, data, t('Failed to update item'))
+            if (ok) {
                 await fetchCart()
             }
         } catch (error: any) {
@@ -61,16 +84,39 @@ export default function Cart() {
         }
     }
 
-    const deleteItem = async (basketItemID: string) => {
+    const deleteItem = async (basketItemID: string, pricingID: string, goodID: string) => {
         try {
-            const res = await fetch(`/api/basket-items/${basketItemID}`, {
-                method: 'DELETE'
+            const endpoint = user
+                ? '/api/basket-items'
+                : '/api/cookie/basket'
+
+            const body =  user ? {
+                basketItems: [
+                    {
+                        id: basketItemID
+                    }
+                ]
+            } : {
+                basketItems: [
+                    {
+                        goodID,
+                        pricingID
+                    }
+                ]
+            }
+
+            const res = await fetch(endpoint, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
             })
 
             const data = await res.json()
 
-            const isSuccess = await checkRes(res, data, t('Failed to remove item'))
-            if (isSuccess) {
+            const ok = await checkRes(res, data, t('Failed to remove item'))
+            if (ok) {
                 await fetchCart()
             }
         } catch (error: any) {

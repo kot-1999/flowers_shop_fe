@@ -18,8 +18,9 @@ import {
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { useAuth } from '@/app/components/AuthContent'
+import { addToBasket } from '@/app/utils/clientFetchFuntions'
 import { getTFunc } from '@/app/utils/helpers'
-import {addToBasket} from "@/app/utils/clientFetchFuntions";
 
 const { Title, Text, Paragraph } = Typography
 
@@ -30,6 +31,7 @@ export default function GoodDetailsPage() {
     const [good, setGood] = useState<any>(null)
     const [selectedPricing, setSelectedPricing] = useState<string | null>(null)
     const [quantity, setQuantity] = useState(1)
+    const { user } = useAuth()
 
     useEffect(() => {
         if (!id) {return}
@@ -63,7 +65,7 @@ export default function GoodDetailsPage() {
             return
         }
 
-        await addToBasket(pricing.id, good.id, quantity, t)
+        await addToBasket(pricing.id, good.id, quantity, t, user)
     }
 
     if (!good) {return null}

@@ -10,8 +10,8 @@ const { Text } = Typography
 interface Props {
     item: any
     t: (key: string) => string
-    onUpdate?: (id: string, qty: number) => void
-    onDelete?: (id: string) => void
+    onUpdate?: (id: string, qty: number, pricingID: string, goodID: string) => void
+    onDelete?: (id: string, pricingID: string, goodID: string) => void
     unavailable?: boolean
 }
 
@@ -109,7 +109,7 @@ export default function BasketItem({
                         max={pricing?.quantity || 1}
                         value={item.quantity}
                         onChange={(value) =>
-                            onUpdate?.(item.id, Number(value) || 1)
+                            onUpdate?.(item.id, Number(value) || 1, item.pricing.id, item.good.id)
                         }
                         disabled={unavailable}
                     />
@@ -117,7 +117,7 @@ export default function BasketItem({
                     <Button
                         danger
                         icon={<DeleteOutlined />}
-                        onClick={() => onDelete?.(item.id)}
+                        onClick={() => onDelete?.(item.id, item.pricing.id, item.good.id)}
                     >
                         {t('Remove')}
                     </Button>
