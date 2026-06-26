@@ -1,6 +1,16 @@
 'use client'
 
-import { Row, Col, Typography, message, Spin, Divider, Card, Space, Button } from 'antd'
+import {
+    Row,
+    Col,
+    Typography,
+    message,
+    Spin,
+    Divider,
+    Card,
+    Space,
+    Button
+} from 'antd'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
@@ -13,22 +23,30 @@ const { Title, Text } = Typography
 export default function Cart() {
     const t = getTFunc()
     const router = useRouter()
+    const { user } = useAuth()
 
     const [loading, setLoading] = useState(false)
     const [cartData, setCartData] = useState<any>(null)
-    const { user } = useAuth()
-    
+
+    // EDIT MODE
+    const [editMode, setEditMode] = useState(false)
+
+    // pending changes
+    const [pendingUpdates, setPendingUpdates] = useState<Record<string, any>>({})
+    const [pendingDeletes, setPendingDeletes] = useState<Record<string, any>>({})
+
     const fetchCart = async () => {
         try {
             setLoading(true)
 
-            const res = user ? await fetch('/api/basket-items') : await fetch('/api/basket-items/public', { method: 'POST' })
+            const res = user
+                ? await fetch('/api/basket-items')
+                : await fetch('/api/basket-items/public', { method: 'POST' })
+
             const data = await res.json()
 
             const ok = await checkRes(res, data, t('Failed to load cart'))
-            if (!ok) {
-                return
-            }
+            if (!ok) {return}
 
             setCartData(data)
         } catch (error: any) {
@@ -39,89 +57,122 @@ export default function Cart() {
     }
 
     useEffect(() => {
+        if (user === undefined) { return }
         fetchCart()
-    }, [])
+    }, [user])
 
-    const updateItem = async (basketItemID: string, quantity: number, pricingID: string, goodID: string) => {
+    // Local edit actions
+    const updateItem = (
+        basketItemID: string,
+        quantity: number,
+        pricingID: string,
+        goodID: string
+    ) => {
+        setPendingUpdates((prev) => ({
+            ...prev,
+            [basketItemID]: {
+                basketItemID,
+                quantity,
+                pricingID,
+                goodID
+            }
+        }))
+
+        setCartData((prev: any) => {
+            if (!prev) {return prev}
+
+            const updateList = (list: any[] = []) =>
+                list.map((item: any) =>
+                    item.id === basketItemID
+                        ? {
+                            ...item,
+                            quantity
+                        }
+                        : item)
+
+            return {
+                ...prev,
+                basketItems: updateList(prev.basketItems),
+                unavailableBasketItems: updateList(prev.unavailableBasketItems)
+            }
+        })
+    }
+
+    const deleteItem = (
+        basketItemID: string,
+        pricingID: string,
+        goodID: string
+    ) => {
+        setPendingDeletes((prev) => ({
+            ...prev,
+            [basketItemID]: {
+                id: basketItemID,
+                pricingID,
+                goodID
+            }
+        }))
+
+        // optional: remove from UI immediately
+        setCartData((prev: any) => {
+            if (!prev) {return prev}
+            return {
+                ...prev,
+                basketItems: prev.basketItems?.filter((i: any) => i.id !== basketItemID)
+            }
+        })
+    }
+
+    // Bulk save
+    const saveCartChanges = async () => {
         try {
             const endpoint = user
                 ? '/api/basket-items'
                 : '/api/cookie/basket'
 
-            const body = user ? {
-                basketItems: [
-                    {
-                        basketItemID,
-                        quantity
-                    }
-                ]
-            } : {
-                basketItems: [
-                    {
-                        goodID,
-                        pricingID,
-                        quantity
-                    }
-                ]
+            const updates = Object.values(pendingUpdates).map((toUpdate: any) => ({
+                basketItemID: toUpdate.basketItemID,
+                quantity: toUpdate.quantity
+            }))
+
+            const deletes = Object.values(pendingDeletes)
+
+            if (updates.length) {
+                const res = await fetch(endpoint, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ basketItems: updates })
+                })
+
+                const data = await res.json()
+                await checkRes(res, data, t('Failed to update items'))
             }
 
-            const res = await fetch(endpoint, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            })
+            if (deletes.length) {
+                const res = await fetch(endpoint, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ basketItems: deletes })
+                })
 
-            const data = await res.json()
-
-            const ok = await checkRes(res, data, t('Failed to update item'), !user ?  t('Items updated') : null)
-            if (ok) {
-                await fetchCart()
+                const data = await res.json()
+                await checkRes(res, data, t('Failed to delete items'))
             }
+
+            setPendingUpdates({})
+            setPendingDeletes({})
+            setEditMode(false)
+
+            await fetchCart()
         } catch (error: any) {
-            message.error(error.message || t('Failed to update item'))
+            message.error(error.message || t('Failed to update cart'))
         }
     }
 
-    const deleteItem = async (basketItemID: string, pricingID: string, goodID: string) => {
-        try {
-            const endpoint = user
-                ? '/api/basket-items'
-                : '/api/cookie/basket'
-
-            const body =  user ? {
-                basketItems: [
-                    {
-                        id: basketItemID
-                    }
-                ]
-            } : {
-                basketItems: [
-                    {
-                        goodID,
-                        pricingID
-                    }
-                ]
-            }
-
-            const res = await fetch(endpoint, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(body)
-            })
-
-            const data = await res.json()
-
-            const ok = await checkRes(res, data, t('Failed to remove item'), !user ?  t('Items deleted') : null)
-            if (ok) {
-                await fetchCart()
-            }
-        } catch (error: any) {
-            message.error(error.message || t('Failed to remove item'))
-        }
+    const cancelEdit = () => {
+        setPendingUpdates({})
+        setPendingDeletes({})
+        setEditMode(false)
+        fetchCart()
     }
 
     const goCheckout = () => {
@@ -152,25 +203,45 @@ export default function Cart() {
             maxWidth: 1200,
             margin: '0 auto' 
         }}>
-            <Title level={2}>{t('Shopping Cart')}</Title>
+            <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+                <Col>
+                    <Title level={2} style={{ margin: 0 }}>
+                        {t('Shopping Cart')}
+                    </Title>
+                </Col>
 
-            {/* SUMMARY (more commercial) */}
+                <Col>
+                    <Space>
+                        {!editMode ? (
+                            <Button onClick={() => setEditMode(true)}>
+                                {t('Edit cart')}
+                            </Button>
+                        ) : (
+                            <>
+                                <Button type="primary" onClick={saveCartChanges}>
+                                    {t('Save changes')}
+                                </Button>
+                                <Button onClick={cancelEdit}>
+                                    {t('Cancel')}
+                                </Button>
+                            </>
+                        )}
+                    </Space>
+                </Col>
+            </Row>
+
             {summary && (
-                <Card
-                    style={{
-                        marginBottom: 20,
-                        borderRadius: 12
-                    }}
-                >
+                <Card style={{
+                    marginBottom: 20,
+                    borderRadius: 12 
+                }}>
                     <Space size="large" wrap>
                         <Text strong style={{ fontSize: 16 }}>
                             {t('Total')}: {summary.totalPrice} €
                         </Text>
-
                         <Text>
                             {t('Available items')}: {summary.totalAvailable}
                         </Text>
-
                         <Text type="secondary">
                             {t('Unavailable')}: {summary.totalUnavailable}
                         </Text>
@@ -178,7 +249,6 @@ export default function Cart() {
                 </Card>
             )}
 
-            {/* AVAILABLE ITEMS */}
             {!!cartData?.basketItems?.length && (
                 <>
                     <Title level={4}>{t('Available items')}</Title>
@@ -189,8 +259,8 @@ export default function Cart() {
                                 <BasketItem
                                     item={item}
                                     t={t}
-                                    onUpdate={updateItem}
-                                    onDelete={deleteItem}
+                                    onUpdate={editMode ? updateItem : undefined}
+                                    onDelete={editMode ? deleteItem : undefined}
                                 />
                             </Col>
                         ))}
@@ -198,7 +268,6 @@ export default function Cart() {
                 </>
             )}
 
-            {/* UNAVAILABLE ITEMS */}
             {!!cartData?.unavailableBasketItems?.length && (
                 <>
                     <Divider />
@@ -207,28 +276,14 @@ export default function Cart() {
                         {t('Unavailable items')}
                     </Title>
 
-                    {/* UX EXPLANATION */}
-                    <Card
-                        style={{
-                            marginBottom: 16,
-                            background: '#fafafa',
-                            border: '1px dashed #d9d9d9'
-                        }}
-                    >
-                        <Text type="secondary">
-                            These items are currently unavailable. You can keep them in your cart —
-                            they will become purchasable again as soon as they are back in stock.
-                        </Text>
-                    </Card>
-
                     <Row gutter={[16, 16]}>
                         {cartData.unavailableBasketItems.map((item: any) => (
                             <Col xs={24} key={item.id}>
                                 <BasketItem
                                     item={item}
                                     t={t}
-                                    onUpdate={updateItem}
-                                    onDelete={deleteItem}
+                                    onUpdate={editMode ? updateItem : undefined}
+                                    onDelete={editMode ? deleteItem : undefined}
                                     unavailable
                                 />
                             </Col>
@@ -237,7 +292,6 @@ export default function Cart() {
                 </>
             )}
 
-            {/* EMPTY STATE */}
             {!hasItems && !loading && (
                 <div style={{
                     textAlign: 'center',
@@ -247,7 +301,6 @@ export default function Cart() {
                 </div>
             )}
 
-            {/* CHECKOUT CTA (commercial bottom action) */}
             {!!cartData?.basketItems?.length && (
                 <Card
                     style={{
@@ -259,37 +312,27 @@ export default function Cart() {
                     }}
                 >
                     <Row justify="space-between" align="middle">
-                        {/* LEFT SIDE */}
                         <Col>
-                            <Space direction="vertical" size={0}>
+                            <Space orientation="vertical" size={0}>
                                 <Text strong style={{ fontSize: 16 }}>
                                     {t('Ready to checkout')}
                                 </Text>
-
                                 <Text type="secondary">
                                     {summary?.totalAvailable} {t('items available for purchase')}
                                 </Text>
                             </Space>
                         </Col>
 
-                        {/* RIGHT SIDE */}
                         <Col>
                             <Space size={24} align="center">
                                 <Space orientation="vertical" size={0} style={{ textAlign: 'right' }}>
-                                    <Text type="secondary">
-                                        {t('Total')}
-                                    </Text>
-
+                                    <Text type="secondary">{t('Total')}</Text>
                                     <Text strong style={{ fontSize: 22 }}>
                                         € {summary?.totalPrice}
                                     </Text>
                                 </Space>
 
-                                <Button
-                                    type="primary"
-                                    size="large"
-                                    onClick={goCheckout}
-                                >
+                                <Button type="primary" size="large" onClick={goCheckout}>
                                     {t('Proceed to Checkout')}
                                 </Button>
                             </Space>

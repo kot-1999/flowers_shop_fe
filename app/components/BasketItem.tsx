@@ -27,7 +27,10 @@ export default function BasketItem({
     const good = item.good
     const pricing = item.pricing
     const locale = pathname.split('/')[1]
-    const slug = good?.name?.[`${locale}Slug`] || good?.name?.enSlug
+
+    const slug
+        = good?.name?.[`${locale}Slug`]
+        || good?.name?.enSlug
 
     const getLink = (slug: string, id: string) => {
         const path = pathname.split('/')
@@ -44,18 +47,25 @@ export default function BasketItem({
         return path.join('/') + `?${query}`
     }
 
+    const isEditable = !!onUpdate && !!onDelete
+
     return (
         <Card
             style={{
                 opacity: unavailable ? 0.45 : 1,
                 filter: unavailable ? 'grayscale(1)' : 'none',
-                border: unavailable ? '1px solid #d9d9d9' : undefined
+                border: unavailable ? '1px dashed #d9d9d9' : undefined,
+                transition: 'all 0.2s ease'
             }}
         >
-            <Space style={{
-                width: '100%',
-                justifyContent: 'space-between' 
-            }} align="start">
+            <Space
+                style={{
+                    width: '100%',
+                    justifyContent: 'space-between'
+                }}
+                align="start"
+            >
+                {/* LEFT SIDE */}
                 <Space align="start">
                     {good?.photos?.[0] && (
                         <Image
@@ -65,7 +75,7 @@ export default function BasketItem({
                             height={200}
                             style={{
                                 objectFit: 'cover',
-                                borderRadius: 8 
+                                borderRadius: 8
                             }}
                             preview={false}
                         />
@@ -83,12 +93,14 @@ export default function BasketItem({
                                 {good?.selectionist?.name?.[locale]} • {good?.selectionist?.country}
                             </Text>
                         </div>
+
                         <Text>
                             {good?.description?.[locale]}
                         </Text>
                     </div>
                 </Space>
 
+                {/* RIGHT SIDE */}
                 <Space orientation="vertical" style={{ textAlign: 'right' }}>
 
                     <Space size={8}>
@@ -104,23 +116,46 @@ export default function BasketItem({
                         {t('Stock')}: {pricing?.quantity}
                     </Text>
 
+                    {/* QUANTITY CONTROL */}
                     <InputNumber
                         min={1}
                         max={pricing?.quantity || 1}
                         value={item.quantity}
                         onChange={(value) =>
-                            onUpdate?.(item.id, Number(value) || 1, item.pricing.id, item.good.id)
+                            isEditable
+                            && onUpdate?.(
+                                item.id,
+                                Number(value) || 1,
+                                item.pricing.id,
+                                item.good.id
+                            )
                         }
-                        disabled={unavailable}
+                        disabled={!isEditable}
                     />
 
+                    {/* DELETE BUTTON */}
                     <Button
                         danger
                         icon={<DeleteOutlined />}
-                        onClick={() => onDelete?.(item.id, item.pricing.id, item.good.id)}
+                        onClick={() =>
+                            isEditable
+                            && onDelete?.(
+                                item.id,
+                                item.pricing.id,
+                                item.good.id
+                            )
+                        }
+                        disabled={!isEditable}
                     >
                         {t('Remove')}
                     </Button>
+
+                    {/* OPTIONAL: subtle edit hint */}
+                    {!isEditable && !unavailable && (
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                            {t('Click Edit cart to modify')}
+                        </Text>
+                    )}
                 </Space>
             </Space>
         </Card>
