@@ -55,3 +55,51 @@ export async function POST(req: NextRequest) {
         )
     }
 }
+
+export async function PATCH(req: NextRequest) {
+    try {
+        const headers = await getRequiredHeaders(req)
+        const body = await req.json()
+
+        const res = await fetch(`${BACKEND_URL}/api/v1/basket-items/public`, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(body)
+        })
+
+        const data = await res.json()
+
+        return NextResponse.json(data, {
+            status: res.status
+        })
+    } catch (error: any) {
+        return NextResponse.json(
+            { message: error.message },
+            { status: 500 }
+        )
+    }
+}
+
+export async function DELETE(req: NextRequest) {
+    try {
+        const headers = await getRequiredHeaders(req)
+        const body = await req.json()
+
+        const res = await fetch(`${BACKEND_URL}/api/v1/basket-items/public`, {
+            method: 'DELETE',
+            headers,
+            body: JSON.stringify(body)
+        })
+
+        const data = await res.json()
+
+        return NextResponse.json(data, {
+            status: res.status
+        })
+    } catch (error: any) {
+        return NextResponse.json(
+            { message: error.message },
+            { status: 500 }
+        )
+    }
+}
