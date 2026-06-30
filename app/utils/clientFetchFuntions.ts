@@ -183,7 +183,6 @@ export const generateAndFetchTranslations = async ({
 
 export const addToBasket = async (
     pricingID: string,
-    goodID: string,
     quantity: number,
     t: (key: string) => string,
     user: any
@@ -196,7 +195,6 @@ export const addToBasket = async (
             },
             body: JSON.stringify({
                 pricingID,
-                goodID,
                 quantity
             })
         })

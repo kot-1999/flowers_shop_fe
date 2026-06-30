@@ -227,7 +227,7 @@ export default function GoodsList({ goodsData, settings, user }: any) {
                                                         [good.id]: false 
                                                     }))
 
-                                                    await addToBasket(currentPricing.id, good.id, quantities[good.id] ?? 1, t, user)
+                                                    await addToBasket(currentPricing.id, quantities[good.id] ?? 1, t, user)
                                                 }}
                                             >
                                                 {t('Add to Cart')}

@@ -10,8 +10,8 @@ const { Text } = Typography
 interface Props {
     item: any
     t: (key: string) => string
-    onUpdate?: (id: string, qty: number, pricingID: string, goodID: string) => void
-    onDelete?: (id: string, pricingID: string, goodID: string) => void
+    onUpdate?: (id: string, qty: number, pricingID: string) => void
+    onDelete?: (id: string, pricingID: string) => void
     unavailable?: boolean
 }
 
@@ -126,8 +126,7 @@ export default function BasketItem({
                             && onUpdate?.(
                                 item.id,
                                 Number(value) || 1,
-                                item.pricing.id,
-                                item.good.id
+                                item.pricing.id
                             )
                         }
                         disabled={!isEditable}
@@ -141,8 +140,7 @@ export default function BasketItem({
                             isEditable
                             && onDelete?.(
                                 item.id,
-                                item.pricing.id,
-                                item.good.id
+                                item.pricing.id
                             )
                         }
                         disabled={!isEditable}

@@ -65,16 +65,14 @@ export default function Cart() {
     const updateItem = (
         basketItemID: string,
         quantity: number,
-        pricingID: string,
-        goodID: string
+        pricingID: string
     ) => {
         setPendingUpdates((prev) => ({
             ...prev,
             [basketItemID]: {
                 basketItemID,
                 quantity,
-                pricingID,
-                goodID
+                pricingID
             }
         }))
 
@@ -100,15 +98,13 @@ export default function Cart() {
 
     const deleteItem = (
         basketItemID: string,
-        pricingID: string,
-        goodID: string
+        pricingID: string
     ) => {
         setPendingDeletes((prev) => ({
             ...prev,
             [basketItemID]: {
                 id: basketItemID,
-                pricingID,
-                goodID
+                pricingID
             }
         }))
 

@@ -26,15 +26,12 @@ export async function POST(req: NextRequest) {
 
         const basket = (await getCookie(CookieKey.Basket)) || []
 
-        const existing = basket.find((i: any) =>
-            i.goodID === body.goodID && i.pricingID === body.pricingID)
+        const existing = basket.find((i: any) => i.pricingID === body.pricingID)
 
         if (existing) {
             existing.quantity += body.quantity
         } else {
             basket.push({
-                id: `${body.goodID}:${body.pricingID}`,
-                goodID: body.goodID,
                 pricingID: body.pricingID,
                 quantity: body.quantity,
                 createdAt: body.createdAt ?? new Date().toISOString()
@@ -64,7 +61,7 @@ export async function PATCH(req: NextRequest) {
         const newBasket: any[] = []
 
         basket.forEach((item: any) => {
-            const isUpdated = body.basketItems.find((i: any) => `${i.goodID}:${i.pricingID}` === item.id)
+            const isUpdated = body.basketItems.find((i: any) => i.basketItemID === item.pricingID)
 
             if (!isUpdated) {
                 newBasket.push(item)
@@ -95,7 +92,7 @@ export async function DELETE(req: NextRequest) {
         const newBasket: any[] = []
 
         basket.forEach((item: any) => {
-            const isDeleted = body.basketItems.find((i: any) => `${i.goodID}:${i.pricingID}` === item.id)
+            const isDeleted = body.basketItems.find((i: any) => i.pricingID === item.pricingID)
 
             if (!isDeleted) {
                 newBasket.push(item)

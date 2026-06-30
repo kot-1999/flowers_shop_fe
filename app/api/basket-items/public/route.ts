@@ -18,7 +18,6 @@ export async function POST(req: NextRequest) {
                 body: JSON.stringify({
                     basketItems: basketItems.map((item: any) => ({
                         pricingID: item.pricingID,
-                        goodID: item.goodID,
                         quantity: item.quantity,
                         createdAt: item.createdAt
                     })) 

@@ -65,7 +65,7 @@ export default function GoodDetailsPage() {
             return
         }
 
-        await addToBasket(pricing.id, good.id, quantity, t, user)
+        await addToBasket(pricing.id, quantity, t, user)
     }
 
     if (!good) {return null}
