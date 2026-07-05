@@ -1,4 +1,5 @@
 import { message } from 'antd'
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
@@ -178,6 +179,47 @@ export const generateAndFetchTranslations = async ({
         message.error(t('AI translation failed'))
     } finally {
         setAiLoading(false)
+    }
+}
+
+export const fetchAddresses = async (setAddresses: (val: any) => void, setLoading: (val: any) => void, t: (val: string) => string) => {
+    setLoading(true)
+
+    try {
+        const res = await fetch('/api/addresses')
+        const data = await res.json()
+
+        setAddresses(data.addresses || [])
+    } catch {
+        message.error(t('Failed to load addresses'))
+    } finally {
+        setLoading(false)
+    }
+}
+
+export const fetchUser = async (authUser: any, setLoading: (val: boolean) => void, setUser: (data: any) => void, router?: AppRouterInstance) => {
+    try {
+        if (!authUser) {return}
+
+        setLoading(true)
+
+        const res = await fetch(`/api/users/${authUser.id}`)
+
+        if (!res.ok) {
+            if (router) {
+                router.push('/')
+            }
+            return
+        }
+
+        const data = await res.json()
+        setUser(data.user)
+    } catch {
+        if (router) {
+            router.push('/')
+        }
+    } finally {
+        setLoading(false)
     }
 }
 

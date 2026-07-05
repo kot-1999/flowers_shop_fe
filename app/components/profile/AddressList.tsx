@@ -3,6 +3,7 @@
 import { Button, Space, Spin, message } from 'antd'
 import { useEffect, useState } from 'react'
 
+import { fetchAddresses } from '@/app/utils/clientFetchFuntions'
 import { checkRes, getTFunc } from '@/app/utils/helpers'
 
 import AddressCard from './AddressCard'
@@ -16,23 +17,8 @@ export default function AddressList() {
     const [open, setOpen] = useState(false)
     const [editing, setEditing] = useState<any | null>(null)
 
-    const fetchAddresses = async () => {
-        setLoading(true)
-
-        try {
-            const res = await fetch('/api/addresses')
-            const data = await res.json()
-
-            setAddresses(data.addresses || [])
-        } catch {
-            message.error(t('Failed to load addresses'))
-        } finally {
-            setLoading(false)
-        }
-    }
-
     useEffect(() => {
-        fetchAddresses()
+        fetchAddresses(setAddresses, setLoading, t)
     }, [])
 
     const handleDelete = async (id: string) => {
@@ -46,7 +32,7 @@ export default function AddressList() {
             const isSuccess = await checkRes(res, data, t('Failed to delete'))
 
             if (isSuccess) {
-                fetchAddresses()
+                fetchAddresses(setAddresses, setLoading, t)
             }
         } catch {
             message.error(t('Failed to delete'))
@@ -89,7 +75,7 @@ export default function AddressList() {
                 onSuccess={() => {
                     setOpen(false)
                     setEditing(null)
-                    fetchAddresses()
+                    fetchAddresses(setAddresses, setLoading, t)
                 }}
             />
         </div>

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/app/components/AuthContent'
 import AddressList from '@/app/components/profile/AddressList'
 import ProfileForm from '@/app/components/profile/ProfileForm'
+import { fetchUser } from '@/app/utils/clientFetchFuntions'
 import { getTFunc } from '@/app/utils/helpers'
 
 export default function ProfilePage() {
@@ -17,30 +18,8 @@ export default function ProfilePage() {
     const [user, setUser] = useState<any>(null)
     const [loading, setLoading] = useState(false)
 
-    const fetchUser = async () => {
-        try {
-            if (!authUser) {return}
-
-            setLoading(true)
-
-            const res = await fetch(`/api/users/${authUser.id}`)
-
-            if (!res.ok) {
-                router.push('/')
-                return
-            }
-
-            const data = await res.json()
-            setUser(data.user)
-        } catch {
-            router.push('/')
-        } finally {
-            setLoading(false)
-        }
-    }
-
     useEffect(() => {
-        fetchUser()
+        fetchUser(authUser, setLoading, setUser, router)
     }, [authUser])
 
     if (loading || !user) {
