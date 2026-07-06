@@ -8,7 +8,7 @@ const BACKEND_URL = process.env.BACKEND_URL
 export async function POST(req: NextRequest) {
     try {
         const headers = await getRequiredHeaders(req)
-        const basketItems = await getCookie(CookieKey.Basket)
+        const basketItems = await getCookie(CookieKey.Basket) ?? []
 
         const response = await fetch(
             `${BACKEND_URL}/api/v1/public/basket-items`,
@@ -16,17 +16,16 @@ export async function POST(req: NextRequest) {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({
-                    basketItems: basketItems.map((item: any) => ({
+                    basketItems: basketItems?.map((item: any) => ({
                         pricingID: item.pricingID,
                         quantity: item.quantity,
                         createdAt: item.createdAt
-                    })) 
+                    }))
                 })
             }
         )
 
         const data = await response.json()
-
         return NextResponse.json(data, {
             status: response.status
         })
