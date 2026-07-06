@@ -24,6 +24,7 @@ export enum LocalStorageKey {
     TagPagination = 'tagPagination',
     SelectionistPagination = 'selectionistPagination',
     GoodPagination = 'goodPagination',
+    CheckoutToken = 'checkoutToken'
 }
 
 export enum GoodState{
