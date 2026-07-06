@@ -172,7 +172,7 @@ export default function Cart() {
     }
 
     const goCheckout = () => {
-        router.push(`/${t('locale')}/checkout`)
+        router.push('/basket/checkout')
     }
 
     if (loading) {
