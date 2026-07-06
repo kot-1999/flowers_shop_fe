@@ -5,8 +5,9 @@ import {
     Card,
     Col,
     Divider,
-    Form,
-    Input,
+    Form, Image,
+    Input, message,
+    Radio,
     Row,
     Select,
     Space,
@@ -51,7 +52,7 @@ export default function Checkout() {
     const [address, setAddress] = useState<any>(null)
     const addressRef = useRef<any>(null)
 
-    const [shippingRates, setShippingRates] = useState<any[]>([])
+    const [shipping, setShipping] = useState<any>(null)
     const [selectedRate, setSelectedRate] = useState<any>(null)
 
     const [customer, setCustomer] = useState({
@@ -59,6 +60,9 @@ export default function Checkout() {
         lastName: '',
         email: ''
     })
+
+    const [addressKey, setAddressKey] = useState<string | null>(null)
+
     useEffect(() => {
         if (!authUser) {return}
 
@@ -93,6 +97,8 @@ export default function Checkout() {
             return
         }
 
+        console.log('!!!!!!!!!!!!!!')
+
         const checkoutToken = getLocalStorage(LocalStorageKey.CheckoutToken)
         const headers: any = {
             'Content-Type': 'application/json'
@@ -111,7 +117,7 @@ export default function Checkout() {
             })
             const data = await res.json()
 
-            setShippingRates(data.rates ?? [])
+            setShipping(data)
 
             if (data.rates?.length) {
                 setSelectedRate(data.rates[0]) // default selection
@@ -120,7 +126,7 @@ export default function Checkout() {
         }
 
         loadRates()
-    }, [currentStep, address])
+    }, [addressKey])
 
     const handleNext = async () => {
         if (currentStep === CheckoutStep.Customer) {
@@ -135,7 +141,25 @@ export default function Checkout() {
 
         if (currentStep === CheckoutStep.Address) {
             await addressRef.current?.submit()
+            setAddressKey(JSON.stringify({
+                country: address?.country,
+                city: address?.city,
+                street: address?.street,
+                building: address?.building,
+                apartment: address?.apartment,
+                postcode: address?.postcode
+            }))
             setCurrentStep(CheckoutStep.Shipping)
+            return
+        }
+
+        if (currentStep === CheckoutStep.Shipping) {
+            if (!selectedRate) {
+                message.error(t('Please select a shipping method'))
+                return
+            }
+
+            setCurrentStep(CheckoutStep.Order)
             return
         }
     }
@@ -196,8 +220,7 @@ export default function Checkout() {
                                     onChange={(e) =>
                                         setCustomer({
                                             ...customer,
-                                            firstName:
-                                                e.target.value
+                                            firstName: e.target.value
                                         })
                                     }
                                 />
@@ -211,8 +234,7 @@ export default function Checkout() {
                                     onChange={(e) =>
                                         setCustomer({
                                             ...customer,
-                                            lastName:
-                                                e.target.value
+                                            lastName: e.target.value
                                         })
                                     }
                                 />
@@ -237,7 +259,7 @@ export default function Checkout() {
         case CheckoutStep.Address:
             return (
                 <Space
-                    direction="vertical"
+                    orientation="vertical"
                     size="large"
                     style={{ width: '100%' }}
                 >
@@ -301,11 +323,109 @@ export default function Checkout() {
 
         case CheckoutStep.Shipping:
             return (
-                <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+                <Space
+                    orientation="vertical"
+                    size="large"
+                    style={{ width: '100%' }}
+                >
                     <Title level={4}>{t('Shipping')}</Title>
+
                     <Paragraph>
-                            Display available shipping rates
+                        {t('Select a shipping method')}
                     </Paragraph>
+
+                    <Radio.Group
+                        style={{ width: '100%' }}
+                        value={selectedRate?.objectId}
+                        onChange={(e) => {
+                            const rate = shipping.rates.find((r: any) => r.objectId === e.target.value)
+
+                            setSelectedRate(rate)
+                        }}
+                    >
+                        <Space
+                            orientation="vertical"
+                            style={{ width: '100%' }}
+                        >
+                            {shipping?.rates?.sort((a: any, b: any) => Number(a.amountLocal) - Number(b.amountLocal))?.map((rate: any) => (
+                                <Card
+                                    key={rate.objectId}
+                                    hoverable
+                                >
+                                    <Radio
+                                        value={rate.objectId}
+                                        style={{ width: '100%' }}
+                                    >
+                                        <Row
+                                            align="middle"
+                                            justify="space-between"
+                                            gutter={24}
+                                        >
+                                            <Col flex="140px">
+                                                <Card
+                                                    size="small"
+                                                    styles={{
+                                                        body: {
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center'
+                                                        }
+                                                    }}
+                                                >
+                                                    <Image
+                                                        preview={false}
+                                                        src={rate.providerImage200}
+                                                        alt={rate.provider}
+                                                        style={{
+                                                            maxWidth: '100%',
+                                                            objectFit: 'contain',
+                                                            display: 'block'
+                                                        }}
+                                                    />
+                                                </Card>
+                                            </Col>
+
+                                            <Col flex="auto">
+                                                <Space
+                                                    orientation="vertical"
+                                                    size={0}
+                                                >
+                                                    <Typography.Text strong>
+                                                        {rate.provider}
+                                                    </Typography.Text>
+
+                                                    <Typography.Text>
+                                                        {rate.servicelevel.name}
+                                                    </Typography.Text>
+
+                                                    {rate.durationTerms && (
+                                                        <Typography.Text type="secondary">
+                                                            {rate.durationTerms}
+                                                        </Typography.Text>
+                                                    )}
+
+                                                    {rate.zone && (
+                                                        <Typography.Text type="secondary">
+                                                            {t('Destination')}: {shipping?.addressTo?.city} {shipping?.addressTo?.country}
+                                                        </Typography.Text>
+                                                    )}
+                                                </Space>
+                                            </Col>
+
+                                            <Col>
+                                                <Typography.Title
+                                                    level={5}
+                                                    style={{ margin: 0 }}
+                                                >
+                                                    {rate.amountLocal} {rate.currencyLocal}
+                                                </Typography.Title>
+                                            </Col>
+                                        </Row>
+                                    </Radio>
+                                </Card>
+                            ))}
+                        </Space>
+                    </Radio.Group>
                 </Space>
             )
 
