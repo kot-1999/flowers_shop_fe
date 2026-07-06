@@ -10,7 +10,7 @@ import {
     Radio,
     Row,
     Select,
-    Space,
+    Space, Spin,
     Steps,
     Typography
 } from 'antd'
@@ -96,8 +96,7 @@ export default function Checkout() {
         if (currentStep !== CheckoutStep.Shipping && !address?.id) {
             return
         }
-
-        console.log('!!!!!!!!!!!!!!')
+        setLoading(true)
 
         const checkoutToken = getLocalStorage(LocalStorageKey.CheckoutToken)
         const headers: any = {
@@ -108,21 +107,27 @@ export default function Checkout() {
         }
 
         const loadRates = async () => {
-            const res = await fetch('/api/shipping', {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                    addressID: address.id
+            try {
+                const res = await fetch('/api/shipping', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        addressID: address.id
+                    })
                 })
-            })
-            const data = await res.json()
+                const data = await res.json()
 
-            setShipping(data)
+                setShipping(data)
 
-            if (data.rates?.length) {
-                setSelectedRate(data.rates[0]) // default selection
+                if (data.rates?.length) {
+                    setSelectedRate(data.rates[0]) // default selection
+                }
+                console.log(data, res)
+            } catch {
+                message.error(t('Failed to load rates'))
+            } finally {
+                setLoading(false)
             }
-            console.log(data, res)
         }
 
         loadRates()
@@ -133,6 +138,7 @@ export default function Checkout() {
             await form.validateFields()
 
             const values = form.getFieldsValue()
+            console.log('!!!!', values)
             setCustomer(values)
 
             await continueCustomer()
@@ -214,7 +220,7 @@ export default function Checkout() {
                 <Form layout="vertical" form={form}>
                     <Row gutter={16}>
                         <Col span={12}>
-                            <Form.Item label="First name" required>
+                            <Form.Item label="First name" name="firstName" required>
                                 <Input
                                     value={customer.firstName}
                                     onChange={(e) =>
@@ -223,12 +229,13 @@ export default function Checkout() {
                                             firstName: e.target.value
                                         })
                                     }
+                                    required
                                 />
                             </Form.Item>
                         </Col>
 
                         <Col span={12}>
-                            <Form.Item label="Last name" required>
+                            <Form.Item label="Last name" name="lastName" required>
                                 <Input
                                     value={customer.lastName}
                                     onChange={(e) =>
@@ -237,12 +244,13 @@ export default function Checkout() {
                                             lastName: e.target.value
                                         })
                                     }
+                                    required
                                 />
                             </Form.Item>
                         </Col>
                     </Row>
 
-                    <Form.Item label="Email" required>
+                    <Form.Item label="Email" name="email" required>
                         <Input
                             value={customer.email}
                             onChange={(e) =>
@@ -251,6 +259,7 @@ export default function Checkout() {
                                     email: e.target.value
                                 })
                             }
+                            required
                         />
                     </Form.Item>
                 </Form>
@@ -432,10 +441,93 @@ export default function Checkout() {
         case CheckoutStep.Order:
             return (
                 <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-                    <Title level={4}>{t('Order')}</Title>
-                    <Paragraph>
-                            Review order
-                    </Paragraph>
+                    <Title level={4}>{t('Order review')}</Title>
+
+                    <Card>
+                        <Space orientation="vertical" style={{ width: '100%' }} size="middle">
+
+                            {/* ADDRESS */}
+                            <div>
+                                <Typography.Text type="secondary">
+                                    {t('Shipping address')}
+                                </Typography.Text>
+
+                                <div style={{ marginTop: 6 }}>
+                                    <Typography.Text strong>
+                                        {customer.firstName + ' ' + customer.lastName}
+                                    </Typography.Text>
+                                    <br />
+                                    <Typography.Text>
+                                        {[
+                                            address?.apartment,
+                                            address?.building,
+                                            address?.street
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' ')}
+                                        {address?.city ? `, ${address.city}` : ''}
+                                    </Typography.Text>
+                                    <br />
+                                    <Typography.Text>
+                                        {address?.postcode} {address?.country}
+                                    </Typography.Text>
+                                </div>
+                            </div>
+
+                            <Divider />
+
+                            {/* SHIPPING */}
+                            <div>
+                                <Typography.Text type="secondary">
+                                    {t('Shipping method')}
+                                </Typography.Text>
+
+                                <div style={{ marginTop: 6 }}>
+                                    <Space>
+                                        <Image
+                                            preview={false}
+                                            src={selectedRate?.providerImage75}
+                                            width={40}
+                                        />
+
+                                        <div>
+                                            <Typography.Text strong>
+                                                {selectedRate?.provider}
+                                            </Typography.Text>
+                                            <br />
+                                            <Typography.Text>
+                                                {selectedRate?.servicelevel?.name}
+                                            </Typography.Text>
+                                        </div>
+                                    </Space>
+                                </div>
+                            </div>
+
+                            <Divider />
+
+                            {/* PRICE */}
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between' 
+                            }}>
+                                <Typography.Text>{t('Shipping')}</Typography.Text>
+                                <Typography.Text>
+                                    {selectedRate?.amountLocal} {selectedRate?.currencyLocal}
+                                </Typography.Text>
+                            </div>
+
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between' 
+                            }}>
+                                <Typography.Text strong>{t('Total')}</Typography.Text>
+                                <Typography.Text strong>
+                                    {'123.00'} EUR
+                                </Typography.Text>
+                            </div>
+
+                        </Space>
+                    </Card>
                 </Space>
             )
 
@@ -471,7 +563,16 @@ export default function Checkout() {
 
             <Divider />
 
-            {renderStep()}
+            { loading ? <div
+                style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: 200
+                }}
+            >
+                <Spin />
+            </div> : renderStep()}
 
             <Divider />
 
