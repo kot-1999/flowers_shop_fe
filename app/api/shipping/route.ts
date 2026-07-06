@@ -6,8 +6,14 @@ const BACKEND_URL = process.env.BACKEND_URL
 
 export async function POST(req: NextRequest) {
     try {
-        const headers = await getRequiredHeaders(req)
+        const headers: any = await getRequiredHeaders(req)
         const body = await req.json()
+
+        const auth = req.headers.get('authorization')
+
+        if (auth) {
+            headers['Authorization'] = auth
+        }
 
         const response = await fetch(
             `${BACKEND_URL}/api/v1/shipping`,

@@ -23,7 +23,7 @@ import {
 } from '@/app/utils/clientFetchFuntions'
 import { LocalStorageKey } from '@/app/utils/enums'
 import {
-    checkRes,
+    checkRes, getLocalStorage,
     getTFunc,
     setLocalStorage
 } from '@/app/utils/helpers'
@@ -43,13 +43,16 @@ export default function Checkout() {
     const { user: authUser } = useAuth()
     const t = getTFunc()
     const [loading, setLoading] = useState(false)
+
     const [user, setUser] = useState<any>(null)
     const [form] = Form.useForm()
 
     const [addresses, setAddresses] = useState<any[]>([])
-
     const [address, setAddress] = useState<any>(null)
     const addressRef = useRef<any>(null)
+
+    const [shippingRates, setShippingRates] = useState<any[]>([])
+    const [selectedRate, setSelectedRate] = useState<any>(null)
 
     const [customer, setCustomer] = useState({
         firstName: '',
@@ -85,6 +88,40 @@ export default function Checkout() {
         }
     }, [addresses])
 
+    useEffect(() => {
+        if (currentStep !== CheckoutStep.Shipping && !address?.id) {
+            return
+        }
+
+        const checkoutToken = getLocalStorage(LocalStorageKey.CheckoutToken)
+        const headers: any = {
+            'Content-Type': 'application/json'
+        }
+        if (checkoutToken) {
+            headers['Authorization'] = `Bearer ${checkoutToken}`
+        }
+
+        const loadRates = async () => {
+            const res = await fetch('/api/shipping', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({
+                    addressID: address.id
+                })
+            })
+            const data = await res.json()
+
+            setShippingRates(data.rates ?? [])
+
+            if (data.rates?.length) {
+                setSelectedRate(data.rates[0]) // default selection
+            }
+            console.log(data, res)
+        }
+
+        loadRates()
+    }, [currentStep, address])
+
     const handleNext = async () => {
         if (currentStep === CheckoutStep.Customer) {
             await form.validateFields()
@@ -98,10 +135,6 @@ export default function Checkout() {
 
         if (currentStep === CheckoutStep.Address) {
             await addressRef.current?.submit()
-            const values = await addressRef.current?.getValues()
-            if (!values) {return}
-
-            setAddress(values)
             setCurrentStep(CheckoutStep.Shipping)
             return
         }
@@ -144,7 +177,6 @@ export default function Checkout() {
                 LocalStorageKey.CheckoutToken,
                 data.user.token
             )
-            console.log(data.user.token)
             setCurrentStep(CheckoutStep.Address)
         } finally {
             setLoading(false)
@@ -221,7 +253,7 @@ export default function Checkout() {
                                 address={address}
                                 useForm={true}
                                 ref={addressRef}
-                                onSuccess={() => {}}
+                                onSuccess={(addr: any) => { setAddress(addr)}}
                             />
                         </>
                     )}
@@ -260,7 +292,7 @@ export default function Checkout() {
                                 ref={addressRef}
                                 address={address}
                                 useForm={true}
-                                onSuccess={() => {}}
+                                onSuccess={(addr: any) => { setAddress(addr)}}
                             />
                         </>
                     )}

@@ -38,7 +38,6 @@ export async function PUT(req: NextRequest) {
         if (auth) {
             headers['Authorization'] = auth
         }
-
         const response = await fetch(
             `${BACKEND_URL}/api/v1/addresses`,
             {
@@ -47,9 +46,7 @@ export async function PUT(req: NextRequest) {
                 body: JSON.stringify(body)
             }
         )
-
         const data = await response.json()
-
         return NextResponse.json(data, {
             status: response.status
         })

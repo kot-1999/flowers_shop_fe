@@ -18,7 +18,6 @@ const AddressModal = forwardRef(function AddressModal(
 ) {
     const [form] = Form.useForm()
     const t = getTFunc()
-    const [addressID, setAddressID] = useState(address?.id)
 
     useEffect(() => {
         if (address) {
@@ -34,11 +33,7 @@ const AddressModal = forwardRef(function AddressModal(
                 const values = await form.validateFields()
                 await handleSubmit(values)
             } catch {}
-        },
-        getValues: () => ({
-            ...form.getFieldsValue(),
-            id: addressID
-        })
+        }
     }))
 
     const handleSubmit = async (values: any) => {
@@ -63,10 +58,11 @@ const AddressModal = forwardRef(function AddressModal(
 
             const data = await res.json()
             const isSuccess = await checkRes(res, data, t('Failed to save address'))
-
-            setAddressID(data.address.id)
             if (isSuccess) {
-                onSuccess?.()
+                onSuccess?.({
+                    ...values,
+                    id: data.address.id 
+                })
             }
 
         } catch {
