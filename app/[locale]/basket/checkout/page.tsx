@@ -122,7 +122,6 @@ export default function Checkout() {
                 if (data.rates?.length) {
                     setSelectedRate(data.rates[0]) // default selection
                 }
-                console.log(data, res)
             } catch {
                 message.error(t('Failed to load rates'))
             } finally {
@@ -138,7 +137,6 @@ export default function Checkout() {
             await form.validateFields()
 
             const values = form.getFieldsValue()
-            console.log('!!!!', values)
             setCustomer(values)
 
             await continueCustomer()

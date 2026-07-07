@@ -79,7 +79,6 @@ export default function TagsTab({ settings }: Props) {
     }
 
     const toggleRestore = (tag: TagEntity) => {
-        console.log(tag)
         updateTag({
             tagID: tag.id,
             nameTID: tag.name.id,
