@@ -520,7 +520,7 @@ export default function Checkout() {
                             }}>
                                 <Typography.Text strong>{t('Total')}</Typography.Text>
                                 <Typography.Text strong>
-                                    {'123.00'} EUR
+                                    {'123.00'} GBP
                                 </Typography.Text>
                             </div>
 

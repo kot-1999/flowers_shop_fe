@@ -108,7 +108,7 @@ export default function BasketItem({
                             {pricing?.itemType?.name?.[locale]}
                         </Text>
                         <Text strong>
-                            {pricing?.price} €
+                            {pricing?.price} £
                         </Text>
                     </Space>
 

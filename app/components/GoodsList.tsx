@@ -150,7 +150,7 @@ export default function GoodsList({ goodsData, settings, user }: any) {
                                                             disabled={pricing.quantity <= 0}
                                                         >
                                                             <Space>
-                                                                <Text strong>{pricing.price} €</Text>
+                                                                <Text strong>{pricing.price} £</Text>
                                                                 <Text>
                                                                     {pricing.itemType?.name?.[settings.locale]}
                                                                 </Text>

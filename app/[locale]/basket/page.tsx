@@ -233,7 +233,7 @@ export default function Cart() {
                 }}>
                     <Space size="large" wrap>
                         <Text strong style={{ fontSize: 16 }}>
-                            {t('Total')}: {summary.totalPrice} €
+                            {t('Total')}: {summary.totalPrice} £
                         </Text>
                         <Text>
                             {t('Available items')}: {summary.totalAvailable}
@@ -324,7 +324,7 @@ export default function Cart() {
                                 <Space orientation="vertical" size={0} style={{ textAlign: 'right' }}>
                                     <Text type="secondary">{t('Total')}</Text>
                                     <Text strong style={{ fontSize: 22 }}>
-                                        € {summary?.totalPrice}
+                                        £ {summary?.totalPrice}
                                     </Text>
                                 </Space>
 
