@@ -4,6 +4,82 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
 
+export const fetchCart = async (user: any, setCartData: (val: any) => void, setLoading: (val: boolean) => void, t: (val: string) => string) => {
+    try {
+
+        setLoading(true)
+
+        const res = user
+            ? await fetch('/api/basket-items')
+            : await fetch('/api/basket-items/public', { method: 'POST' })
+
+        const data = await res.json()
+        const ok = await checkRes(res, data, t('Failed to load cart'))
+        if (!ok) {return}
+
+        setCartData(data)
+    } catch (error: any) {
+        message.error(error.message || t('Failed to load cart'))
+    } finally {
+        setLoading(false)
+    }
+}
+
+export const saveCartChanges = async (
+    user: any,
+    pendingUpdates: any,
+    pendingDeletes: any,
+    setPendingUpdates: any,
+    setPendingDeletes: any,
+    setEditMode: any,
+    setCartData: any,
+    setLoading: (val: boolean) => void,
+    t: (val: string) => string
+) => {
+    try {
+        const endpoint = user
+            ? '/api/basket-items'
+            : '/api/cookie/basket'
+
+        const updates = Object.values(pendingUpdates).map((toUpdate: any) => ({
+            basketItemID: toUpdate.basketItemID,
+            quantity: toUpdate.quantity
+        }))
+
+        const deletes = Object.values(pendingDeletes)
+
+        if (updates.length) {
+            const res = await fetch(endpoint, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ basketItems: updates })
+            })
+
+            const data = await res.json()
+            await checkRes(res, data, t('Failed to update items'))
+        }
+
+        if (deletes.length) {
+            const res = await fetch(endpoint, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ basketItems: deletes })
+            })
+
+            const data = await res.json()
+            await checkRes(res, data, t('Failed to delete items'))
+        }
+
+        setPendingUpdates({})
+        setPendingDeletes({})
+        setEditMode(false)
+
+        await fetchCart(user, setCartData, setLoading, t)
+    } catch (error: any) {
+        message.error(error.message || t('Failed to update cart'))
+    }
+}
+
 export async function uploadFile(file: File): Promise<{
     publicUrl: string,
     key: string,
