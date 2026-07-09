@@ -108,3 +108,63 @@ export const checkRes = async (
 
     return true
 }
+
+export const updateItem = (
+    basketItemID: string,
+    quantity: number,
+    pricingID: string,
+    setPendingUpdates: any,
+    setCartData: any
+) => {
+    setPendingUpdates((prev: any) => ({
+        ...prev,
+        [basketItemID]: {
+            basketItemID,
+            quantity,
+            pricingID
+        }
+    }))
+
+    setCartData((prev: any) => {
+        if (!prev) {return prev}
+
+        const updateList = (list: any[] = []) =>
+            list.map((item: any) =>
+                item.id === basketItemID
+                    ? {
+                        ...item,
+                        quantity
+                    }
+                    : item)
+
+        return {
+            ...prev,
+            basketItems: updateList(prev.basketItems),
+            unavailableBasketItems: updateList(prev.unavailableBasketItems)
+        }
+    })
+}
+
+export const deleteItem = (
+    basketItemID: string,
+    pricingID: string,
+    setPendingDeletes: any,
+    setCartData: any
+) => {
+    setPendingDeletes((prev: any) => ({
+        ...prev,
+        [basketItemID]: {
+            id: basketItemID,
+            pricingID
+        }
+    }))
+
+    // optional: remove from UI immediately
+    setCartData((prev: any) => {
+        if (!prev) {return prev}
+        return {
+            ...prev,
+            basketItems: prev.basketItems?.filter((i: any) => i.id !== basketItemID)
+        }
+    })
+}
