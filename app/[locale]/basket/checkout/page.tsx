@@ -1,5 +1,6 @@
 'use client'
 
+import { Elements } from '@stripe/react-stripe-js'
 import {
     Button,
     Card,
@@ -17,17 +18,20 @@ import {
 import { useEffect, useRef, useState } from 'react'
 
 import { useAuth } from '@/app/components/AuthContent'
+import BasketItem from '@/app/components/BasketItem'
+import PaymentForm from '@/app/components/PaymentForm'
 import AddressModal from '@/app/components/profile/AddressModal'
 import {
-    fetchAddresses,
-    fetchUser
+    fetchAddresses, fetchCart,
+    fetchUser, saveCartChanges
 } from '@/app/utils/clientFetchFuntions'
-import { LocalStorageKey } from '@/app/utils/enums'
+import { LocalStorageKey, UserRole } from '@/app/utils/enums'
 import {
-    checkRes, getLocalStorage,
+    checkRes, deleteItem, getLocalStorage,
     getTFunc,
-    setLocalStorage
+    setLocalStorage, updateItem
 } from '@/app/utils/helpers'
+import { stripePromise } from '@/app/utils/stripeService'
 
 const { Title, Paragraph } = Typography
 
@@ -63,6 +67,19 @@ export default function Checkout() {
 
     const [addressKey, setAddressKey] = useState<string | null>(null)
 
+    const [cartData, setCartData] = useState<any>(null)
+
+    // EDIT MODE
+    const [editMode, setEditMode] = useState(false)
+
+    // pending changes
+    const [pendingUpdates, setPendingUpdates] = useState<Record<string, any>>({})
+    const [pendingDeletes, setPendingDeletes] = useState<Record<string, any>>({})
+
+    const [clientSecret, setClientSecret] = useState<string>()
+    const [orderID, setOrderID] = useState<string>()
+    const [stripeLoading, setStripeLoading] = useState(false)
+
     useEffect(() => {
         if (!authUser) {return}
 
@@ -79,6 +96,12 @@ export default function Checkout() {
             email: user?.email ?? ''
         })
     }, [user])
+
+    useEffect(() => {
+        if (currentStep !== CheckoutStep.Order) {return}
+
+        fetchCart(user, setCartData, setLoading, t)
+    }, [currentStep])
 
     useEffect(() => {
         if (!addresses?.length) {return}
@@ -132,6 +155,13 @@ export default function Checkout() {
         loadRates()
     }, [addressKey])
 
+    const cancelEdit = () => {
+        setPendingUpdates({})
+        setPendingDeletes({})
+        setEditMode(false)
+        fetchCart(user, setCartData, setLoading, t)
+    }
+
     const handleNext = async () => {
         if (currentStep === CheckoutStep.Customer) {
             await form.validateFields()
@@ -141,9 +171,7 @@ export default function Checkout() {
 
             await continueCustomer()
             return
-        }
-
-        if (currentStep === CheckoutStep.Address) {
+        } else if (currentStep === CheckoutStep.Address) {
             await addressRef.current?.submit()
             setAddressKey(JSON.stringify({
                 country: address?.country,
@@ -155,15 +183,56 @@ export default function Checkout() {
             }))
             setCurrentStep(CheckoutStep.Shipping)
             return
-        }
-
-        if (currentStep === CheckoutStep.Shipping) {
+        } else if (currentStep === CheckoutStep.Shipping) {
             if (!selectedRate) {
                 message.error(t('Please select a shipping method'))
                 return
             }
 
             setCurrentStep(CheckoutStep.Order)
+            return
+        } else if (currentStep === CheckoutStep.Order) {
+            setStripeLoading(true)
+
+            try {
+                const headers: any = {
+                    'Content-Type': 'application/json'
+                }
+
+                if (user.role === UserRole.NotRegistered) {
+                    const token = getLocalStorage(LocalStorageKey.CheckoutToken)
+                    headers['Authorization'] = `Bearer ${token}`
+                }
+                const res = await fetch('/api/checkout/order', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        addressID: address.id,
+                        shippingRateID: selectedRate.objectId,
+                        recipientFirstName: customer.firstName,
+                        recipientLastName: customer.lastName,
+                        recipientEmail: customer.email
+                    })
+                })
+
+                const data = await res.json()
+
+                const ok = await checkRes(
+                    res,
+                    data,
+                    t('Failed to create order')
+                )
+
+                if (!ok) {return}
+
+                setOrderID(data.order.id)
+                setClientSecret(data.clientSecret)
+
+                setCurrentStep(CheckoutStep.Payment)
+            } finally {
+                setStripeLoading(false)
+            }
+
             return
         }
     }
@@ -194,7 +263,6 @@ export default function Checkout() {
             })
 
             const data = await res.json()
-
             await checkRes(
                 res,
                 data,
@@ -210,6 +278,37 @@ export default function Checkout() {
             setLoading(false)
         }
     }
+
+    const editButton = () => <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+            <Space>
+                {!editMode ? (
+                    <Button onClick={() => setEditMode(true)}>
+                        {t('Edit cart')}
+                    </Button>
+                ) : (
+                    <>
+                        <Button type="primary" onClick={() => saveCartChanges(
+                            user,
+                            pendingUpdates,
+                            pendingDeletes,
+                            setPendingUpdates,
+                            setPendingDeletes,
+                            setEditMode,
+                            setCartData,
+                            setLoading,
+                            t
+                        )}>
+                            {t('Save changes')}
+                        </Button>
+                        <Button onClick={cancelEdit}>
+                            {t('Cancel')}
+                        </Button>
+                    </>
+                )}
+            </Space>
+        </Col>
+    </Row>
 
     const renderStep = () => {
         switch (currentStep) {
@@ -476,10 +575,6 @@ export default function Checkout() {
 
                             {/* SHIPPING */}
                             <div>
-                                <Typography.Text type="secondary">
-                                    {t('Shipping method')}
-                                </Typography.Text>
-
                                 <div style={{ marginTop: 6 }}>
                                     <Space>
                                         <Image
@@ -510,7 +605,17 @@ export default function Checkout() {
                             }}>
                                 <Typography.Text>{t('Shipping')}</Typography.Text>
                                 <Typography.Text>
-                                    {selectedRate?.amountLocal} {selectedRate?.currencyLocal}
+                                    {selectedRate?.amountLocal} £
+                                </Typography.Text>
+                            </div>
+
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between'
+                            }}>
+                                <Typography.Text>{t('Products')}</Typography.Text>
+                                <Typography.Text>
+                                    {cartData?.summary?.totalPrice} £
                                 </Typography.Text>
                             </div>
 
@@ -520,22 +625,61 @@ export default function Checkout() {
                             }}>
                                 <Typography.Text strong>{t('Total')}</Typography.Text>
                                 <Typography.Text strong>
-                                    {'123.00'} GBP
+                                    {Math.round((Number(cartData?.summary?.totalPrice) + Number(selectedRate?.amountLocal)) * 100) / 100} £
                                 </Typography.Text>
                             </div>
 
                         </Space>
                     </Card>
+
+                    {!!cartData?.basketItems?.length && (
+                        <>
+                            {editButton()}
+
+                            <Title level={4}>{t('Purchasing items')}</Title>
+
+                            <Row gutter={[16, 16]}>
+                                {cartData.basketItems.map((item: any) => (
+                                    <Col xs={24} key={item.id}>
+                                        <BasketItem
+                                            item={item}
+                                            t={t}
+                                            onUpdate={editMode ? updateItem : undefined}
+                                            onDelete={editMode ? deleteItem : undefined}
+                                            setCartData={setCartData}
+                                            setPendingUpdates={setPendingUpdates}
+                                            setPendingDeletes={setPendingDeletes}
+                                        />
+                                    </Col>
+                                ))}
+                            </Row>
+
+                            {editButton()}
+
+                        </>
+                    )}
                 </Space>
             )
 
         case CheckoutStep.Payment:
             return (
-                <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+                <Space
+                    orientation="vertical"
+                    size="large"
+                    style={{ width: '100%' }}
+                >
                     <Title level={4}>{t('Payment')}</Title>
-                    <Paragraph>
-                            Payment
-                    </Paragraph>
+
+                    {clientSecret && (
+                        <Elements
+                            stripe={stripePromise}
+                            options={{
+                                clientSecret
+                            }}
+                        >
+                            <PaymentForm />
+                        </Elements>
+                    )}
                 </Space>
             )
         }
