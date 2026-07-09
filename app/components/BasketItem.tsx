@@ -10,9 +10,12 @@ const { Text } = Typography
 interface Props {
     item: any
     t: (key: string) => string
-    onUpdate?: (id: string, qty: number, pricingID: string) => void
-    onDelete?: (id: string, pricingID: string) => void
-    unavailable?: boolean
+    onUpdate?: (id: string, qty: number, pricingID: string, setPendingUpdates: any, setCartData: any) => void
+    onDelete?: (id: string, pricingID: string, setPendingDeletes: any, setCartData: any) => void
+    unavailable?: boolean,
+    setPendingDeletes?: any,
+    setCartData?: any,
+    setPendingUpdates?: any
 }
 
 export default function BasketItem({
@@ -20,7 +23,10 @@ export default function BasketItem({
     t,
     onUpdate,
     onDelete,
-    unavailable = false
+    unavailable,
+    setPendingDeletes,
+    setCartData,
+    setPendingUpdates
 }: Props) {
     const pathname = usePathname()
 
@@ -126,7 +132,9 @@ export default function BasketItem({
                             && onUpdate?.(
                                 item.id,
                                 Number(value) || 1,
-                                item.pricing.id
+                                item.pricing.id,
+                                setPendingUpdates,
+                                setCartData
                             )
                         }
                         disabled={!isEditable}
@@ -140,7 +148,9 @@ export default function BasketItem({
                             isEditable
                             && onDelete?.(
                                 item.id,
-                                item.pricing.id
+                                item.pricing.id,
+                                setPendingDeletes,
+                                setCartData
                             )
                         }
                         disabled={!isEditable}
