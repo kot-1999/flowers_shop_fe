@@ -1,20 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getRequiredHeaders } from '@/app/utils/serverFunctions'
+import { CookieKey } from '@/app/utils/enums'
+import { getCookie, getRequiredHeaders } from '@/app/utils/serverFunctions'
 
 const BACKEND_URL = process.env.BACKEND_URL
 
 export async function POST(req: NextRequest) {
     try {
-        const headers = await getRequiredHeaders(req)
+        const headers: any = await getRequiredHeaders(req)
         const body = await req.json()
+        const auth = req.headers.get('authorization')
+
+        if (auth) {
+            headers['Authorization'] = auth
+        }
+        
+        const basketItems = await getCookie(CookieKey.Basket) ?? []
 
         const response = await fetch(
             `${BACKEND_URL}/api/v1/checkout/order`,
             {
                 method: 'POST',
                 headers,
-                body: JSON.stringify(body)
+                body: JSON.stringify({
+                    ...body,
+                    basketItems: basketItems?.map((item: any) => ({
+                        pricingID: item.pricingID,
+                        quantity: item.quantity,
+                        createdAt: item.createdAt
+                    }))
+                })
             }
         )
 

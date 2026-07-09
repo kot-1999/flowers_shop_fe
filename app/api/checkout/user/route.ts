@@ -10,17 +10,12 @@ export async function POST(req: NextRequest) {
         const headers = await getRequiredHeaders(req)
         const body = await req.json()
 
-        const basketItems = await getCookie(CookieKey.Basket)
-        
         const response = await fetch(
             `${BACKEND_URL}/api/v1/checkout/user`,
             {
                 method: 'POST',
                 headers,
-                body: JSON.stringify({
-                    ...body,
-                    basketItems
-                })
+                body: JSON.stringify(body)
             }
         )
 
