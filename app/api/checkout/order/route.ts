@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
             const updatedBasket = []
 
             for (const item of basketItems) {
-                const isPurchased = data.order.pricings.find((pricingID: string) => pricingID === item.id)
+                const isPurchased = data.order.pricings.find((pricingID: string) => pricingID === item.pricingID)
 
                 if (!isPurchased) {
                     updatedBasket.push(item)

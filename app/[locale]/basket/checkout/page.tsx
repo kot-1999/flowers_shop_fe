@@ -25,7 +25,7 @@ import {
     fetchAddresses, fetchCart,
     fetchUser, saveCartChanges
 } from '@/app/utils/clientFetchFuntions'
-import { LocalStorageKey, UserRole } from '@/app/utils/enums'
+import { LocalStorageKey } from '@/app/utils/enums'
 import {
     checkRes, deleteItem, getLocalStorage,
     getTFunc,
@@ -38,8 +38,8 @@ const { Title, Paragraph } = Typography
 enum CheckoutStep {
     Customer = 0,
     Address,
+    BasketReview,
     Shipping,
-    Order,
     Payment
 }
 
@@ -98,9 +98,55 @@ export default function Checkout() {
     }, [user])
 
     useEffect(() => {
-        if (currentStep !== CheckoutStep.Order) {return}
+        if (currentStep !== CheckoutStep.BasketReview) {return}
 
         fetchCart(user, setCartData, setLoading, t)
+    }, [currentStep])
+
+    useEffect(() => {
+        if (currentStep !== CheckoutStep.Payment) {return}
+        const createPayment = async () => {
+            setStripeLoading(true)
+            try {
+                const headers: any = {
+                    'Content-Type': 'application/json'
+                }
+
+                if (!user) {
+                    const token = getLocalStorage(LocalStorageKey.CheckoutToken)
+                    headers['Authorization'] = `Bearer ${token}`
+                }
+                const res = await fetch('/api/checkout/order', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        addressID: address.id,
+                        shippingRateID: selectedRate.objectId,
+                        recipientFirstName: customer.firstName,
+                        recipientLastName: customer.lastName,
+                        recipientEmail: customer.email
+                    })
+                })
+
+                const data = await res.json()
+
+                const ok = await checkRes(
+                    res,
+                    data,
+                    t('Failed to create order')
+                )
+
+                if (!ok) {return}
+
+                setOrderID(data.order.id)
+                setClientSecret(data.clientSecret)
+
+                setCurrentStep(CheckoutStep.Payment)
+            } finally {
+                setStripeLoading(false)
+            }
+        }
+        createPayment()
     }, [currentStep])
 
     useEffect(() => {
@@ -120,7 +166,6 @@ export default function Checkout() {
             return
         }
         setLoading(true)
-
         const checkoutToken = getLocalStorage(LocalStorageKey.CheckoutToken)
         const headers: any = {
             'Content-Type': 'application/json'
@@ -181,58 +226,22 @@ export default function Checkout() {
                 apartment: address?.apartment,
                 postcode: address?.postcode
             }))
-            setCurrentStep(CheckoutStep.Shipping)
+            setCurrentStep(CheckoutStep.BasketReview)
             return
+        } else if (currentStep === CheckoutStep.BasketReview) {
+            if (editMode) {
+                message.warning(t('Finish editing first'))
+            }
+            setCurrentStep(CheckoutStep.Shipping)
         } else if (currentStep === CheckoutStep.Shipping) {
             if (!selectedRate) {
                 message.error(t('Please select a shipping method'))
                 return
             }
 
-            setCurrentStep(CheckoutStep.Order)
-            return
-        } else if (currentStep === CheckoutStep.Order) {
-            setStripeLoading(true)
-
-            try {
-                const headers: any = {
-                    'Content-Type': 'application/json'
-                }
-
-                if (user.role === UserRole.NotRegistered) {
-                    const token = getLocalStorage(LocalStorageKey.CheckoutToken)
-                    headers['Authorization'] = `Bearer ${token}`
-                }
-                const res = await fetch('/api/checkout/order', {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify({
-                        addressID: address.id,
-                        shippingRateID: selectedRate.objectId,
-                        recipientFirstName: customer.firstName,
-                        recipientLastName: customer.lastName,
-                        recipientEmail: customer.email
-                    })
-                })
-
-                const data = await res.json()
-
-                const ok = await checkRes(
-                    res,
-                    data,
-                    t('Failed to create order')
-                )
-
-                if (!ok) {return}
-
-                setOrderID(data.order.id)
-                setClientSecret(data.clientSecret)
-
-                setCurrentStep(CheckoutStep.Payment)
-            } finally {
-                setStripeLoading(false)
-            }
-
+            setCurrentStep(CheckoutStep.Payment)
+        }
+        if (currentStep === CheckoutStep.Payment) {
             return
         }
     }
@@ -434,7 +443,7 @@ export default function Checkout() {
                     size="large"
                     style={{ width: '100%' }}
                 >
-                    <Title level={4}>{t('Shipping')}</Title>
+                    <Title level={4}>{t('Cart review')}</Title>
 
                     <Paragraph>
                         {t('Select a shipping method')}
@@ -523,7 +532,7 @@ export default function Checkout() {
                                                     level={5}
                                                     style={{ margin: 0 }}
                                                 >
-                                                    {rate.amountLocal} {rate.currencyLocal}
+                                                    {rate.amount} {rate.currency}
                                                 </Typography.Title>
                                             </Col>
                                         </Row>
@@ -535,9 +544,46 @@ export default function Checkout() {
                 </Space>
             )
 
-        case CheckoutStep.Order:
+        case CheckoutStep.BasketReview:
             return (
                 <Space orientation="vertical" size="large" style={{ width: '100%' }}>
+                    {!!cartData?.basketItems?.length && (
+                        <>
+                            {editButton()}
+
+                            <Title level={4}>{t('Purchasing items')}</Title>
+
+                            <Row gutter={[16, 16]}>
+                                {cartData.basketItems.map((item: any) => (
+                                    <Col xs={24} key={item.id}>
+                                        <BasketItem
+                                            item={item}
+                                            t={t}
+                                            onUpdate={editMode ? updateItem : undefined}
+                                            onDelete={editMode ? deleteItem : undefined}
+                                            setCartData={setCartData}
+                                            setPendingUpdates={setPendingUpdates}
+                                            setPendingDeletes={setPendingDeletes}
+                                        />
+                                    </Col>
+                                ))}
+                            </Row>
+
+                            {editButton()}
+
+                        </>
+                    )}
+                </Space>
+            )
+
+        case CheckoutStep.Payment:
+            return (
+                <Space
+                    orientation="vertical"
+                    size="large"
+                    style={{ width: '100%' }}
+                >
+                    <Title level={4}>{t('Payment')}</Title>
                     <Title level={4}>{t('Order review')}</Title>
 
                     <Card>
@@ -598,10 +644,9 @@ export default function Checkout() {
 
                             <Divider />
 
-                            {/* PRICE */}
                             <div style={{
                                 display: 'flex',
-                                justifyContent: 'space-between' 
+                                justifyContent: 'space-between'
                             }}>
                                 <Typography.Text>{t('Shipping')}</Typography.Text>
                                 <Typography.Text>
@@ -621,7 +666,7 @@ export default function Checkout() {
 
                             <div style={{
                                 display: 'flex',
-                                justifyContent: 'space-between' 
+                                justifyContent: 'space-between'
                             }}>
                                 <Typography.Text strong>{t('Total')}</Typography.Text>
                                 <Typography.Text strong>
@@ -631,44 +676,6 @@ export default function Checkout() {
 
                         </Space>
                     </Card>
-
-                    {!!cartData?.basketItems?.length && (
-                        <>
-                            {editButton()}
-
-                            <Title level={4}>{t('Purchasing items')}</Title>
-
-                            <Row gutter={[16, 16]}>
-                                {cartData.basketItems.map((item: any) => (
-                                    <Col xs={24} key={item.id}>
-                                        <BasketItem
-                                            item={item}
-                                            t={t}
-                                            onUpdate={editMode ? updateItem : undefined}
-                                            onDelete={editMode ? deleteItem : undefined}
-                                            setCartData={setCartData}
-                                            setPendingUpdates={setPendingUpdates}
-                                            setPendingDeletes={setPendingDeletes}
-                                        />
-                                    </Col>
-                                ))}
-                            </Row>
-
-                            {editButton()}
-
-                        </>
-                    )}
-                </Space>
-            )
-
-        case CheckoutStep.Payment:
-            return (
-                <Space
-                    orientation="vertical"
-                    size="large"
-                    style={{ width: '100%' }}
-                >
-                    <Title level={4}>{t('Payment')}</Title>
 
                     {clientSecret && (
                         <Elements
@@ -697,8 +704,8 @@ export default function Checkout() {
                 items={[
                     { title: t('Customer') },
                     { title: t('Address') },
-                    { title: t('Shipping') },
-                    { title: t('Order') },
+                    { title: t('Cart Review') },
+                    { title: t('Shipping method') },
                     { title: t('Payment') }
                 ]}
             />
@@ -735,10 +742,6 @@ export default function Checkout() {
                     <Button type="primary" onClick={handleNext}>
                         Continue
                     </Button>
-                )}
-
-                {currentStep === CheckoutStep.Payment && (
-                    <Button type="primary">Pay</Button>
                 )}
             </Space>
         </Card>
