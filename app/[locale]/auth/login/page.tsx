@@ -16,11 +16,11 @@ export default function AuthCard() {
     const t = getTFunc()
 
     const onLoginFinish = (values: { email: string, firstName: string, lastName: string, password: string }) => {
-        loginOrRegister(values, 'login', checkAuth, router, setActiveTab)
+        loginOrRegister(values, 'login', checkAuth, router, t, setActiveTab)
     }
 
     const onRegisterFinish = (values: { email: string, firstName: string, lastName: string, password: string }) => {
-        loginOrRegister(values, 'register', checkAuth, router, setActiveTab)
+        loginOrRegister(values, 'register', checkAuth, router, t, setActiveTab)
     }
 
     const items = [

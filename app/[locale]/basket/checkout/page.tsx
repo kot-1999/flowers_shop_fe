@@ -403,7 +403,7 @@ export default function Checkout() {
                                                     lastName: customer.lastName,
                                                     email: customer.email,
                                                     password: password
-                                                }, 'register', checkAuth, router)
+                                                }, 'register', checkAuth, router, t)
 
                                                 if (isOk) {
                                                     message.success(t('Account created successfully. You may sign in now.'))

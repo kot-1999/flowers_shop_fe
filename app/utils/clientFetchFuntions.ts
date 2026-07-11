@@ -4,11 +4,45 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
 
+export const fetchOrders = async (
+    ordersData: any,
+    setLoading: (val: boolean) => void,
+    search: string,
+    setOrders: (val: any) => void,
+    t: (key: string) => string,
+    isAdmin: boolean = false
+) => {
+    try {
+        setLoading(true)
+
+        const params = new URLSearchParams()
+
+        params.set('page', String(ordersData?.pagination?.page ?? Defaults.Page))
+
+        params.set('limit', String(ordersData?.pagination?.limit ?? Defaults.Limit))
+
+        if (search) {
+            params.set('search', search)
+        }
+
+        const res = await fetch(`/api/${isAdmin ? 'admin/' : ''}orders?${params.toString()}`)
+
+        const data = await res.json()
+        await checkRes(res, data, t('Failed to fetch orders'))
+        setOrders(data)
+    } catch {
+        message.error('Failed to fetch orders')
+    } finally {
+        setLoading(false)
+    }
+}
+
 export const loginOrRegister = async (
     values: { email: string, firstName: string, lastName: string, password: string }, 
     mode: 'login' | 'register', 
     checkAuth: () => void, 
     router: AppRouterInstance,
+    t: (key: string) => string,
     setActiveTab?: (val: 'login') => void
 ) => {
     try {
@@ -35,6 +69,8 @@ export const loginOrRegister = async (
         })
 
         const data = await res.json()
+
+        await checkRes(res, data, mode === 'register' ? t('Failed to register') : t('Failed to login'))
         await checkAuth()
 
         if (res.ok) {
@@ -47,8 +83,8 @@ export const loginOrRegister = async (
             }
         }
         return res.ok
-    } catch (err: any) {
-        message.error(err.message)
+    } catch {
+        message.error(mode === 'register' ? t('Failed to register') : t('Failed to login'))
     }
 }
 
