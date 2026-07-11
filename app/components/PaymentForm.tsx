@@ -8,12 +8,22 @@ import {
 import { Button, message } from 'antd'
 import { useState } from 'react'
 
-export default function PaymentForm() {
+import { getTFunc } from '@/app/utils/helpers'
+
+interface PaymentFormProps {
+    onSuccess: () => void
+}
+
+export default function PaymentForm({
+    onSuccess
+}: PaymentFormProps) {
     const stripe = useStripe()
     const elements = useElements()
 
     const [loading, setLoading] = useState(false)
 
+    const t = getTFunc()
+    
     const handleSubmit = async () => {
         if (!stripe || !elements) {
             return
@@ -21,7 +31,7 @@ export default function PaymentForm() {
 
         setLoading(true)
 
-        const { error } = await stripe.confirmPayment({
+        const { error, paymentIntent } = await stripe.confirmPayment({
             elements,
             redirect: 'if_required'
         })
@@ -33,7 +43,11 @@ export default function PaymentForm() {
             return
         }
 
-        message.success('Payment successful')
+        if (paymentIntent?.status === 'succeeded') {
+            onSuccess()
+        } else {
+            message.error(t('Payment failed'))
+        }
     }
 
     return (
