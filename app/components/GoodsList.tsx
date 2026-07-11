@@ -46,7 +46,7 @@ export default function GoodsList({ goodsData, settings, user }: any) {
         const path = pathname.split('/')
 
         if (path.length === 2) {
-            path.push(t('all-categories'))
+            path.push('/' + t('all-categories'))
         }
 
         path.push(slug)
