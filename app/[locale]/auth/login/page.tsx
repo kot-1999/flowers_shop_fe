@@ -1,11 +1,12 @@
 'use client'
 
 import { GoogleOutlined } from '@ant-design/icons'
-import { Form, Input, Button, Card, Tabs, message, Divider } from 'antd'
+import { Form, Input, Button, Card, Tabs, Divider } from 'antd'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 import { useAuth } from '@/app/components/AuthContent'
+import { loginOrRegister } from '@/app/utils/clientFetchFuntions'
 import { getTFunc } from '@/app/utils/helpers'
 
 export default function AuthCard() {
@@ -14,61 +15,12 @@ export default function AuthCard() {
     const [activeTab, setActiveTab] = useState('login')
     const t = getTFunc()
 
-    const onLoginFinish = (values: unknown) => {
-        onFinish(values, 'login')
+    const onLoginFinish = (values: { email: string, firstName: string, lastName: string, password: string }) => {
+        loginOrRegister(values, 'login', checkAuth, router, setActiveTab)
     }
 
-    const onRegisterFinish = (values: unknown) => {
-        onFinish(values, 'register')
-    }
-
-    const onFinish = async (values: any, mode: 'login' | 'register') => {
-        try {
-            const payload = {
-                ...values,
-                mode 
-            }
-            const res = mode === 'login' ? await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: payload.email,
-                    password: payload.password
-                })
-            }) : await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email: payload.email,
-                    password: payload.password,
-                    firstName: payload.firstName,
-                    lastName: payload.lastName
-                })
-            })
-
-            const data = await res.json()
-            await checkAuth()
-
-            if (res.ok) {
-                message.success(data.message)
-
-                if (mode === 'register') {
-                    setActiveTab('login')
-                } else {
-                    router.push('/')
-                }
-            } else {
-                if (data.messages) {
-                    data.messages.forEach((msg: string) => message.error(msg))
-                } else if (data.message) {
-                    message.error(data.message)
-                } else {
-                    throw new Error(data)
-                }
-            }
-        } catch (err: any) {
-            message.error(err.message)
-        }
+    const onRegisterFinish = (values: { email: string, firstName: string, lastName: string, password: string }) => {
+        loginOrRegister(values, 'register', checkAuth, router, setActiveTab)
     }
 
     const items = [

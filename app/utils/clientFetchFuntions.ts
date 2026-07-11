@@ -4,6 +4,54 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
 
+export const loginOrRegister = async (
+    values: { email: string, firstName: string, lastName: string, password: string }, 
+    mode: 'login' | 'register', 
+    checkAuth: () => void, 
+    router: AppRouterInstance,
+    setActiveTab?: (val: 'login') => void
+) => {
+    try {
+        const payload = {
+            ...values,
+            mode
+        }
+        const res = mode === 'login' ? await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: payload.email,
+                password: payload.password
+            })
+        }) : await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: payload.email,
+                password: payload.password,
+                firstName: payload.firstName,
+                lastName: payload.lastName
+            })
+        })
+
+        const data = await res.json()
+        await checkAuth()
+
+        if (res.ok) {
+            message.success(data.message)
+
+            if (mode === 'register' && setActiveTab) {
+                setActiveTab('login')
+            } else if (setActiveTab) {
+                router.push('/')
+            }
+        }
+        return res.ok
+    } catch (err: any) {
+        message.error(err.message)
+    }
+}
+
 export const getInvoice = async (orderID: string, setInvoiceLoading: (val: boolean) => void, t: (val: string) => string) => {
     if (!orderID) {
         return
@@ -14,9 +62,13 @@ export const getInvoice = async (orderID: string, setInvoiceLoading: (val: boole
     try {
         const auth = getLocalStorage(LocalStorageKey.CheckoutToken)
 
-        const headers: any = auth ? { 'Authorization': 'Bearer ' + auth } : { }
-
-        const res = await fetch(`/api/checkout/order/${orderID}`, headers)
+        const headers: any = auth ? { 'Authorization': `Bearer ${auth}` } : { }
+        const res = await fetch(`/api/checkout/order/${orderID}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...headers
+            }
+        })
 
         const data = await res.json()
 
