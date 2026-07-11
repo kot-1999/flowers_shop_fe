@@ -8,13 +8,14 @@ import {
     Divider,
     Form, Image,
     Input, message,
-    Radio,
+    Radio, Result,
     Row,
     Select,
     Space, Spin,
     Steps,
     Typography
 } from 'antd'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { useAuth } from '@/app/components/AuthContent'
@@ -23,7 +24,7 @@ import PaymentForm from '@/app/components/PaymentForm'
 import AddressModal from '@/app/components/profile/AddressModal'
 import {
     fetchAddresses, fetchCart,
-    fetchUser, saveCartChanges
+    fetchUser, getInvoice, loginOrRegister, saveCartChanges
 } from '@/app/utils/clientFetchFuntions'
 import { LocalStorageKey } from '@/app/utils/enums'
 import {
@@ -44,41 +45,49 @@ enum CheckoutStep {
 }
 
 export default function Checkout() {
+    const router = useRouter()
     const [currentStep, setCurrentStep] = useState(CheckoutStep.Customer)
-    const { user: authUser } = useAuth()
+    const { user: authUser, checkAuth } = useAuth()
     const t = getTFunc()
     const [loading, setLoading] = useState(false)
 
+    // User data
     const [user, setUser] = useState<any>(null)
     const [form] = Form.useForm()
-
-    const [addresses, setAddresses] = useState<any[]>([])
-    const [address, setAddress] = useState<any>(null)
-    const addressRef = useRef<any>(null)
-
-    const [shipping, setShipping] = useState<any>(null)
-    const [selectedRate, setSelectedRate] = useState<any>(null)
-
     const [customer, setCustomer] = useState({
         firstName: '',
         lastName: '',
         email: ''
     })
 
+    // Address data
+    const [addresses, setAddresses] = useState<any[]>([])
+    const [address, setAddress] = useState<any>(null)
+    const addressRef = useRef<any>(null)
     const [addressKey, setAddressKey] = useState<string | null>(null)
 
+    // Shipping info
+    const [shipping, setShipping] = useState<any>(null)
+    const [selectedRate, setSelectedRate] = useState<any>(null)
+
+    // Cart
     const [cartData, setCartData] = useState<any>(null)
-
-    // EDIT MODE
     const [editMode, setEditMode] = useState(false)
-
-    // pending changes
     const [pendingUpdates, setPendingUpdates] = useState<Record<string, any>>({})
     const [pendingDeletes, setPendingDeletes] = useState<Record<string, any>>({})
 
+    // Payment
     const [clientSecret, setClientSecret] = useState<string>()
     const [orderID, setOrderID] = useState<string>()
-    const [stripeLoading, setStripeLoading] = useState(false)
+    const [paymentSuccess, setPaymentSuccess] = useState(false)
+
+    // Invoice
+    const [invoiceLoading, setInvoiceLoading] = useState(false)
+
+    // Register user after order
+    const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [creatingAccount, setCreatingAccount] = useState(false)
 
     useEffect(() => {
         if (!authUser) {return}
@@ -106,7 +115,6 @@ export default function Checkout() {
     useEffect(() => {
         if (currentStep !== CheckoutStep.Payment) {return}
         const createPayment = async () => {
-            setStripeLoading(true)
             try {
                 const headers: any = {
                     'Content-Type': 'application/json'
@@ -142,8 +150,8 @@ export default function Checkout() {
                 setClientSecret(data.clientSecret)
 
                 setCurrentStep(CheckoutStep.Payment)
-            } finally {
-                setStripeLoading(false)
+            } catch {
+                message.error(t('Failed to create order'))
             }
         }
         createPayment()
@@ -215,6 +223,12 @@ export default function Checkout() {
             setCustomer(values)
 
             await continueCustomer()
+
+            if (!customer.firstName || !customer.lastName || !customer.email) {
+                message.error(t('Customer required fields are missing'))
+            }
+
+            setCurrentStep(CheckoutStep.Address)
             return
         } else if (currentStep === CheckoutStep.Address) {
             await addressRef.current?.submit()
@@ -241,9 +255,6 @@ export default function Checkout() {
 
             setCurrentStep(CheckoutStep.Payment)
         }
-        if (currentStep === CheckoutStep.Payment) {
-            return
-        }
     }
 
     const previous = () => {
@@ -254,7 +265,6 @@ export default function Checkout() {
 
     const continueCustomer = async () => {
         if (authUser) {
-            setCurrentStep(CheckoutStep.Address)
             return
         }
 
@@ -282,10 +292,149 @@ export default function Checkout() {
                 LocalStorageKey.CheckoutToken,
                 data.user.token
             )
-            setCurrentStep(CheckoutStep.Address)
         } finally {
             setLoading(false)
         }
+    }
+
+    if (paymentSuccess && orderID) {
+        return (
+            <Result
+                status="success"
+                title="Payment successful!"
+                subTitle="Your order has been placed successfully."
+                extra={[
+                    <Space
+                        key="actions"
+                        orientation="vertical"
+                        size="large"
+                        style={{
+                            width: '100%',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Space
+                            orientation="vertical"
+                            size="small"
+                            style={{
+                                textAlign: 'center'
+                            }}
+                        >
+                            <Typography.Text type="secondary">
+                                Order ID
+                            </Typography.Text>
+
+                            <Typography.Text copyable>
+                                {orderID}
+                            </Typography.Text>
+                        </Space>
+
+                        <Button
+                            type="primary"
+                            loading={invoiceLoading}
+                            onClick={() => getInvoice(orderID, setInvoiceLoading, t)}
+                        >
+                            Download invoice
+                        </Button>
+
+                        {!user && (
+                            <Card
+                                style={{
+                                    width: '100%',
+                                    maxWidth: 500,
+                                    marginTop: 24
+                                }}
+                            >
+                                <Space
+                                    orientation="vertical"
+                                    size="middle"
+                                    style={{
+                                        width: '100%'
+                                    }}
+                                >
+                                    <Title level={4}>
+                                        Create your customer account 🎁
+                                    </Title>
+
+                                    <Typography.Paragraph>
+                                        Your order was placed using{' '}
+                                        <Typography.Text strong>
+                                            {customer.email}
+                                        </Typography.Text>
+                                        .
+                                        <br />
+                                        Create a password now to unlock order tracking,
+                                        manage your orders, download invoices anytime,
+                                        and access your purchase history.
+                                    </Typography.Paragraph>
+
+                                    <Input.Password
+                                        placeholder="Password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+
+                                    <Input.Password
+                                        placeholder="Confirm password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+
+                                    <Button
+                                        type="primary"
+                                        block
+                                        loading={creatingAccount}
+                                        onClick={async () => {
+                                            if (password.length < 7) {
+                                                message.error(t('Password must contain at least 7 characters'))
+                                                return
+                                            }
+
+                                            if (password !== confirmPassword) {
+                                                message.error(t('Passwords do not match'))
+                                                return
+                                            }
+
+                                            setCreatingAccount(true)
+
+                                            try {
+                                                const isOk = await loginOrRegister({
+                                                    firstName: customer.firstName,
+                                                    lastName: customer.lastName,
+                                                    email: customer.email,
+                                                    password: password
+                                                }, 'register', checkAuth, router)
+
+                                                if (isOk) {
+                                                    message.success(t('Account created successfully. You may sign in now.'))
+                                                    router.replace('/auth/login')
+                                                }
+                                            } finally {
+                                                setCreatingAccount(false)
+                                            }
+                                        }}
+                                    >
+                                        Create account
+                                    </Button>
+
+                                    <Typography.Text type="secondary">
+                                        You can also continue shopping without creating an account.
+                                    </Typography.Text>
+                                </Space>
+                            </Card>
+                        )}
+
+                        <Button
+                            onClick={() => {
+                                router.push('/' + t('all-categories'))
+                            }}
+                        >
+                            Continue shopping
+                        </Button>
+                    </Space>
+                ]}
+            />
+        )
     }
 
     const editButton = () => <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
@@ -684,7 +833,9 @@ export default function Checkout() {
                                 clientSecret
                             }}
                         >
-                            <PaymentForm />
+                            <PaymentForm
+                                onSuccess={() => setPaymentSuccess(true)}
+                            />
                         </Elements>
                     )}
                 </Space>
