@@ -4,6 +4,45 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
 
+export const getInvoice = async (orderID: string, setInvoiceLoading: (val: boolean) => void, t: (val: string) => string) => {
+    if (!orderID) {
+        return
+    }
+
+    setInvoiceLoading(true)
+
+    try {
+        const auth = getLocalStorage(LocalStorageKey.CheckoutToken)
+
+        const headers: any = auth ? { 'Authorization': 'Bearer ' + auth } : { }
+
+        const res = await fetch(`/api/checkout/order/${orderID}`, headers)
+
+        const data = await res.json()
+
+        const ok = await checkRes(
+            res,
+            data,
+            t('Unable to generate invoice')
+        )
+
+        if (!ok) {
+            return
+        }
+
+        if (data.pdfUrl) {
+            window.open(
+                data.pdfUrl,
+                '_blank'
+            )
+        }
+    } catch {
+        message.error(t('Unable to generate invoice'))
+    } finally {
+        setInvoiceLoading(false)
+    }
+}
+
 export const fetchCart = async (user: any, setCartData: (val: any) => void, setLoading: (val: boolean) => void, t: (val: string) => string) => {
     try {
 
