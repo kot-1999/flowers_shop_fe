@@ -1,13 +1,18 @@
 import { message } from 'antd'
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
-import { Defaults, LocalStorageKey } from '@/app/utils/enums'
+import { Defaults, LocalStorageKey, OrderState } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
 
 export const fetchOrders = async (
     ordersData: any,
     setLoading: (val: boolean) => void,
-    search: string,
+    values: {
+        search: string,
+        states: OrderState[],
+        sortBy: string,
+        sortOrder: string
+    },
     setOrders: (val: any) => void,
     t: (key: string) => string,
     isAdmin: boolean = false
@@ -15,12 +20,23 @@ export const fetchOrders = async (
     try {
         setLoading(true)
 
+        const {
+            search,
+            states,
+            sortBy,
+            sortOrder
+        } = values
+
         const params = new URLSearchParams()
 
         params.set('page', String(ordersData?.pagination?.page ?? Defaults.Page))
-
         params.set('limit', String(ordersData?.pagination?.limit ?? Defaults.Limit))
-
+        params.set('sortBy', sortBy)
+        params.set('sortOrder', sortOrder)
+        states.forEach((state: OrderState) => {
+            params.append('state[]', state)
+        })
+        
         if (search) {
             params.set('search', search)
         }

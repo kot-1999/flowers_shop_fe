@@ -12,7 +12,7 @@ import { fetchOrders } from '@/app/utils/clientFetchFuntions'
 import { Defaults, LocalStorageKey } from '@/app/utils/enums'
 import { getTFunc } from '@/app/utils/helpers'
 
-export default function OrdersManagement() {
+export default function Orders() {
     const t = getTFunc()
 
     const [ordersData, setOrders] = useState<{
@@ -30,13 +30,13 @@ export default function OrdersManagement() {
         sortBy: 'createdAt',
         sortOrder: 'desc'
     })
-
+    
     useEffect(() => {
-        fetchOrders(ordersData, setLoading, options, setOrders, t, true)
+        fetchOrders(ordersData, setLoading, options, setOrders, t)
     }, [])
 
     const handleSearch = () => {
-        fetchOrders(ordersData, setLoading, options, setOrders, t, true)
+        fetchOrders(ordersData, setLoading, options, setOrders, t)
     }
 
     return (
@@ -49,7 +49,7 @@ export default function OrdersManagement() {
                 <Spin />
             ) : (
                 <>
-                    <OrderList orders={ordersData?.orders ?? []} isAdmin={true}/>
+                    <OrderList orders={ordersData?.orders ?? []}/>
 
                     <SimplePagination
                         storageKey={LocalStorageKey.OrdersPagination}
