@@ -24,7 +24,9 @@ export enum LocalStorageKey {
     TagPagination = 'tagPagination',
     SelectionistPagination = 'selectionistPagination',
     GoodPagination = 'goodPagination',
-    CheckoutToken = 'checkoutToken'
+    CheckoutToken = 'checkoutToken',
+    OrdersPagination = 'ordersPagination',
+    AdminOrdersPagination = 'adminOrdersPagination',
 }
 
 export enum GoodState{
@@ -37,6 +39,18 @@ export enum GoodState{
 export enum Defaults {
     Page = 1,
     Limit = 24
+}
+
+export enum OrderState {
+    Pending = 'Pending',
+    Paid = 'Paid',
+    Processing = 'Processing',
+    Shipped = 'Shipped',
+    Delivered = 'Delivered',
+    Cancelled = 'Cancelled',
+    Refunded = 'Refunded',
+    Expired = 'Expired',
+    PaymentFailed = 'PaymentFailed'
 }
 
 export enum Country {

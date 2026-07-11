@@ -1,7 +1,7 @@
 import { message } from 'antd'
 import { useIntl } from 'react-intl'
 
-import { Language, LocalStorageKey } from '@/app/utils/enums'
+import { Language, LocalStorageKey, OrderState } from '@/app/utils/enums'
 
 export function getTFunc() {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -167,4 +167,38 @@ export const deleteItem = (
             basketItems: prev.basketItems?.filter((i: any) => i.id !== basketItemID)
         }
     })
+}
+
+export const getOrderStateColor = (state: OrderState) => {
+    switch (state) {
+    case OrderState.Pending:
+        return 'gold'
+
+    case OrderState.Paid:
+        return 'blue'
+
+    case OrderState.Processing:
+        return 'cyan'
+
+    case OrderState.Shipped:
+        return 'purple'
+
+    case OrderState.Delivered:
+        return 'green'
+
+    case OrderState.Cancelled:
+        return 'red'
+
+    case OrderState.Refunded:
+        return 'orange'
+
+    case OrderState.Expired:
+        return 'default'
+
+    case OrderState.PaymentFailed:
+        return 'volcano'
+
+    default:
+        return 'default'
+    }
 }
