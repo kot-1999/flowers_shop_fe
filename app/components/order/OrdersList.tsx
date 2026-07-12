@@ -5,24 +5,36 @@ import {
     Typography,
     Tag
 } from 'antd'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
+import OrderModal from '@/app/components/order/OrderModal'
 import { getOrderStateColor } from '@/app/utils/helpers'
 
 const { Text } = Typography
 
-export default function OrderList({ orders, isAdmin = false }: { orders: any[], isAdmin?: boolean }) {
-    const router = useRouter()
+export default function OrderList({ 
+    orders,
+    t,
+    isAdmin = false
     
+}: { 
+    orders: any[], 
+    t: (val: string) => string
+    isAdmin?: boolean,
+    
+}) {
+    const [open, setOpen] = useState<boolean>(false)
+    const [orderID, setOrderID] = useState<string>()
     return (
         <Flex vertical gap={16}>
             {orders.map((order) => (
                 <Card
                     key={order.id}
                     hoverable
-                    onClick={() =>
-                        router.push(`/orders${ isAdmin ? '/admin' : ''}/${order.id}`)
-                    }
+                    onClick={() => {
+                        setOrderID(order.id),
+                        setOpen(true)
+                    }}
                     styles={{
                         body: {
                             padding: 24
@@ -154,6 +166,14 @@ export default function OrderList({ orders, isAdmin = false }: { orders: any[], 
                     </Flex>
                 </Card>
             ))}
+
+            <OrderModal
+                open={open}
+                isAdmin={isAdmin}
+                orderID={orderID}
+                t={t}
+                onClose={() => setOpen(false)}
+            />
         </Flex>
     )
 }

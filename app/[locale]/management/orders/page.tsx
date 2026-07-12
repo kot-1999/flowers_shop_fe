@@ -49,7 +49,7 @@ export default function OrdersManagement() {
                 <Spin />
             ) : (
                 <>
-                    <OrderList orders={ordersData?.orders ?? []} isAdmin={true}/>
+                    <OrderList orders={ordersData?.orders ?? []} t={t} isAdmin={true}/>
 
                     <SimplePagination
                         storageKey={LocalStorageKey.OrdersPagination}

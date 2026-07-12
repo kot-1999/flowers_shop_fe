@@ -4,6 +4,28 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { Defaults, LocalStorageKey, OrderState } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
 
+export const fetchOrder = async (
+    setLoading: (val: boolean) => void,
+    orderID: string,
+    setOrder: (val: any) => void,
+    t: (key: string) => string,
+    isAdmin: boolean = false
+) => {
+    try {
+        setLoading(true)
+
+        const res = await fetch(`/api/${isAdmin ? 'admin/' : ''}orders/${orderID}`)
+
+        const data = await res.json()
+        await checkRes(res, data, t('Failed to fetch order'))
+        setOrder(data)
+    } catch {
+        message.error('Failed to fetch order')
+    } finally {
+        setLoading(false)
+    }
+}
+
 export const fetchOrders = async (
     ordersData: any,
     setLoading: (val: boolean) => void,
