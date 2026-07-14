@@ -26,6 +26,35 @@ export const fetchOrder = async (
     }
 }
 
+export const refundOrder = async (
+    orderID: string,
+    setLoading: (val: boolean) => void,
+    t: (key: string) => string
+) => {
+    try {
+        setLoading(true)
+
+        const res = await fetch(
+            `/api/checkout/order/${orderID}/refund`,
+            {
+                method: 'POST'
+            }
+        )
+
+        const data = await res.json()
+        await checkRes(
+            res,
+            data,
+            t('Failed to cancel order')
+        )
+        return data
+    } catch {
+        message.error(t('Failed to cancel order'))
+    } finally {
+        setLoading(false)
+    }
+}
+
 export const fetchOrders = async (
     ordersData: any,
     setLoading: (val: boolean) => void,
