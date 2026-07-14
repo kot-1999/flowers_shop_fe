@@ -3,12 +3,13 @@ import {
     Divider,
     Flex,
     Typography,
-    Tag
+    Tag, Avatar
 } from 'antd'
 import { useState } from 'react'
 
 import OrderModal from '@/app/components/order/OrderModal'
 import { getOrderStateColor } from '@/app/utils/helpers'
+import Link from "next/link";
 
 const { Text } = Typography
 
@@ -84,18 +85,26 @@ export default function OrderList({
 
                         {/* People */}
                         <Flex gap={48}>
+                            <Avatar
+                                size={80}
+                                src={order.user.avatar}
+                            >
+                                {order.user.firstName[0]}
+                            </Avatar>
                             <Flex vertical gap={4}>
                                 <Text type="secondary">
-                                    Recipient
+                                    {t('Customer')}
                                 </Text>
 
                                 <Text strong>
-                                    {order.recipientFirstName}{' '}
-                                    {order.recipientLastName}
+                                    {order.user.firstName}{' '}
+                                    {order.user.lastName}
                                 </Text>
 
-                                <Text type="secondary">
-                                    {order.recipientEmail}
+                                <Text type="secondary" copyable={{
+                                    text: order.user.email
+                                }}>
+                                    {order.user.email}
                                 </Text>
                             </Flex>
 
@@ -105,19 +114,47 @@ export default function OrderList({
                                     || order.user.email !== order.recipientEmail)
                                 && <Flex vertical gap={4}>
                                     <Text type="secondary">
-                                        Customer
+                                        {t('Recipient')}
                                     </Text>
 
                                     <Text strong>
-                                        {order.user.firstName}{' '}
-                                        {order.user.lastName}
+                                        {order.recipientFirstName}{' '}
+                                        {order.recipientLastName}
                                     </Text>
 
                                     <Text type="secondary">
-                                        {order.user.email}
+                                        {order.recipientEmail}
                                     </Text>
                                 </Flex>
                             }
+                            <Flex
+                                vertical
+                                gap={2}
+                                style={{ minWidth: 260 }}
+                            >
+                                <Text type="secondary">
+                                    {t('Shipping address')}
+                                </Text>
+
+                                <Text strong>
+                                    {[
+                                        order.addressSnapshot.apartment,
+                                        order.addressSnapshot.building,
+                                        order.addressSnapshot.street
+                                    ]
+                                        .filter(Boolean)
+                                        .join(' ')}
+                                </Text>
+
+                                <Text type="secondary">
+                                    {order.addressSnapshot.city},{' '}
+                                    {order.addressSnapshot.postcode}
+                                </Text>
+
+                                <Text type="secondary">
+                                    {order.addressSnapshot.country}
+                                </Text>
+                            </Flex>
                         </Flex>
 
                         <Divider style={{ margin: 0 }} />
@@ -163,6 +200,7 @@ export default function OrderList({
                                 </Text>
                             </Flex>
                         </Flex>
+
                     </Flex>
                 </Card>
             ))}

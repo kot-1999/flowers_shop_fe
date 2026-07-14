@@ -1,6 +1,9 @@
 'use client'
 
 import {
+    Avatar,
+    Button,
+    Card,
     Descriptions,
     Divider,
     Flex,
@@ -10,9 +13,12 @@ import {
     Tag,
     Typography
 } from 'antd'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { fetchOrder } from '@/app/utils/clientFetchFuntions'
+import { fetchOrder, getInvoice, refundOrder } from '@/app/utils/clientFetchFuntions'
+import { Language, OrderState } from '@/app/utils/enums'
 import { getOrderStateColor } from '@/app/utils/helpers'
 
 const { Text, Title } = Typography
@@ -34,7 +40,27 @@ export default function OrderModal({
 }: OrderModalProps) {
     const [loading, setLoading] = useState(false)
     const [order, setOrder] = useState<any>()
-
+    const isPending = order?.state === OrderState.Pending
+    const [invoiceLoading, setInvoiceLoading] = useState(false)
+    const pathname = usePathname()
+    const currentLocale = pathname.split('/')[1] as Language
+    const [refundLoading, setRefundLoading] = useState(false)
+    const canCancel = [
+        OrderState.Pending,
+        OrderState.Paid,
+        OrderState.Processing
+    ].includes(order?.state)
+        ?? (
+            isAdmin
+            && !([
+                OrderState.Cancelled,
+                OrderState.Refunded,
+                OrderState.Expired,
+                OrderState.Delivered,
+                OrderState.PaymentFailed
+            ].includes(order?.state))
+        )
+    
     useEffect(() => {
         if (!open || !orderID) {
             return
@@ -58,7 +84,7 @@ export default function OrderModal({
             destroyOnHidden
             title={t('Order details')}
         >
-            {loading || !order ? (
+            {loading || !order  || !orderID ? (
                 <Flex
                     justify="center"
                     style={{ padding: 80 }}
@@ -99,46 +125,49 @@ export default function OrderModal({
                         column={2}
                         size="small"
                     >
-                        <Descriptions.Item label={t('Recipient')}>
-                            {order.recipientFirstName} {order.recipientLastName}
+                        <Descriptions.Item label={t('Customer')}>
+                            {order.user.firstName} {order.user.lastName}
                         </Descriptions.Item>
 
                         <Descriptions.Item label={t('Email')}>
-                            {order.recipientEmail}
+                            {order.user.email}
                         </Descriptions.Item>
 
-                        <Descriptions.Item label={t('Products')}>
-                            £{Number(order.productsPrice).toFixed(2)}
+                        {
+                            (
+                                order.user.firstName !== order.recipientFirstName
+                                || order.user.lastName !== order.recipientLastName
+                                || order.user.email !== order.recipientEmail
+                            ) && (
+                                <>
+                                    <Descriptions.Item label={t('Recipient name')}>
+                                        {order.recipientFirstName} {order.recipientLastName}
+                                    </Descriptions.Item>
+
+                                    <Descriptions.Item label={t('Recipient email')}>
+                                        {order.recipientEmail}
+                                    </Descriptions.Item>
+                                </>
+                            )
+                        }
+
+                        <Descriptions.Item label={t('Address')} span={2}>
+                            {
+                                order.addressSnapshot
+                                    ? `${order.addressSnapshot.apartment ?? ''} ${
+                                        order.addressSnapshot.building
+                                    } ${order.addressSnapshot.street}, ${
+                                        order.addressSnapshot.city
+                                    }, ${
+                                        order.addressSnapshot.postcode
+                                    }, ${
+                                        order.addressSnapshot.country
+                                    }`
+                                    : '-'
+                            }
                         </Descriptions.Item>
 
-                        <Descriptions.Item label={t('Shipping')}>
-                            £{Number(order.shippingPrice).toFixed(2)}
-                        </Descriptions.Item>
-
-                        <Descriptions.Item label={t('Total')}>
-                            <Text strong>
-                                £{(
-                                    Number(order.productsPrice)
-                                + Number(order.shippingPrice)
-                                ).toFixed(2)}
-                            </Text>
-                        </Descriptions.Item>
-
-                        <Descriptions.Item label={t('Refund')}>
-                            {order.refundAmount
-                                ? `£${Number(order.refundAmount).toFixed(2)}`
-                                : '-'}
-                        </Descriptions.Item>
-
-                        <Descriptions.Item label={t('Payment')}>
-                            {order.paymentTransactionID ?? '-'}
-                        </Descriptions.Item>
-
-                        <Descriptions.Item label={t('Shipping transaction')}>
-                            {order.shippingTransactionID ?? '-'}
-                        </Descriptions.Item>
-
-                        <Descriptions.Item label={t('Tracking')}>
+                        <Descriptions.Item label={t('Tracking Number')}>
                             {order.trackingNumber ?? '-'}
                         </Descriptions.Item>
 
@@ -159,9 +188,124 @@ export default function OrderModal({
 
                     <Divider />
 
-                    <Title level={5}>
-                        {t('Items')}
-                    </Title>
+                    <Flex vertical gap={16}>
+                        {/* Price */}
+                        <Flex gap={48} wrap="wrap">
+                            <Flex vertical gap={4}>
+                                <Text type="secondary">
+                                    {t('Products')}
+                                </Text>
+
+                                <Text strong>
+                                    £{Number(order.productsPrice).toFixed(2)}
+                                </Text>
+                            </Flex>
+
+                            <Flex vertical gap={4}>
+                                <Text type="secondary">
+                                    {t('Shipping')}
+                                </Text>
+
+                                <Text strong>
+                                    £{Number(order.shippingPrice).toFixed(2)}
+                                </Text>
+                            </Flex>
+
+                            <Flex vertical gap={4}>
+                                <Text type="secondary">
+                                    {t('Total')}
+                                </Text>
+
+                                <Text
+                                    strong
+                                    style={{
+                                        fontSize: 20
+                                    }}
+                                >
+                                    £{(
+                                        Number(order.productsPrice)
+                                    + Number(order.shippingPrice)
+                                    ).toFixed(2)}
+                                </Text>
+                            </Flex>
+
+                            {
+                                order.refundAmount && <Flex vertical gap={4}>
+                                    <Text type="secondary">
+                                        {t('Refunded')}
+                                    </Text>
+
+                                    <Text
+                                        strong
+                                        type="danger"
+                                    >
+                                        £{(
+                                            Number(order.refundAmount) / 100
+                                        ).toFixed(2)}
+                                    </Text>
+                                </Flex>
+                            }
+                        </Flex>
+
+                        {/* Transactions */}
+                        {
+                            (
+                                order.paymentTransactionID
+                                || order.shippingTransactionID
+                                || order.trackingNumber
+                                || order.trackingUrl
+                            )
+                            && <>
+                                <Divider style={{ margin: '8px 0' }}/>
+
+                                <Flex gap={48} wrap="wrap">
+                                    {
+                                        order.shippingTransactionID
+                                        && <Flex vertical gap={4}>
+                                            <Text type="secondary">
+                                                {t('Shipping transaction')}
+                                            </Text>
+
+                                            <Text copyable>
+                                                {order.shippingTransactionID}
+                                            </Text>
+                                        </Flex>
+                                    }
+
+                                    {
+                                        order.trackingNumber
+                                        && <Flex vertical gap={4}>
+                                            <Text type="secondary">
+                                                {t('Tracking')}
+                                            </Text>
+
+                                            <Text>
+                                                {order.trackingNumber}
+                                            </Text>
+                                        </Flex>
+                                    }
+
+                                    {
+                                        order.trackingUrl
+                                        && <Flex vertical gap={4}>
+                                            <Text type="secondary">
+                                                {t('Tracking URL')}
+                                            </Text>
+
+                                            <a
+                                                href={order.trackingUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                {t('Open tracking')}
+                                            </a>
+                                        </Flex>
+                                    }
+
+                                </Flex>
+                            </>
+                        }
+                    </Flex>
 
                     <Table
                         rowKey="id"
@@ -170,13 +314,32 @@ export default function OrderModal({
                         columns={[
                             {
                                 title: t('Product'),
-                                render: (_, item: any) =>
-                                    item.good?.name
+                                render: (_: any, item: any) => (
+                                    <Flex align="center" gap={10}>
+                                        <Link
+                                            target="_blank"
+                                            href={`/${t('all-categories')}/${item.snapshot.name[currentLocale + 'Slug']}?id=${item.snapshot.id}`}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 8
+                                            }}
+                                        >
+                                            <Avatar
+                                                shape="square"
+                                                size={60}
+                                                src={item.snapshot.photos?.[0]}
+                                            />
+
+                                            {item.snapshot.name[currentLocale]}
+                                        </Link>
+                                    </Flex>
+                                )
                             },
                             {
                                 title: t('Type'),
                                 render: (_, item: any) =>
-                                    item.itemType?.name
+                                    item.snapshot?.itemType?.name[currentLocale]
                             },
                             {
                                 title: t('Qty'),
@@ -190,10 +353,51 @@ export default function OrderModal({
                             {
                                 title: t('Total'),
                                 render: (_, item: any) =>
-                                    `£${Number(item.totalPrice).toFixed(2)}`
+                                    `£${Number(item.unitPrice * item.quantity).toFixed(2)}`
                             }
                         ]}
                     />
+
+                    <Flex justify="space-between" align="center">
+                        <Button
+                            danger
+                            disabled={!canCancel}
+                            loading={refundLoading}
+                            onClick={async () => {
+                                await refundOrder(orderID, setRefundLoading, t)
+                                fetchOrder(
+                                    setLoading,
+                                    orderID,
+                                    (data) => setOrder(data.order),
+                                    t,
+                                    isAdmin
+                                )
+                            }}
+                        >
+                            {t('Cancel order')}
+                        </Button>
+
+                        <Flex gap={12}>
+                            {
+                                !isAdmin && isPending 
+                                && <Button
+                                    type="primary"
+                                    onClick={() => console.log('Pay')}
+                                >
+                                    {t('Pay now')}
+                                </Button>
+                            }
+                            {!isPending
+                                && <Button
+                                    loading={invoiceLoading}
+                                    onClick={() => getInvoice(orderID, setInvoiceLoading, t)}
+                                >
+                                    {t('Download invoice')}
+                                </Button>
+                            }
+                        </Flex>
+                    </Flex>
+                    
                 </Flex>
             )}
         </Modal>
