@@ -32,3 +32,32 @@ export async function GET(
         )
     }
 }
+
+export async function PATCH(
+    req: NextRequest,
+    { params }: { params: Promise<{ orderID: string }> }
+) {
+    try {
+        const { orderID } = await params
+        const headers = await getRequiredHeaders(req)
+
+        const response = await fetch(
+            `${BACKEND_URL}/api/v1/admin/orders/${orderID}`,
+            {
+                method: 'PATCH',
+                headers
+            }
+        )
+
+        const data = await response.json()
+
+        return NextResponse.json(data, {
+            status: response.status
+        })
+    } catch (error: any) {
+        return NextResponse.json(
+            { message: error.message },
+            { status: 500 }
+        )
+    }
+}

@@ -8,6 +8,7 @@ import {
     Divider,
     Flex,
     Modal,
+    Image,
     Spin,
     Table,
     Tag,
@@ -17,7 +18,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { fetchOrder, getInvoice, refundOrder } from '@/app/utils/clientFetchFuntions'
+import { fetchOrder, getInvoice, refundOrder, updateOrderState } from '@/app/utils/clientFetchFuntions'
 import { Language, OrderState } from '@/app/utils/enums'
 import { getOrderStateColor } from '@/app/utils/helpers'
 
@@ -45,12 +46,14 @@ export default function OrderModal({
     const pathname = usePathname()
     const currentLocale = pathname.split('/')[1] as Language
     const [refundLoading, setRefundLoading] = useState(false)
+    const [stateLoading, setStateLoading] = useState(false)
+    const [labelUrl, setLabelUrl] = useState<string | null>(null)
     const canCancel = [
         OrderState.Pending,
         OrderState.Paid,
         OrderState.Processing
     ].includes(order?.state)
-        ?? (
+        || (
             isAdmin
             && !([
                 OrderState.Cancelled,
@@ -75,6 +78,22 @@ export default function OrderModal({
         )
     }, [open, orderID])
 
+    const getNextStateText = () => {
+        switch (order?.state) {
+        case OrderState.Paid:
+            return t('Start processing')
+
+        case OrderState.Processing:
+            return t('Create shipping label')
+
+        case OrderState.Shipped:
+            return t('Mark as delivered')
+
+        default:
+            return t('Update state')
+        }
+    }
+    
     return (
         <Modal
             open={open}
@@ -239,72 +258,11 @@ export default function OrderModal({
                                         strong
                                         type="danger"
                                     >
-                                        £{(
-                                            Number(order.refundAmount) / 100
-                                        ).toFixed(2)}
+                                        £{order.refundAmount}
                                     </Text>
                                 </Flex>
                             }
                         </Flex>
-
-                        {/* Transactions */}
-                        {
-                            (
-                                order.paymentTransactionID
-                                || order.shippingTransactionID
-                                || order.trackingNumber
-                                || order.trackingUrl
-                            )
-                            && <>
-                                <Divider style={{ margin: '8px 0' }}/>
-
-                                <Flex gap={48} wrap="wrap">
-                                    {
-                                        order.shippingTransactionID
-                                        && <Flex vertical gap={4}>
-                                            <Text type="secondary">
-                                                {t('Shipping transaction')}
-                                            </Text>
-
-                                            <Text copyable>
-                                                {order.shippingTransactionID}
-                                            </Text>
-                                        </Flex>
-                                    }
-
-                                    {
-                                        order.trackingNumber
-                                        && <Flex vertical gap={4}>
-                                            <Text type="secondary">
-                                                {t('Tracking')}
-                                            </Text>
-
-                                            <Text>
-                                                {order.trackingNumber}
-                                            </Text>
-                                        </Flex>
-                                    }
-
-                                    {
-                                        order.trackingUrl
-                                        && <Flex vertical gap={4}>
-                                            <Text type="secondary">
-                                                {t('Tracking URL')}
-                                            </Text>
-
-                                            <a
-                                                href={order.trackingUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                {t('Open tracking')}
-                                            </a>
-                                        </Flex>
-                                    }
-
-                                </Flex>
-                            </>
-                        }
                     </Flex>
 
                     <Table
@@ -358,6 +316,36 @@ export default function OrderModal({
                         ]}
                     />
 
+                    {
+                        labelUrl && isAdmin && (
+                            <Card
+                                title={t('Shipping label')}
+                                extra={
+                                    <Button
+                                        type="link"
+                                        href={labelUrl}
+                                        target="_blank"
+                                        download
+                                    >
+                                        {t('Download')}
+                                    </Button>
+                                }
+                            >
+                                <Flex justify="center">
+                                    <Image
+                                        src={labelUrl}
+                                        alt={t('Shipping label')}
+                                        style={{
+                                            maxWidth: '100%',
+                                            maxHeight: 600,
+                                            objectFit: 'contain'
+                                        }}
+                                    />
+                                </Flex>
+                            </Card>
+                        )
+                    }
+
                     <Flex justify="space-between" align="center">
                         <Button
                             danger
@@ -393,6 +381,31 @@ export default function OrderModal({
                                     onClick={() => getInvoice(orderID, setInvoiceLoading, t)}
                                 >
                                     {t('Download invoice')}
+                                </Button>
+                            }
+
+                            {isAdmin && [OrderState.Paid, OrderState.Processing, OrderState.Shipped].includes(order.state)
+                                && <Button
+                                    type="primary"
+                                    loading={stateLoading}
+                                    onClick={async () => {
+                                        await updateOrderState(
+                                            orderID,
+                                            setStateLoading,
+                                            t,
+                                            setLabelUrl
+                                        )
+
+                                        await fetchOrder(
+                                            setLoading,
+                                            orderID,
+                                            (data) => setOrder(data.order),
+                                            t,
+                                            isAdmin
+                                        )
+                                    }}
+                                >
+                                    {getNextStateText()}
                                 </Button>
                             }
                         </Flex>

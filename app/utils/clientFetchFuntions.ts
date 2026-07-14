@@ -4,6 +4,33 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 import { Defaults, LocalStorageKey, OrderState } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
 
+export async function updateOrderState(
+    orderID: string,
+    setLoading: (value: boolean) => void,
+    t: (key: string) => string,
+    setLabelUrl: (data: string | null) => void
+) {
+    try {
+        setLoading(true)
+
+        const res = await fetch(`/api/admin/orders/${orderID}`, {
+            method: 'PATCH'
+        })
+
+        const data = await res.json()
+
+        await checkRes(res, data, t('Can not update order state'))
+
+        setLabelUrl(data.order.labelUrl ?? null)
+
+        return data
+    } catch (error: any) {
+        message.error(error.message || t('Can not update order state'))
+    } finally {
+        setLoading(false)
+    }
+}
+
 export const fetchOrder = async (
     setLoading: (val: boolean) => void,
     orderID: string,
