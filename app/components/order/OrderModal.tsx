@@ -30,6 +30,7 @@ interface OrderModalProps {
     onClose: () => void
     t: (key: string) => string
     isAdmin?: boolean
+    setOrderUpdated: (data: any) => void
 }
 
 export default function OrderModal({
@@ -37,7 +38,8 @@ export default function OrderModal({
     orderID,
     onClose,
     t,
-    isAdmin = false
+    isAdmin = false,
+    setOrderUpdated
 }: OrderModalProps) {
     const [loading, setLoading] = useState(false)
     const [order, setOrder] = useState<any>()
@@ -77,6 +79,10 @@ export default function OrderModal({
             isAdmin
         )
     }, [open, orderID])
+
+    useEffect(() => {
+        setOrderUpdated(order)
+    }, [order]);
 
     const getNextStateText = () => {
         switch (order?.state) {
