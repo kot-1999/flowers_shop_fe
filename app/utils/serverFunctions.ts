@@ -4,7 +4,8 @@ import crypto from 'crypto-js'
 import { cookies } from 'next/headers'
 import { NextRequest } from 'next/server'
 
-import { CookieKey, Language } from '@/app/utils/enums'
+import {CookieKey, GoodState, Language} from '@/app/utils/enums'
+import {getTFunc} from "@/app/utils/helpers";
 
 export async function setCookie(key: CookieKey, data: any, maxAge = 60 * 60 * 1) {
     const cookieStore = await cookies()

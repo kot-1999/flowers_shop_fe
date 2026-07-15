@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import AppHeader from '@/app/components/AppHeader'
 import AppSidebar from '@/app/components/AppSidebar'
 import { AuthProvider } from '@/app/components/AuthContent'
+import { getTFunc, initEnumTranslations } from '@/app/utils/helpers'
 import { darkTheme, lightTheme } from '@/app/utils/themes'
 import { ThemeMode } from '@/app/utils/types'
 
@@ -18,7 +19,9 @@ export const Root = ({ children }: { children: React.ReactNode }) => {
     const [themeMode, setThemeMode] = useState<ThemeMode>('system')
 
     const [systemIsDark, setSystemIsDark] = useState(false)
+    const t = getTFunc()
 
+    initEnumTranslations(t)
     const isDark = themeMode === 'dark'
         || (themeMode === 'system' && systemIsDark)
 
