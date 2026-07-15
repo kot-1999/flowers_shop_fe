@@ -82,7 +82,7 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
                     zIndex: 1100, // above page content
                     boxShadow: drawerOpen
                         ? 'none'
-                        : '0 2px 8px rgba(0, 0, 0, 0.15)', // 👈 restore shadow
+                        : '0 2px 8px rgba(0, 0, 0, 0.15)',
                     transition: 'box-shadow 0.2s ease'
                 }}
             >
@@ -136,7 +136,7 @@ export default function AppHeader({ isDark, setDark }: { isDark: boolean, setDar
             >
                 <Menu
                     mode="inline"
-                    selectedKeys={['/' + rest.join('/')]}
+                    selectedKeys={['/' + rest?.map((item) => decodeURIComponent(item)).join('/')]}
                     defaultOpenKeys={['categories', 'account']}
                     style={{
                         borderInlineEnd: 0,

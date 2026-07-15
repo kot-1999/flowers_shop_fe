@@ -4,17 +4,19 @@ import { getRequiredHeaders } from '@/app/utils/serverFunctions'
 
 const BACKEND_URL = process.env.BACKEND_URL
 
-export async function POST(req: NextRequest) {
+export async function GET(
+    req: NextRequest,
+    { params }: { params: Promise<{ orderID: string }> }
+) {
     try {
+        const { orderID } = await params
         const headers = await getRequiredHeaders(req)
-        const body = await req.json()
 
         const response = await fetch(
-            `${BACKEND_URL}/api/v1/checkout/user`,
+            `${BACKEND_URL}/api/v1/orders/${orderID}`,
             {
-                method: 'POST',
-                headers,
-                body: JSON.stringify(body)
+                method: 'GET',
+                headers
             }
         )
 

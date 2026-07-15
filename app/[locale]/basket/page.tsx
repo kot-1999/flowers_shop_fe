@@ -4,7 +4,6 @@ import {
     Row,
     Col,
     Typography,
-    message,
     Spin,
     Divider,
     Card,
@@ -16,7 +15,8 @@ import { useEffect, useState } from 'react'
 
 import { useAuth } from '@/app/components/AuthContent'
 import BasketItem from '@/app/components/BasketItem'
-import { checkRes, getTFunc } from '@/app/utils/helpers'
+import { fetchCart, saveCartChanges } from '@/app/utils/clientFetchFuntions'
+import { deleteItem, getTFunc, updateItem } from '@/app/utils/helpers'
 
 const { Title, Text } = Typography
 
@@ -35,147 +35,23 @@ export default function Cart() {
     const [pendingUpdates, setPendingUpdates] = useState<Record<string, any>>({})
     const [pendingDeletes, setPendingDeletes] = useState<Record<string, any>>({})
 
-    const fetchCart = async () => {
-        try {
-            setLoading(true)
-
-            const res = user
-                ? await fetch('/api/basket-items')
-                : await fetch('/api/basket-items/public', { method: 'POST' })
-
-            const data = await res.json()
-
-            const ok = await checkRes(res, data, t('Failed to load cart'))
-            if (!ok) {return}
-
-            setCartData(data)
-        } catch (error: any) {
-            message.error(error.message || t('Failed to load cart'))
-        } finally {
-            setLoading(false)
-        }
-    }
-
     useEffect(() => {
         if (user === undefined) { return }
-        fetchCart()
+        fetchCart(user, setCartData, setLoading, t)
     }, [user])
-
-    // Local edit actions
-    const updateItem = (
-        basketItemID: string,
-        quantity: number,
-        pricingID: string
-    ) => {
-        setPendingUpdates((prev) => ({
-            ...prev,
-            [basketItemID]: {
-                basketItemID,
-                quantity,
-                pricingID
-            }
-        }))
-
-        setCartData((prev: any) => {
-            if (!prev) {return prev}
-
-            const updateList = (list: any[] = []) =>
-                list.map((item: any) =>
-                    item.id === basketItemID
-                        ? {
-                            ...item,
-                            quantity
-                        }
-                        : item)
-
-            return {
-                ...prev,
-                basketItems: updateList(prev.basketItems),
-                unavailableBasketItems: updateList(prev.unavailableBasketItems)
-            }
-        })
-    }
-
-    const deleteItem = (
-        basketItemID: string,
-        pricingID: string
-    ) => {
-        setPendingDeletes((prev) => ({
-            ...prev,
-            [basketItemID]: {
-                id: basketItemID,
-                pricingID
-            }
-        }))
-
-        // optional: remove from UI immediately
-        setCartData((prev: any) => {
-            if (!prev) {return prev}
-            return {
-                ...prev,
-                basketItems: prev.basketItems?.filter((i: any) => i.id !== basketItemID)
-            }
-        })
-    }
-
-    // Bulk save
-    const saveCartChanges = async () => {
-        try {
-            const endpoint = user
-                ? '/api/basket-items'
-                : '/api/cookie/basket'
-
-            const updates = Object.values(pendingUpdates).map((toUpdate: any) => ({
-                basketItemID: toUpdate.basketItemID,
-                quantity: toUpdate.quantity
-            }))
-
-            const deletes = Object.values(pendingDeletes)
-
-            if (updates.length) {
-                const res = await fetch(endpoint, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ basketItems: updates })
-                })
-
-                const data = await res.json()
-                await checkRes(res, data, t('Failed to update items'))
-            }
-
-            if (deletes.length) {
-                const res = await fetch(endpoint, {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ basketItems: deletes })
-                })
-
-                const data = await res.json()
-                await checkRes(res, data, t('Failed to delete items'))
-            }
-
-            setPendingUpdates({})
-            setPendingDeletes({})
-            setEditMode(false)
-
-            await fetchCart()
-        } catch (error: any) {
-            message.error(error.message || t('Failed to update cart'))
-        }
-    }
 
     const cancelEdit = () => {
         setPendingUpdates({})
         setPendingDeletes({})
         setEditMode(false)
-        fetchCart()
+        fetchCart(user, setCartData, setLoading, t)
     }
 
     const goCheckout = () => {
         router.push('/basket/checkout')
     }
 
-    if (loading) {
+    if (loading || !cartData) {
         return (
             <div style={{
                 display: 'flex',
@@ -214,7 +90,17 @@ export default function Cart() {
                             </Button>
                         ) : (
                             <>
-                                <Button type="primary" onClick={saveCartChanges}>
+                                <Button type="primary" onClick={() => saveCartChanges(
+                                    user,
+                                    pendingUpdates,
+                                    pendingDeletes,
+                                    setPendingUpdates,
+                                    setPendingDeletes,
+                                    setEditMode,
+                                    setCartData,
+                                    setLoading,
+                                    t
+                                )}>
                                     {t('Save changes')}
                                 </Button>
                                 <Button onClick={cancelEdit}>
@@ -233,7 +119,7 @@ export default function Cart() {
                 }}>
                     <Space size="large" wrap>
                         <Text strong style={{ fontSize: 16 }}>
-                            {t('Total')}: {summary.totalPrice} €
+                            {t('Total')}: {summary.totalPrice} £
                         </Text>
                         <Text>
                             {t('Available items')}: {summary.totalAvailable}
@@ -257,6 +143,9 @@ export default function Cart() {
                                     t={t}
                                     onUpdate={editMode ? updateItem : undefined}
                                     onDelete={editMode ? deleteItem : undefined}
+                                    setCartData={setCartData}
+                                    setPendingUpdates={setPendingUpdates}
+                                    setPendingDeletes={setPendingDeletes}
                                 />
                             </Col>
                         ))}
@@ -281,6 +170,9 @@ export default function Cart() {
                                     onUpdate={editMode ? updateItem : undefined}
                                     onDelete={editMode ? deleteItem : undefined}
                                     unavailable
+                                    setCartData={setCartData}
+                                    setPendingUpdates={setPendingUpdates}
+                                    setPendingDeletes={setPendingDeletes}
                                 />
                             </Col>
                         ))}
@@ -324,7 +216,7 @@ export default function Cart() {
                                 <Space orientation="vertical" size={0} style={{ textAlign: 'right' }}>
                                     <Text type="secondary">{t('Total')}</Text>
                                     <Text strong style={{ fontSize: 22 }}>
-                                        € {summary?.totalPrice}
+                                        £ {summary?.totalPrice}
                                     </Text>
                                 </Space>
 

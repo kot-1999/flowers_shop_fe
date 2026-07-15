@@ -67,10 +67,10 @@ export default function SearchBar({ fetchGoods, settings }: any) {
     ])
 
     return (
-        <div>
+        <div className="mt-10 mb-10">
             <Space.Compact style={{
                 width: '100%',
-                marginBottom: 12 
+                marginBottom: 12
             }}>
                 <Input
                     placeholder={t('searchGoods')}

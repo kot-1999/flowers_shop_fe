@@ -1,5 +1,6 @@
 'use client'
 
+import { Elements } from '@stripe/react-stripe-js'
 import {
     Button,
     Card,
@@ -7,61 +8,86 @@ import {
     Divider,
     Form, Image,
     Input, message,
-    Radio,
+    Radio, Result,
     Row,
     Select,
     Space, Spin,
     Steps,
     Typography
 } from 'antd'
+import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
 import { useAuth } from '@/app/components/AuthContent'
+import BasketItem from '@/app/components/BasketItem'
+import PaymentForm from '@/app/components/PaymentForm'
 import AddressModal from '@/app/components/profile/AddressModal'
 import {
-    fetchAddresses,
-    fetchUser
+    fetchAddresses, fetchCart,
+    fetchUser, getInvoice, loginOrRegister, saveCartChanges
 } from '@/app/utils/clientFetchFuntions'
 import { LocalStorageKey } from '@/app/utils/enums'
 import {
-    checkRes, getLocalStorage,
+    checkRes, deleteItem, getLocalStorage,
     getTFunc,
-    setLocalStorage
+    setLocalStorage, updateItem
 } from '@/app/utils/helpers'
+import { stripePromise } from '@/app/utils/stripeService'
 
 const { Title, Paragraph } = Typography
 
 enum CheckoutStep {
     Customer = 0,
     Address,
+    BasketReview,
     Shipping,
-    Order,
     Payment
 }
 
 export default function Checkout() {
+    const router = useRouter()
     const [currentStep, setCurrentStep] = useState(CheckoutStep.Customer)
-    const { user: authUser } = useAuth()
+    const { user: authUser, checkAuth } = useAuth()
     const t = getTFunc()
     const [loading, setLoading] = useState(false)
 
+    // User data
     const [user, setUser] = useState<any>(null)
     const [form] = Form.useForm()
-
-    const [addresses, setAddresses] = useState<any[]>([])
-    const [address, setAddress] = useState<any>(null)
-    const addressRef = useRef<any>(null)
-
-    const [shipping, setShipping] = useState<any>(null)
-    const [selectedRate, setSelectedRate] = useState<any>(null)
-
     const [customer, setCustomer] = useState({
         firstName: '',
         lastName: '',
         email: ''
     })
 
+    // Address data
+    const [addresses, setAddresses] = useState<any[]>([])
+    const [address, setAddress] = useState<any>(null)
+    const addressRef = useRef<any>(null)
     const [addressKey, setAddressKey] = useState<string | null>(null)
+
+    // Shipping info
+    const [shipping, setShipping] = useState<any>(null)
+    const [selectedRate, setSelectedRate] = useState<any>(null)
+
+    // Cart
+    const [cartData, setCartData] = useState<any>(null)
+    const [editMode, setEditMode] = useState(false)
+    const [pendingUpdates, setPendingUpdates] = useState<Record<string, any>>({})
+    const [pendingDeletes, setPendingDeletes] = useState<Record<string, any>>({})
+
+    // Payment
+    const [clientSecret, setClientSecret] = useState<string>()
+    const [orderID, setOrderID] = useState<string>()
+    const [paymentSuccess, setPaymentSuccess] = useState(false)
+
+    // Invoice
+    const [invoiceLoading, setInvoiceLoading] = useState(false)
+
+    // Register user after order
+    const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [creatingAccount, setCreatingAccount] = useState(false)
 
     useEffect(() => {
         if (!authUser) {return}
@@ -81,6 +107,57 @@ export default function Checkout() {
     }, [user])
 
     useEffect(() => {
+        if (currentStep !== CheckoutStep.BasketReview) {return}
+
+        fetchCart(user, setCartData, setLoading, t)
+    }, [currentStep])
+
+    useEffect(() => {
+        if (currentStep !== CheckoutStep.Payment) {return}
+        const createPayment = async () => {
+            try {
+                const headers: any = {
+                    'Content-Type': 'application/json'
+                }
+
+                if (!user) {
+                    const token = getLocalStorage(LocalStorageKey.CheckoutToken)
+                    headers['Authorization'] = `Bearer ${token}`
+                }
+                const res = await fetch('/api/checkout/order', {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        addressID: address.id,
+                        shippingRateID: selectedRate.objectId,
+                        recipientFirstName: customer.firstName,
+                        recipientLastName: customer.lastName,
+                        recipientEmail: customer.email
+                    })
+                })
+
+                const data = await res.json()
+
+                const ok = await checkRes(
+                    res,
+                    data,
+                    t('Failed to create order')
+                )
+
+                if (!ok) {return}
+
+                setOrderID(data.order.id)
+                setClientSecret(data.clientSecret)
+
+                setCurrentStep(CheckoutStep.Payment)
+            } catch {
+                message.error(t('Failed to create order'))
+            }
+        }
+        createPayment()
+    }, [currentStep])
+
+    useEffect(() => {
         if (!addresses?.length) {return}
 
         const def = addresses.find((a: any) => a.isDefault)
@@ -97,7 +174,6 @@ export default function Checkout() {
             return
         }
         setLoading(true)
-
         const checkoutToken = getLocalStorage(LocalStorageKey.CheckoutToken)
         const headers: any = {
             'Content-Type': 'application/json'
@@ -132,6 +208,13 @@ export default function Checkout() {
         loadRates()
     }, [addressKey])
 
+    const cancelEdit = () => {
+        setPendingUpdates({})
+        setPendingDeletes({})
+        setEditMode(false)
+        fetchCart(user, setCartData, setLoading, t)
+    }
+
     const handleNext = async () => {
         if (currentStep === CheckoutStep.Customer) {
             await form.validateFields()
@@ -140,10 +223,14 @@ export default function Checkout() {
             setCustomer(values)
 
             await continueCustomer()
-            return
-        }
 
-        if (currentStep === CheckoutStep.Address) {
+            if (!customer.firstName || !customer.lastName || !customer.email) {
+                message.error(t('Customer required fields are missing'))
+            }
+
+            setCurrentStep(CheckoutStep.Address)
+            return
+        } else if (currentStep === CheckoutStep.Address) {
             await addressRef.current?.submit()
             setAddressKey(JSON.stringify({
                 country: address?.country,
@@ -153,18 +240,20 @@ export default function Checkout() {
                 apartment: address?.apartment,
                 postcode: address?.postcode
             }))
-            setCurrentStep(CheckoutStep.Shipping)
+            setCurrentStep(CheckoutStep.BasketReview)
             return
-        }
-
-        if (currentStep === CheckoutStep.Shipping) {
+        } else if (currentStep === CheckoutStep.BasketReview) {
+            if (editMode) {
+                message.warning(t('Finish editing first'))
+            }
+            setCurrentStep(CheckoutStep.Shipping)
+        } else if (currentStep === CheckoutStep.Shipping) {
             if (!selectedRate) {
                 message.error(t('Please select a shipping method'))
                 return
             }
 
-            setCurrentStep(CheckoutStep.Order)
-            return
+            setCurrentStep(CheckoutStep.Payment)
         }
     }
 
@@ -176,7 +265,6 @@ export default function Checkout() {
 
     const continueCustomer = async () => {
         if (authUser) {
-            setCurrentStep(CheckoutStep.Address)
             return
         }
 
@@ -194,7 +282,6 @@ export default function Checkout() {
             })
 
             const data = await res.json()
-
             await checkRes(
                 res,
                 data,
@@ -205,11 +292,182 @@ export default function Checkout() {
                 LocalStorageKey.CheckoutToken,
                 data.user.token
             )
-            setCurrentStep(CheckoutStep.Address)
         } finally {
             setLoading(false)
         }
     }
+
+    if (paymentSuccess && orderID) {
+        return (
+            <Result
+                status="success"
+                title={t('Payment successful!')}
+                subTitle={t('Your order has been placed successfully.')}
+                extra={[
+                    <Space
+                        key="actions"
+                        orientation="vertical"
+                        size="large"
+                        style={{
+                            width: '100%',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Space
+                            orientation="vertical"
+                            size="small"
+                            style={{
+                                textAlign: 'center'
+                            }}
+                        >
+                            <Typography.Text type="secondary">
+                                {t('Order ID')}
+                            </Typography.Text>
+
+                            <Typography.Text copyable>
+                                {orderID}
+                            </Typography.Text>
+                        </Space>
+
+                        <Button
+                            type="primary"
+                            loading={invoiceLoading}
+                            onClick={() => getInvoice(orderID, setInvoiceLoading, t)}
+                        >
+                            {t('Download invoice')}
+                        </Button>
+
+                        {!user && (
+                            <Card
+                                style={{
+                                    width: '100%',
+                                    maxWidth: 500,
+                                    marginTop: 24
+                                }}
+                            >
+                                <Space
+                                    orientation="vertical"
+                                    size="middle"
+                                    style={{
+                                        width: '100%'
+                                    }}
+                                >
+                                    <Title level={4}>
+                                        {t('Create your customer account')}
+                                    </Title>
+
+                                    <Typography.Paragraph>
+                                        {t('Your order was placed using')}{' '}
+                                        <Typography.Text strong>
+                                            {customer.email}
+                                        </Typography.Text>
+                                        .
+                                        <br /><br/>
+                                        {t('Create a password now to unlock order tracking')}<br/><br/>
+                                        {t('Manage your orders, download invoices anytime')}<br/><br/>
+                                        {t('Access your purchase history')}<br/>
+                                    </Typography.Paragraph>
+
+                                    <Input.Password
+                                        placeholder="Password"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+
+                                    <Input.Password
+                                        placeholder="Confirm password"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+
+                                    <Button
+                                        type="primary"
+                                        block
+                                        loading={creatingAccount}
+                                        onClick={async () => {
+                                            if (password.length < 7) {
+                                                message.error(t('Password must contain at least 7 characters'))
+                                                return
+                                            }
+
+                                            if (password !== confirmPassword) {
+                                                message.error(t('Passwords do not match'))
+                                                return
+                                            }
+
+                                            setCreatingAccount(true)
+
+                                            try {
+                                                const isOk = await loginOrRegister({
+                                                    firstName: customer.firstName,
+                                                    lastName: customer.lastName,
+                                                    email: customer.email,
+                                                    password: password
+                                                }, 'register', checkAuth, router, t)
+
+                                                if (isOk) {
+                                                    message.success(t('Account created successfully. You may sign in now.'))
+                                                    router.replace('/auth/login')
+                                                }
+                                            } finally {
+                                                setCreatingAccount(false)
+                                            }
+                                        }}
+                                    >
+                                        {t('Create account')}
+                                    </Button>
+
+                                    <Typography.Text type="secondary">
+                                        {t('You can also continue shopping without creating an account.')}
+                                    </Typography.Text>
+                                </Space>
+                            </Card>
+                        )}
+
+                        <Button
+                            onClick={() => {
+                                setLocalStorage(LocalStorageKey.SelectedCategory, null)
+                                router.push('/' + t('all-categories'))
+                            }}
+                        >
+                            {t('Continue shopping')}
+                        </Button>
+                    </Space>
+                ]}
+            />
+        )
+    }
+
+    const editButton = () => <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col>
+            <Space>
+                {!editMode ? (
+                    <Button onClick={() => setEditMode(true)}>
+                        {t('Edit cart')}
+                    </Button>
+                ) : (
+                    <>
+                        <Button type="primary" onClick={() => saveCartChanges(
+                            user,
+                            pendingUpdates,
+                            pendingDeletes,
+                            setPendingUpdates,
+                            setPendingDeletes,
+                            setEditMode,
+                            setCartData,
+                            setLoading,
+                            t
+                        )}>
+                            {t('Save changes')}
+                        </Button>
+                        <Button onClick={cancelEdit}>
+                            {t('Cancel')}
+                        </Button>
+                    </>
+                )}
+            </Space>
+        </Col>
+    </Row>
 
     const renderStep = () => {
         switch (currentStep) {
@@ -218,7 +476,7 @@ export default function Checkout() {
                 <Form layout="vertical" form={form}>
                     <Row gutter={16}>
                         <Col span={12}>
-                            <Form.Item label="First name" name="firstName" required>
+                            <Form.Item label={t('First name')} name="firstName" required>
                                 <Input
                                     value={customer.firstName}
                                     onChange={(e) =>
@@ -233,7 +491,7 @@ export default function Checkout() {
                         </Col>
 
                         <Col span={12}>
-                            <Form.Item label="Last name" name="lastName" required>
+                            <Form.Item label={t('Last name')} name="lastName" required>
                                 <Input
                                     value={customer.lastName}
                                     onChange={(e) =>
@@ -248,7 +506,7 @@ export default function Checkout() {
                         </Col>
                     </Row>
 
-                    <Form.Item label="Email" name="email" required>
+                    <Form.Item label={t('Email')} name="email" required>
                         <Input
                             value={customer.email}
                             onChange={(e) =>
@@ -335,7 +593,7 @@ export default function Checkout() {
                     size="large"
                     style={{ width: '100%' }}
                 >
-                    <Title level={4}>{t('Shipping')}</Title>
+                    <Title level={4}>{t('Cart review')}</Title>
 
                     <Paragraph>
                         {t('Select a shipping method')}
@@ -424,7 +682,7 @@ export default function Checkout() {
                                                     level={5}
                                                     style={{ margin: 0 }}
                                                 >
-                                                    {rate.amountLocal} {rate.currencyLocal}
+                                                    {rate.amount} {rate.currency}
                                                 </Typography.Title>
                                             </Col>
                                         </Row>
@@ -436,10 +694,46 @@ export default function Checkout() {
                 </Space>
             )
 
-        case CheckoutStep.Order:
+        case CheckoutStep.BasketReview:
             return (
                 <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-                    <Title level={4}>{t('Order review')}</Title>
+                    {!!cartData?.basketItems?.length && (
+                        <>
+                            {editButton()}
+
+                            <Title level={4}>{t('Purchasing items')}</Title>
+
+                            <Row gutter={[16, 16]}>
+                                {cartData.basketItems.map((item: any) => (
+                                    <Col xs={24} key={item.id}>
+                                        <BasketItem
+                                            item={item}
+                                            t={t}
+                                            onUpdate={editMode ? updateItem : undefined}
+                                            onDelete={editMode ? deleteItem : undefined}
+                                            setCartData={setCartData}
+                                            setPendingUpdates={setPendingUpdates}
+                                            setPendingDeletes={setPendingDeletes}
+                                        />
+                                    </Col>
+                                ))}
+                            </Row>
+
+                            {editButton()}
+
+                        </>
+                    )}
+                </Space>
+            )
+
+        case CheckoutStep.Payment:
+            return (
+                <Space
+                    orientation="vertical"
+                    size="large"
+                    style={{ width: '100%' }}
+                >
+                    <Title level={4}>{t('Payment')}</Title>
 
                     <Card>
                         <Space orientation="vertical" style={{ width: '100%' }} size="middle">
@@ -476,10 +770,6 @@ export default function Checkout() {
 
                             {/* SHIPPING */}
                             <div>
-                                <Typography.Text type="secondary">
-                                    {t('Shipping method')}
-                                </Typography.Text>
-
                                 <div style={{ marginTop: 6 }}>
                                     <Space>
                                         <Image
@@ -503,39 +793,51 @@ export default function Checkout() {
 
                             <Divider />
 
-                            {/* PRICE */}
                             <div style={{
                                 display: 'flex',
-                                justifyContent: 'space-between' 
+                                justifyContent: 'space-between'
                             }}>
                                 <Typography.Text>{t('Shipping')}</Typography.Text>
                                 <Typography.Text>
-                                    {selectedRate?.amountLocal} {selectedRate?.currencyLocal}
+                                    {selectedRate?.amountLocal} £
                                 </Typography.Text>
                             </div>
 
                             <div style={{
                                 display: 'flex',
-                                justifyContent: 'space-between' 
+                                justifyContent: 'space-between'
+                            }}>
+                                <Typography.Text>{t('Products')}</Typography.Text>
+                                <Typography.Text>
+                                    {cartData?.summary?.totalPrice} £
+                                </Typography.Text>
+                            </div>
+
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'space-between'
                             }}>
                                 <Typography.Text strong>{t('Total')}</Typography.Text>
                                 <Typography.Text strong>
-                                    {'123.00'} EUR
+                                    {Math.round((Number(cartData?.summary?.totalPrice) + Number(selectedRate?.amountLocal)) * 100) / 100} £
                                 </Typography.Text>
                             </div>
 
                         </Space>
                     </Card>
-                </Space>
-            )
 
-        case CheckoutStep.Payment:
-            return (
-                <Space orientation="vertical" size="large" style={{ width: '100%' }}>
-                    <Title level={4}>{t('Payment')}</Title>
-                    <Paragraph>
-                            Payment
-                    </Paragraph>
+                    {clientSecret && (
+                        <Elements
+                            stripe={stripePromise}
+                            options={{
+                                clientSecret
+                            }}
+                        >
+                            <PaymentForm
+                                onSuccess={() => setPaymentSuccess(true)}
+                            />
+                        </Elements>
+                    )}
                 </Space>
             )
         }
@@ -546,15 +848,15 @@ export default function Checkout() {
             maxWidth: 900,
             margin: '40px auto' 
         }}>
-            <Title level={2}>Checkout</Title>
+            <Title level={2}>{t('Checkout')}</Title>
 
             <Steps
                 current={currentStep}
                 items={[
                     { title: t('Customer') },
                     { title: t('Address') },
-                    { title: t('Shipping') },
-                    { title: t('Order') },
+                    { title: t('Cart Review') },
+                    { title: t('Shipping method') },
                     { title: t('Payment') }
                 ]}
             />
@@ -584,17 +886,13 @@ export default function Checkout() {
                     disabled={currentStep === CheckoutStep.Customer}
                     onClick={previous}
                 >
-                    Back
+                    {t('Back')}
                 </Button>
 
                 {currentStep !== CheckoutStep.Payment && (
                     <Button type="primary" onClick={handleNext}>
-                        Continue
+                        {t('Continue')}
                     </Button>
-                )}
-
-                {currentStep === CheckoutStep.Payment && (
-                    <Button type="primary">Pay</Button>
                 )}
             </Space>
         </Card>

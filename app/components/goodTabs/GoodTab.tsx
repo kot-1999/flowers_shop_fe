@@ -150,7 +150,7 @@ export default function GoodsTab({ settings }: Props) {
             width: 120,
             render: (_: any, record: GoodEntity) => (
                 <Tag color={getStateColor(record.state)}>
-                    {record.state}
+                    {t(record.state)}
                 </Tag>
             )
         },

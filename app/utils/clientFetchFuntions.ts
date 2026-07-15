@@ -1,8 +1,305 @@
 import { message } from 'antd'
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
-import { Defaults, LocalStorageKey } from '@/app/utils/enums'
+import { Defaults, LocalStorageKey, OrderState } from '@/app/utils/enums'
 import { checkRes, getLocalStorage } from '@/app/utils/helpers'
+
+export async function updateOrderState(
+    orderID: string,
+    setLoading: (value: boolean) => void,
+    t: (key: string) => string,
+    setLabelUrl: (data: string | null) => void
+) {
+    try {
+        setLoading(true)
+
+        const res = await fetch(`/api/admin/orders/${orderID}`, {
+            method: 'PATCH'
+        })
+
+        const data = await res.json()
+
+        await checkRes(res, data, t('Can not update order state'))
+
+        setLabelUrl(data.order.labelUrl ?? null)
+
+        return data
+    } catch (error: any) {
+        message.error(error.message || t('Can not update order state'))
+    } finally {
+        setLoading(false)
+    }
+}
+
+export const fetchOrder = async (
+    setLoading: (val: boolean) => void,
+    orderID: string,
+    setOrder: (val: any) => void,
+    t: (key: string) => string,
+    isAdmin: boolean = false
+) => {
+    try {
+        setLoading(true)
+
+        const res = await fetch(`/api/${isAdmin ? 'admin/' : ''}orders/${orderID}`)
+
+        const data = await res.json()
+        await checkRes(res, data, t('Failed to fetch order'))
+        setOrder(data)
+    } catch {
+        message.error('Failed to fetch order')
+    } finally {
+        setLoading(false)
+    }
+}
+
+export const refundOrder = async (
+    orderID: string,
+    setLoading: (val: boolean) => void,
+    t: (key: string) => string
+) => {
+    try {
+        setLoading(true)
+
+        const res = await fetch(
+            `/api/checkout/order/${orderID}/refund`,
+            {
+                method: 'POST'
+            }
+        )
+
+        const data = await res.json()
+        await checkRes(
+            res,
+            data,
+            t('Failed to cancel order')
+        )
+        return data
+    } catch {
+        message.error(t('Failed to cancel order'))
+    } finally {
+        setLoading(false)
+    }
+}
+
+export const fetchOrders = async (
+    ordersData: any,
+    setLoading: (val: boolean) => void,
+    values: {
+        search: string,
+        states: OrderState[],
+        sortBy: string,
+        sortOrder: string
+    },
+    setOrders: (val: any) => void,
+    t: (key: string) => string,
+    isAdmin: boolean = false
+) => {
+    try {
+        setLoading(true)
+
+        const {
+            search,
+            states,
+            sortBy,
+            sortOrder
+        } = values
+
+        const params = new URLSearchParams()
+
+        params.set('page', String(ordersData?.pagination?.page ?? Defaults.Page))
+        params.set('limit', String(ordersData?.pagination?.limit ?? Defaults.Limit))
+        params.set('sortBy', sortBy)
+        params.set('sortOrder', sortOrder)
+        states.forEach((state: OrderState) => {
+            params.append('state[]', state)
+        })
+        
+        if (search) {
+            params.set('search', search)
+        }
+
+        const res = await fetch(`/api/${isAdmin ? 'admin/' : ''}orders?${params.toString()}`)
+
+        const data = await res.json()
+        await checkRes(res, data, t('Failed to fetch orders'))
+        setOrders(data)
+    } catch {
+        message.error('Failed to fetch orders')
+    } finally {
+        setLoading(false)
+    }
+}
+
+export const loginOrRegister = async (
+    values: { email: string, firstName: string, lastName: string, password: string }, 
+    mode: 'login' | 'register', 
+    checkAuth: () => void, 
+    router: AppRouterInstance,
+    t: (key: string) => string,
+    setActiveTab?: (val: 'login') => void
+) => {
+    try {
+        const payload = {
+            ...values,
+            mode
+        }
+        const res = mode === 'login' ? await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: payload.email,
+                password: payload.password
+            })
+        }) : await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                email: payload.email,
+                password: payload.password,
+                firstName: payload.firstName,
+                lastName: payload.lastName
+            })
+        })
+
+        const data = await res.json()
+
+        await checkRes(res, data, mode === 'register' ? t('Failed to register') : t('Failed to login'))
+        await checkAuth()
+
+        if (res.ok) {
+            message.success(data.message)
+
+            if (mode === 'register' && setActiveTab) {
+                setActiveTab('login')
+            } else if (setActiveTab) {
+                router.push('/')
+            }
+        }
+        return res.ok
+    } catch {
+        message.error(mode === 'register' ? t('Failed to register') : t('Failed to login'))
+    }
+}
+
+export const getInvoice = async (orderID: string, setInvoiceLoading: (val: boolean) => void, t: (val: string) => string) => {
+    if (!orderID) {
+        return
+    }
+
+    setInvoiceLoading(true)
+
+    try {
+        const auth = getLocalStorage(LocalStorageKey.CheckoutToken)
+
+        const headers: any = auth ? { 'Authorization': `Bearer ${auth}` } : { }
+        const res = await fetch(`/api/checkout/order/${orderID}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...headers
+            }
+        })
+
+        const data = await res.json()
+
+        const ok = await checkRes(
+            res,
+            data,
+            t('Unable to generate invoice')
+        )
+
+        if (!ok) {
+            return
+        }
+
+        if (data.pdfUrl) {
+            window.open(
+                data.pdfUrl,
+                '_blank'
+            )
+        }
+    } catch {
+        message.error(t('Unable to generate invoice'))
+    } finally {
+        setInvoiceLoading(false)
+    }
+}
+
+export const fetchCart = async (user: any, setCartData: (val: any) => void, setLoading: (val: boolean) => void, t: (val: string) => string) => {
+    try {
+
+        setLoading(true)
+
+        const res = user
+            ? await fetch('/api/basket-items')
+            : await fetch('/api/basket-items/public', { method: 'POST' })
+
+        const data = await res.json()
+        const ok = await checkRes(res, data, t('Failed to load cart'))
+        if (!ok) {return}
+
+        setCartData(data)
+    } catch (error: any) {
+        message.error(error.message || t('Failed to load cart'))
+    } finally {
+        setLoading(false)
+    }
+}
+
+export const saveCartChanges = async (
+    user: any,
+    pendingUpdates: any,
+    pendingDeletes: any,
+    setPendingUpdates: any,
+    setPendingDeletes: any,
+    setEditMode: any,
+    setCartData: any,
+    setLoading: (val: boolean) => void,
+    t: (val: string) => string
+) => {
+    try {
+        const endpoint = user
+            ? '/api/basket-items'
+            : '/api/cookie/basket'
+
+        const updates = Object.values(pendingUpdates).map((toUpdate: any) => ({
+            basketItemID: toUpdate.basketItemID,
+            quantity: toUpdate.quantity
+        }))
+
+        const deletes = Object.values(pendingDeletes)
+
+        if (updates.length) {
+            const res = await fetch(endpoint, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ basketItems: updates })
+            })
+
+            const data = await res.json()
+            await checkRes(res, data, t('Failed to update items'))
+        }
+
+        if (deletes.length) {
+            const res = await fetch(endpoint, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ basketItems: deletes })
+            })
+
+            const data = await res.json()
+            await checkRes(res, data, t('Failed to delete items'))
+        }
+
+        setPendingUpdates({})
+        setPendingDeletes({})
+        setEditMode(false)
+
+        await fetchCart(user, setCartData, setLoading, t)
+    } catch (error: any) {
+        message.error(error.message || t('Failed to update cart'))
+    }
+}
 
 export async function uploadFile(file: File): Promise<{
     publicUrl: string,

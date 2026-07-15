@@ -129,7 +129,7 @@ export default function GoodDetailsPage() {
                                                     disabled={p.quantity <= 0}
                                                 >
                                                     <Space orientation="vertical" size={0}>
-                                                        <Text strong>{p.price} €</Text>
+                                                        <Text strong>{p.price} £</Text>
                                                         <Text type="secondary">
                                                             {p.itemType?.name?.en}
                                                         </Text>
