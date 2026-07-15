@@ -301,8 +301,8 @@ export default function Checkout() {
         return (
             <Result
                 status="success"
-                title="Payment successful!"
-                subTitle="Your order has been placed successfully."
+                title={t('Payment successful!')}
+                subTitle={t('Your order has been placed successfully.')}
                 extra={[
                     <Space
                         key="actions"
@@ -321,7 +321,7 @@ export default function Checkout() {
                             }}
                         >
                             <Typography.Text type="secondary">
-                                Order ID
+                                {t('Order ID')}
                             </Typography.Text>
 
                             <Typography.Text copyable>
@@ -334,7 +334,7 @@ export default function Checkout() {
                             loading={invoiceLoading}
                             onClick={() => getInvoice(orderID, setInvoiceLoading, t)}
                         >
-                            Download invoice
+                            {t('Download invoice')}
                         </Button>
 
                         {!user && (
@@ -353,19 +353,19 @@ export default function Checkout() {
                                     }}
                                 >
                                     <Title level={4}>
-                                        Create your customer account 🎁
+                                        {t('Create your customer account')}
                                     </Title>
 
                                     <Typography.Paragraph>
-                                        Your order was placed using{' '}
+                                        {t('Your order was placed using')}{' '}
                                         <Typography.Text strong>
                                             {customer.email}
                                         </Typography.Text>
                                         .
-                                        <br />
-                                        Create a password now to unlock order tracking,
-                                        manage your orders, download invoices anytime,
-                                        and access your purchase history.
+                                        <br /><br/>
+                                        {t('Create a password now to unlock order tracking')}<br/><br/>
+                                        {t('Manage your orders, download invoices anytime')}<br/><br/>
+                                        {t('Access your purchase history')}<br/>
                                     </Typography.Paragraph>
 
                                     <Input.Password
@@ -414,11 +414,11 @@ export default function Checkout() {
                                             }
                                         }}
                                     >
-                                        Create account
+                                        {t('Create account')}
                                     </Button>
 
                                     <Typography.Text type="secondary">
-                                        You can also continue shopping without creating an account.
+                                        {t('You can also continue shopping without creating an account.')}
                                     </Typography.Text>
                                 </Space>
                             </Card>
@@ -430,7 +430,7 @@ export default function Checkout() {
                                 router.push('/' + t('all-categories'))
                             }}
                         >
-                            Continue shopping
+                            {t('Continue shopping')}
                         </Button>
                     </Space>
                 ]}
@@ -476,7 +476,7 @@ export default function Checkout() {
                 <Form layout="vertical" form={form}>
                     <Row gutter={16}>
                         <Col span={12}>
-                            <Form.Item label="First name" name="firstName" required>
+                            <Form.Item label={t('First name')} name="firstName" required>
                                 <Input
                                     value={customer.firstName}
                                     onChange={(e) =>
@@ -491,7 +491,7 @@ export default function Checkout() {
                         </Col>
 
                         <Col span={12}>
-                            <Form.Item label="Last name" name="lastName" required>
+                            <Form.Item label={t('Last name')} name="lastName" required>
                                 <Input
                                     value={customer.lastName}
                                     onChange={(e) =>
@@ -506,7 +506,7 @@ export default function Checkout() {
                         </Col>
                     </Row>
 
-                    <Form.Item label="Email" name="email" required>
+                    <Form.Item label={t('Email')} name="email" required>
                         <Input
                             value={customer.email}
                             onChange={(e) =>
@@ -849,7 +849,7 @@ export default function Checkout() {
             maxWidth: 900,
             margin: '40px auto' 
         }}>
-            <Title level={2}>Checkout</Title>
+            <Title level={2}>{t('Checkout')}</Title>
 
             <Steps
                 current={currentStep}
@@ -887,12 +887,12 @@ export default function Checkout() {
                     disabled={currentStep === CheckoutStep.Customer}
                     onClick={previous}
                 >
-                    Back
+                    {t('Back')}
                 </Button>
 
                 {currentStep !== CheckoutStep.Payment && (
                     <Button type="primary" onClick={handleNext}>
-                        Continue
+                        {t('Continue')}
                     </Button>
                 )}
             </Space>

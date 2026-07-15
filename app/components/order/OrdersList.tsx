@@ -84,7 +84,7 @@ export default function OrderList({
                                         fontWeight: 600
                                     }}
                                 >
-                                    {order.state}
+                                    {t(order.state)}
                                 </Tag>
                             </Flex>
 
@@ -173,17 +173,17 @@ export default function OrderList({
                             >
                                 <Flex vertical gap={4}>
                                     <Text>
-                                        {order.itemsCount} items
+                                        {order.itemsCount} {t('items')}
                                     </Text>
 
                                     <Text type="secondary">
-                                        Products:
+                                        {t('Products')}:
                                         {' '}
                                         £{Number(order.productsPrice).toFixed(2)}
                                     </Text>
 
                                     <Text type="secondary">
-                                        Shipping:
+                                        {t('Shipping')}:
                                         {' '}
                                         £{Number(order.shippingPrice).toFixed(2)}
                                     </Text>
@@ -194,7 +194,7 @@ export default function OrderList({
                                     align="end"
                                 >
                                     <Text type="secondary">
-                                        Total
+                                        {t('Total')}
                                     </Text>
 
                                     <Text

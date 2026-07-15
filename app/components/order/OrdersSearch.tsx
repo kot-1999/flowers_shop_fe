@@ -58,7 +58,7 @@ export default function OrdersSearch({
                     }
                     options={Object.values(OrderState).map((state) => ({
                         value: state,
-                        label: state
+                        label: t(state)
                     }))}
                 />
             </Col>

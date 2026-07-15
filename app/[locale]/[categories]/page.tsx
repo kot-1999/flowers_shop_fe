@@ -114,7 +114,9 @@ export default function Categories() {
                 }}
             >
                 {categoryRes.categories.map((category: any, index) => {
-                    const active = category.name[locale + 'Slug'] === currentSlug
+                    const decodedSlug = decodeURIComponent(currentSlug)
+
+                    const active = category.name[locale + 'Slug'] === decodedSlug
                         || hoveredCategory === category.id
 
                     return (

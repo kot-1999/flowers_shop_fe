@@ -82,7 +82,7 @@ export default function OrderModal({
 
     useEffect(() => {
         setOrderUpdated(order)
-    }, [order]);
+    }, [order])
 
     const getNextStateText = () => {
         switch (order?.state) {
@@ -141,7 +141,7 @@ export default function OrderModal({
                                 fontWeight: 600
                             }}
                         >
-                            {order.state}
+                            {t(order.state)}
                         </Tag>
                     </Flex>
 

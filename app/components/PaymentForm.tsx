@@ -23,7 +23,7 @@ export default function PaymentForm({
     const [loading, setLoading] = useState(false)
 
     const t = getTFunc()
-    
+
     const handleSubmit = async () => {
         if (!stripe || !elements) {
             return
@@ -67,7 +67,7 @@ export default function PaymentForm({
                 onClick={handleSubmit}
                 style={{ marginTop: 24 }}
             >
-                Pay
+                {t('Pay')}
             </Button>
         </>
     )
