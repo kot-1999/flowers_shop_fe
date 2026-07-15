@@ -734,7 +734,6 @@ export default function Checkout() {
                     style={{ width: '100%' }}
                 >
                     <Title level={4}>{t('Payment')}</Title>
-                    <Title level={4}>{t('Order review')}</Title>
 
                     <Card>
                         <Space orientation="vertical" style={{ width: '100%' }} size="middle">

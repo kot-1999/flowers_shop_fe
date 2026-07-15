@@ -129,10 +129,7 @@ export default function Categories() {
                                 removeLocalStorage(LocalStorageKey.SearchSettings)
                                 removeLocalStorage(LocalStorageKey.HomePagination)
                                 removeLocalStorage(LocalStorageKey.SelectedCategory)
-                                localStorage.setItem(
-                                    LocalStorageKey.SelectedCategory,
-                                    JSON.stringify(category)
-                                )
+                                localStorage.setItem(LocalStorageKey.SelectedCategory, category)
                             }}
                             style={{
                                 flex: active ? 1.35 : 1,

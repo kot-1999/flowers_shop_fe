@@ -113,7 +113,7 @@ export default function AppSidebar({ isDark, setDark }: { isDark: boolean, setDa
                 >
                     <Menu
                         mode="inline"
-                        selectedKeys={['/' + rest.join('/')]}
+                        selectedKeys={['/' + rest?.map((item) => decodeURIComponent(item)).join('/')]}
                         defaultOpenKeys={['categories', 'account']}
                         style={{
                             borderRight: 0
