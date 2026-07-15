@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { CookieKey } from '@/app/utils/enums'
-import { getCookie, getRequiredHeaders } from '@/app/utils/serverFunctions'
+import { getRequiredHeaders } from '@/app/utils/serverFunctions'
 
 const BACKEND_URL = process.env.BACKEND_URL
 

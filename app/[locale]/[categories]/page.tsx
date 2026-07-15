@@ -11,7 +11,7 @@ import SearchBar from '@/app/components/SearchBar'
 import SimplePagination from '@/app/components/SimplePagination'
 import { commonFetch } from '@/app/utils/clientFetchFuntions'
 import { Defaults, GoodState, LocalStorageKey } from '@/app/utils/enums'
-import { fetchSettings, getLocalStorage, removeLocalStorage } from '@/app/utils/helpers'
+import { fetchSettings, getLocalStorage, removeLocalStorage, setLocalStorage } from '@/app/utils/helpers'
 
 export default function Categories() {
     const [goodsData, setGoods] = useState<{
@@ -59,7 +59,7 @@ export default function Categories() {
             const searchSettings = getLocalStorage(LocalStorageKey.SearchSettings) ?? {}
             const homePagination = getLocalStorage(LocalStorageKey.HomePagination) ?? {}
             const selectedCategory = getLocalStorage(LocalStorageKey.SelectedCategory)
-
+            console.log(selectedCategory)
             params.set('page', homePagination?.page ?? Defaults.Page.toString())
             params.set('limit', homePagination?.limit ?? Defaults.Limit.toString())
             params.set('sortBy', searchSettings?.sortBy ?? 'createdAt')
@@ -129,7 +129,7 @@ export default function Categories() {
                                 removeLocalStorage(LocalStorageKey.SearchSettings)
                                 removeLocalStorage(LocalStorageKey.HomePagination)
                                 removeLocalStorage(LocalStorageKey.SelectedCategory)
-                                localStorage.setItem(LocalStorageKey.SelectedCategory, category)
+                                setLocalStorage(LocalStorageKey.SelectedCategory, category)
                             }}
                             style={{
                                 flex: active ? 1.35 : 1,
@@ -165,8 +165,7 @@ export default function Categories() {
                                 style={{
                                     position: 'absolute',
                                     inset: 0,
-                                    background:
-                                        'linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,.15), transparent)',
+
                                     display: 'flex',
                                     alignItems: 'flex-end',
                                     padding: 28,
