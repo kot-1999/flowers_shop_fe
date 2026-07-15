@@ -1,7 +1,8 @@
 import { ShoppingCartOutlined } from '@ant-design/icons'
 import {
     Button,
-    Card, Carousel,
+    Card,
+    Carousel,
     Col,
     Divider,
     Image,
@@ -17,11 +18,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 
-const { Text, Paragraph } = Typography
-
 import { addToBasket } from '@/app/utils/clientFetchFuntions'
-import { GoodState } from '@/app/utils/enums'
-import { getTFunc } from '@/app/utils/helpers'
+import { GoodState, LocalStorageKey } from '@/app/utils/enums'
+import { getTFunc, setLocalStorage } from '@/app/utils/helpers'
+
+const { Text, Paragraph } = Typography
 
 export default function GoodsList({ goodsData, settings, user }: any) {
     const t = getTFunc()
@@ -46,6 +47,7 @@ export default function GoodsList({ goodsData, settings, user }: any) {
         const path = pathname.split('/')
 
         if (path.length === 2) {
+            setLocalStorage(LocalStorageKey.SelectedCategory, null)
             path.push('/' + t('all-categories'))
         }
 

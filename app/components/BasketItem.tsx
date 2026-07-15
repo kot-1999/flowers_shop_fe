@@ -5,6 +5,9 @@ import { Card, Image, InputNumber, Space, Typography, Button } from 'antd'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+import { LocalStorageKey } from '@/app/utils/enums'
+import { setLocalStorage } from '@/app/utils/helpers'
+
 const { Text } = Typography
 
 interface Props {
@@ -42,6 +45,7 @@ export default function BasketItem({
         const path = pathname.split('/')
 
         if (path.length === 2) {
+            setLocalStorage(LocalStorageKey.SelectedCategory, null)
             path.push(t('all-categories'))
         }
 

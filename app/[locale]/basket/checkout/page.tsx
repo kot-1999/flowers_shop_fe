@@ -426,6 +426,7 @@ export default function Checkout() {
 
                         <Button
                             onClick={() => {
+                                setLocalStorage(LocalStorageKey.SelectedCategory, null)
                                 router.push('/' + t('all-categories'))
                             }}
                         >
